@@ -2,9 +2,9 @@
 
 **Offline airport staffing scheduler for TSO / LTSO / STSO positions.**
 
-BrokeSched is a lightweight, single-page HTML/JavaScript application that generates optimized workforce schedules for airport Transportation Security Officer (TSO) teams. Works entirely offline—no server, no build step, no dependencies required (except a modern browser).
+BrokeSched is a lightweight, single-page HTML/JavaScript application that generates optimized workforce schedules for airport Transportation Security Officer (TSO) teams. Works entirely offline—no backend, no database, no cloud calls.
 
-[![GitHub Pages](https://img.shields.io/badge/live-GitHub%20Pages-blue?logo=github)](https://dad2lna-coder.github.io/BrokeSched/)
+[![GitHub Pages](https://img.shields.io/badge/live-GitHub%20Pages-blue?logo=github)](https://dad2lna-coder.github.io/BLADE_Alpha/)
 ![License](https://img.shields.io/badge/license-MIT-green)
 ![Built with](https://img.shields.io/badge/built%20with-HTML%2FJS%2FCSS-orange)
 
@@ -16,8 +16,8 @@ BrokeSched is a lightweight, single-page HTML/JavaScript application that genera
 
 1. **Clone or download the repo:**
    ```bash
-   git clone https://github.com/dad2lna-coder/BrokeSched.git
-   cd BrokeSched
+   git clone https://github.com/dad2lna-coder/BLADE_Alpha.git
+   cd BLADE_Alpha
    ```
 
 2. **Open in browser:**
@@ -31,7 +31,7 @@ BrokeSched is a lightweight, single-page HTML/JavaScript application that genera
 3. **Start scheduling** — all data stays in your browser
 
 ### **Live Demo**
-Visit the deployed version at: https://dad2lna-coder.github.io/BrokeSched/
+Visit the deployed version at: https://dad2lna-coder.github.io/BLADE_Alpha/
 
 ---
 
@@ -65,7 +65,7 @@ Visit the deployed version at: https://dad2lna-coder.github.io/BrokeSched/
 ### **Project Structure**
 
 ```
-BrokeSched/
+BLADE_Alpha/
 ├── index.html              # Entry point (single page)
 ├── README.md               # This file
 ├── INSTRUCTIONS.md         # In-app user guide (loaded in Instructions modal)
@@ -295,7 +295,7 @@ All bundled locally—no CDN calls:
 ## 🤝 Contributing
 
 Found a bug? Have a feature request? Open an issue on GitHub:  
-https://github.com/dad2lna-coder/BrokeSched/issues
+https://github.com/dad2lna-coder/BLADE_Alpha/issues
 
 For detailed user instructions, see **[INSTRUCTIONS.md](INSTRUCTIONS.md)** or click the **Instructions** button in the app.
 
