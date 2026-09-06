@@ -217,6 +217,17 @@ window.Scheduler = window.Scheduler || {};
     }).catch(function () {});
   }
 
+  function loadRotationJoin() {
+    if (document.querySelector('script[src*="rotation-join.js"]')) return;
+    var css = document.createElement("link");
+    css.rel = "stylesheet";
+    css.href = "css/rotation-join.css?v=20260906a";
+    document.head.appendChild(css);
+    var s = document.createElement("script");
+    s.src = "js/rotation-join.js?v=20260906a";
+    document.body.appendChild(s);
+  }
+
   function init() {
     document.body.classList.add("console-skin");
     if (!S.state) S.state = {};
@@ -236,7 +247,7 @@ window.Scheduler = window.Scheduler || {};
       if (e.defaultPrevented) return;
       var tag = (e.target && e.target.tagName) || "";
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      var map = { F1: "setup", F2: "coverage", F3: "lines", F4: "teams", F5: "reports", F6: "capacity" };
+      var map = { F1: "setup", F2: "coverage", F3: "lines", F4: "teams", F5: "reports", F6: "capacity", F7: "rotation" };
       if (map[e.key] && S.switchTab) { e.preventDefault(); S.switchTab(map[e.key]); }
     });
     var orig = S.renderAll;
@@ -248,6 +259,7 @@ window.Scheduler = window.Scheduler || {};
       };
       S.renderAll._consoleWrapped = true;
     }
+    loadRotationJoin();
   }
 
   document.addEventListener("DOMContentLoaded", init);
