@@ -390,15 +390,34 @@ select:focus {
   color: var(--text);
 }
 
+/* ================================================================= */
+/* == THIS IS THE CORRECTED AND FINAL MODAL RULE                  == */
+/* ================================================================= */
 .modal-content {
   background-color: var(--panel);
   margin: 5% auto;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 10px;
-  width: 90%;
-  max-width: 960px;
   position: relative;
+  
+  /* --- MODIFICATIONS START HERE --- */
+  
+  /* 1. Set a default starting width instead of a percentage. */
+  width: 600px; 
+  
+  /* 2. Remove the maximum width constraint entirely. */
+  max-width: none;
+  
+  /* 3. Add the properties to enable the resize handle. */
+  overflow: auto;
+  resize: both;
+  
+  /* 4. Set minimum dimensions to prevent it from becoming unusable. */
+  min-width: 320px;
+  min-height: 250px;
+  
+  /* --- MODIFICATIONS END HERE --- */
 }
 
 .modal-close {
@@ -602,7 +621,6 @@ select:focus {
 }
 
 .team-board-list .team-line { background: var(--bg); }
-
 .btn-sm { padding: 0.25rem 0.5rem; font-size: 0.75rem; }
 
 .sortable-ghost { opacity: 0.4; }
@@ -674,6 +692,8 @@ select {
   height: 1.25rem;
   min-width: 1.25rem;
   min-height: 1.25rem;
+  margin: 0;
+  cursor: pointer;
 }
 
 /* Coverage matrix: sticky time column, larger cells, smooth scroll */
@@ -813,31 +833,41 @@ select {
   .grid-4 {
     grid-template-columns: 1fr 1fr;
   }
+  
   .topbar {
     padding: 0.65rem 0.85rem;
   }
+  
   .tabs {
     padding: 0.4rem 0.75rem;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     flex-wrap: nowrap;
   }
+  
   .tab-btn {
     flex-shrink: 0;
   }
+  
   .panel {
     padding: 0.75rem;
   }
+  
+  /* This rule was also contributing to the problem on smaller screens. */
+  /* It has been updated to also have no max-width. */
   .modal-content {
     width: 96%;
+    max-width: none; /* Make sure it can be resized here too */
     margin: 3% auto;
     max-height: 92vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
   }
+  
   .data-table {
     font-size: 0.9rem;
   }
+
   .data-table input[type="time"],
   .data-table input[type="number"],
   .data-table input[type="text"] {
@@ -851,13 +881,16 @@ select {
   .grid-4 {
     grid-template-columns: 1fr;
   }
+  
   .brand {
     font-size: 0.95rem;
   }
+  
   .btn,
   .tab-btn {
     padding: 0.55rem 0.75rem;
   }
+  
   .cov-matrix th,
   .cov-matrix td {
     padding: 0.45rem 0.3rem;
