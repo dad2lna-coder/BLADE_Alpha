@@ -946,20 +946,33 @@ select {
   font-size: 0.7rem;
 }
 /* ================================================================= */
-/* == THIS IS THE CORRECTED AND FINAL FLOAT PANEL RULE            == */
+/* == UNLOCK FLOATING DOCK PANEL WIDTHS & ENERGIZE RESIZING        == */
 /* ================================================================= */
+
 .team-stats-dock {
-  width: 30rem; /* Increased default width */
+  /* Change hardcoded 'width' to 'min-width' so it can expand */
+  min-width: 18rem; 
+  width: 24rem;          /* Larger, more comfortable starting width */
   height: 22rem;
-  max-width: 90vw;
-  max-height: 80vh;
+  max-width: 95vw;       /* Keep it within browser boundaries */
+  max-height: 85vh;
 }
+
 .team-boards-dock {
-  width: 45rem; /* Increased default width */
+  /* Change hardcoded 'width' to 'min-width' so it can expand */
+  min-width: 22rem; 
+  width: 32rem;          /* Larger, more comfortable starting width */
   height: 28rem;
-  max-width: 90vw;
-  max-height: 80vh;
+  max-width: 95vw;       /* Keep it within browser boundaries */
+  max-height: 85vh;
 }
+
+/* Ensure the main float panels allow resizing and display handles */
+.team-float-panel {
+  resize: both !important;
+  overflow: auto !important;
+}
+
 .team-boards-follow {
   display: flex;
   flex-direction: column;
