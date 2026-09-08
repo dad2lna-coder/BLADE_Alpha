@@ -215,3 +215,23 @@
   grid-template-columns: 1fr 4rem 3rem 4rem 5rem 4rem 1.7rem;
   padding: 0 0.5rem;
 }
+/* ================================================================= */
+/* == FORCE MODAL WIDTH OVERRIDES (BYPASSES INLINE HTML INJECTS)  == */
+/* ================================================================= */
+
+/* 1. Break the hardcoded 720px inline-style constraint in the HTML */
+#team-detail-modal .modal-content {
+  width: 900px !important;      /* Starts much wider automatically */
+  max-width: 95vw !important;    /* Allows it to scale down on tablets/laptops */
+  resize: both !important;       /* Enables the draggable handle */
+  overflow: auto !important;     /* Required for resize to work */
+  min-width: 320px !important;   /* Safety minimum */
+  min-height: 250px !important;  /* Safety minimum */
+}
+
+/* 2. Apply same resizable rules to all other modals on the page */
+.modal-content {
+  resize: both !important;
+  overflow: auto !important;
+  max-width: 95vw !important;
+}
