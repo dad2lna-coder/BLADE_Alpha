@@ -180,18 +180,38 @@
 }
 
 /* =============================================================== */
-/* == RESIZABLE TEAM-BUILDER MODALS                             == */
+/* == RESIZABLE & WIDER TEAM-BUILDER MODALS (Corrected)         == */
 /* =============================================================== */
 /*
- * Makes any modal inside the 'Teams' tab panel resizable.
- * The 'resize' property requires 'overflow' to be set to a
- * value other than 'visible'.
+ * PROBLEM: The parent container (.modal) has a max-width that
+ *          prevents the inner .modal-content from resizing wider.
+ *
+ * SOLUTION:
+ * 1. Override the size constraints on the specific modal containers
+ *    (#team-detail-modal) so they can grow.
+ * 2. Keep the `resize` handle on the inner .modal-content.
 */
+
+/* Step 1: Remove width constraints from the parent modal container */
+#tab-teams .modal {
+  width: auto;
+  max-width: none; /* This is the key fix */
+  
+  /* Use min-width to define the modal's initial, smallest size */
+  min-width: 500px; /* Adjust as needed */
+}
+
+/* Step 2: Make the inner content area resizable */
 #tab-teams .modal-content {
   overflow: auto; /* Required for the 'resize' property to work */
   resize: both;   /* Allows the user to resize horizontally and vertically */
-
-  /* Define minimum dimensions to prevent the modal from becoming unusable. */
-  min-width: 320px;
+  
+  /* Optional: Set a minimum size for the content pane itself */
   min-height: 250px;
+}
+
+/* Optional: Adjust internal columns to fit the new default width */
+#team-detail-modal .team-line-cols {
+  grid-template-columns: 1fr 4rem 3rem 4rem 5rem 4rem 1.7rem;
+  padding: 0 0.5rem;
 }
