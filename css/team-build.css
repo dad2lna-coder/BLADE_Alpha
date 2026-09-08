@@ -464,7 +464,6 @@ window.Scheduler = window.Scheduler || {};
     t.members = sortedMembers;
 
     var members = "";
-    // Only render individual lines fully if it's the main board (NOT the docked board)
     if (!isDock) {
       members = sortedMembers
         .map(function (mid) {
@@ -477,7 +476,6 @@ window.Scheduler = window.Scheduler || {};
     var followChecked = t.followMe ? " checked" : "";
     var phaseLbl = t.phase || (S.teamPhaseInfo ? S.teamPhaseInfo(t).phase : "");
 
-    // When inside the dock, just output a small summary container, not the full Sortable list structure
     if (isDock) {
         return (
           '<div class="team-board" data-team-id="' + t.id + '" data-phase="' + (phaseLbl || "") + '">' +
@@ -542,8 +540,8 @@ window.Scheduler = window.Scheduler || {};
 
     if (dock) {
       dock.innerHTML = following.length
-        ? S.teamBoardsHtml(following, true) // Pass 'true' to signify we are in the dock view
-        : '<p class="muted">Check <strong>Follow Me</strong> on a team to dock it here.</p>';
+        ? S.teamBoardsHtml(following, true) 
+        : '<p class="muted">Click any team from the Assignment panel to pin it here.</p>';
     }
   };
 
@@ -598,8 +596,10 @@ window.Scheduler = window.Scheduler || {};
         var allM = c.STSO.M + c.LTSO.M + c.TSO.M;
         var allF = c.STSO.F + c.LTSO.F + c.TSO.F;
         var fPct = allM + allF ? Math.round((100 * allF) / (allM + allF)) : 0;
+        
+        // This is where we make the row clickable to toggle Follow Me
         return (
-          '<div class="team-stat-team-line">' +
+          '<div class="team-stat-team-line" style="cursor:pointer;" data-team-follow-toggle="' + row.id + '" title="Click to pin/unpin to Teams panel">' +
           "<strong>" +
           String(row.name).replace(/</g, "&lt;") +
           "</strong> " +
@@ -607,7 +607,7 @@ window.Scheduler = window.Scheduler || {};
           row.counts.total +
           " · " + fPct + "%F)</span> " +
           bits +
-          (row.followMe ? ' <span class="team-follow-badge">follow</span>' : "") +
+          (row.followMe ? ' <span class="team-follow-badge" style="float:right;">Pinned</span>' : "") +
           "</div>"
         );
       })
@@ -651,14 +651,12 @@ window.Scheduler = window.Scheduler || {};
     }
   };
 
-  /** Resizable & Draggable Floating Panel Fixes */
   S.initFloatPanels = function () {
     if (S._floatPanelsBound) return;
     S._floatPanelsBound = true;
     var panels = document.querySelectorAll(".team-float-panel");
 
     panels.forEach(function (panel, idx) {
-      // Clear any forced inline widths/heights so CSS sizing takes control
       panel.style.width = "";
       panel.style.height = "";
       if (!panel.style.left && !panel.style.right) {
@@ -679,12 +677,10 @@ window.Scheduler = window.Scheduler || {};
         if (e.target && (e.target.tagName === "BUTTON" || e.target.closest("button"))) return;
         e.preventDefault();
         
-        // Get starting layout measurements
         var rect = panel.getBoundingClientRect();
         var ox = e.clientX - rect.left;
         var oy = e.clientY - rect.top;
 
-        // Keep current width and height on drag start so size doesn't reset
         panel.style.width = rect.width + "px";
         panel.style.height = rect.height + "px";
         panel.style.left = rect.left + "px";
@@ -711,7 +707,6 @@ window.Scheduler = window.Scheduler || {};
         document.addEventListener("mouseup", onUp);
       });
 
-      // Touch drag
       handle.addEventListener(
         "touchstart",
         function (e) {
@@ -1070,10 +1065,23 @@ window.Scheduler = window.Scheduler || {};
     document.addEventListener("click", function (e) {
       var t = e.target;
       if (!t) return;
+      
+      // NEW: Click a line in the Assignment panel to toggle it to the Teams panel
+      var toggleEl = t.closest ? t.closest("[data-team-follow-toggle]") : null;
+      if (toggleEl) {
+        var tid = toggleEl.getAttribute("data-team-follow-toggle");
+        var team = S.getTeamById(tid);
+        if (team) {
+          team.followMe = !team.followMe;
+          S.renderTeams();
+        }
+        return; // Stop execution here since we handled the click
+      }
+
       if (t.id === "btn-team-auto-form") {
         S.autoFormTeams();
       } else if (t.id === "btn-team-build") {
-        // Restore the "Build" button functionality on F4 page
+        // Restored "Build" functionality
         if (S.renderLines) S.renderLines();
         S.renderTeams();
         if (S.updateStatus) S.updateStatus("Teams successfully built from current lines.");
@@ -1097,8 +1105,8 @@ window.Scheduler = window.Scheduler || {};
         S.removeTeam(t.getAttribute("data-remove-team"));
       } else if (t.getAttribute && t.getAttribute("data-remove-member") != null) {
         var mid = t.getAttribute("data-remove-member");
-        var tid = t.getAttribute("data-from-team");
-        S.removeMemberFromTeam(tid, mid);
+        var fTid = t.getAttribute("data-from-team"); // fixed variable scope
+        S.removeMemberFromTeam(fTid, mid);
         S.renderTeams();
         if (S.renderLines) S.renderLines();
       }
