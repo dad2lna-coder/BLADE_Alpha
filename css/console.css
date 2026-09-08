@@ -155,6 +155,7 @@ body.console-skin select {
 }
 
 body.console-skin .data-table { font-size: 0.78rem; }
+
 body.console-skin .data-table th {
   color: var(--cyan);
   text-transform: uppercase;
@@ -213,7 +214,6 @@ body.console-skin .console-footer {
 }
 
 body.console-skin .console-footer b { font-weight: 400; color: var(--green); }
-
 body.console-skin .alert-ok { background: #062010; border-color: var(--green); color: var(--green); }
 body.console-skin .alert-warn { background: #201800; border-color: var(--border); color: var(--amber); }
 
@@ -223,30 +223,30 @@ body.console-skin .alert-warn { background: #201800; border-color: var(--border)
 }
 
 /* ================================================================= */
-/* == MODAL FIX: UNLOCK WIDTH & ENABLE MANUAL USER RESIZING        == */
+/* == MODAL FIX: UNLOCK WIDTH & ENABLE MANUAL RESIZING            == */
 /* ================================================================= */
 
-/* 1. Free the rigid width/max-width boundary limits on the outer containers */
-body.console-skin .modal {
-  width: auto !important;
-  max-width: 95vw !important; /* Prevent it extending past display screen edges */
-}
+/*
+ * The .modal-content rule in styles.css has a `max-width: 960px`.
+ * The following rules use the higher-specificity `body.console-skin`
+ * selector to override those default constraints.
+*/
 
-/* 2. Give resizable qualities and default widths to the modal contents */
+/* 1. Remove the max-width constraint that prevents resizing. */
 body.console-skin .modal-content {
-  resize: both !important;
-  overflow: auto !important;
-  
-  /* Initial layout dimensions when opened */
-  width: 650px !important;
-  max-width: 90vw !important;
-  
-  /* Prevent modals from being crushed too small by accident */
-  min-width: 320px !important;
-  min-height: 250px !important;
+  max-width: none; /* <-- The most important fix */
+
+  /* 2. Enable the resize handle. */
+  overflow: auto; /* Required for resize to work */
+  resize: both;   /* This adds the drag handle */
+
+  /* 3. Set a sensible default and minimum size. */
+  width: 600px; /* Default starting width */
+  min-width: 320px;
+  min-height: 250px;
 }
 
-/* 3. Make specific exception rules for the Team Details modal */
-#team-detail-modal .modal-content {
-  width: 880px !important; /* Starts wider automatically for the workforce grid layout */
+/* 4. [Optional] Give the larger team-detail modal a wider default size. */
+body.console-skin #team-detail-modal .modal-content {
+  width: 800px;
 }
