@@ -1,8 +1,8 @@
 {
-  "name": "brokesched",
+  "name": "BLADE_Alpha",
   "version": "0.2.0",
   "private": true,
-  "description": "Offline airport staffing scheduler (TSO / LTSO / STSO)",
+  "description": "Offline staffing scheduler",
   "scripts": {
     "tauri": "tauri",
     "dev": "tauri dev",
