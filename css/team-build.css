@@ -1,5 +1,4 @@
 /** Team forming module — checkbox select + add-to-team (fully offline) */
-
 window.Scheduler = window.Scheduler || {};
 
 (function (S) {
@@ -14,7 +13,7 @@ window.Scheduler = window.Scheduler || {};
     filters: { role: "ALL", start: "", rdo: "" },
     selected: {}, // poolId -> true
     sortables: [],
-    followMe: false,
+    followMe: false
   };
 
   if (!S.teams.sortables) S.teams.sortables = [];
@@ -27,24 +26,14 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function rdoKey(line) {
-    return (line.rdoDays || [])
-      .slice()
-      .sort(function (a, b) {
-        return a - b;
-      })
-      .join(",");
+    return (line.rdoDays || []).slice().sort(function (a, b) { return a - b; }).join(",");
   }
 
   function rdoLabel(line) {
     var days = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     var k = rdoKey(line);
     if (!k) return "—";
-    return k
-      .split(",")
-      .map(function (i) {
-        return days[+i] || i;
-      })
-      .join(",");
+    return k.split(",").map(function (i) { return days[+i] || i; }).join(",");
   }
 
   function startOf(line) {
@@ -64,11 +53,11 @@ window.Scheduler = window.Scheduler || {};
   S.teamStartLabel = startLabel;
 
   S.collectTeamPool = function () {
-    var lines = S.state && S.state.lines ? S.state.lines : [];
+    var lines = (S.state && S.state.lines) ? S.state.lines : [];
     S.teams.pool = lines.map(function (l) {
       return {
         id: l.id,
-        lineCode: l.lineCode || "L" + l.id,
+        lineCode: l.lineCode || ("L" + l.id),
         role: roleOf(l),
         start: startLabel(l),
         startMin: startOf(l),
@@ -78,20 +67,14 @@ window.Scheduler = window.Scheduler || {};
         empClass: l.empClass || "",
         shiftId: l.shiftId,
         shiftName: l.shiftName || (S.getShift && S.getShift(l.shiftId) ? S.getShift(l.shiftId).name : l.shiftId),
-        paid: l.paid || 0,
+        paid: l.paid || 0
       };
     });
 
     var valid = {};
-    S.teams.pool.forEach(function (p) {
-      valid[p.id] = true;
-    });
+    S.teams.pool.forEach(function (p) { valid[p.id] = true; });
     S.teams.teams.forEach(function (t) {
-      t.members = (t.members || [])
-        .filter(function (m) {
-          return valid[+m];
-        })
-        .map(Number);
+      t.members = (t.members || []).filter(function (m) { return valid[+m]; }).map(Number);
     });
   };
 
@@ -131,7 +114,7 @@ window.Scheduler = window.Scheduler || {};
       name: name != null && name !== "" ? String(name) : S.padTeamNum(n, width),
       members: [],
       followMe: false,
-      phase: null,
+      phase: null
     };
     S.teams.teams.push(t);
     return t;
@@ -142,7 +125,6 @@ window.Scheduler = window.Scheduler || {};
     var phase = "AM";
     var anchors = S.computeShiftAnchors ? S.computeShiftAnchors() : { am: 8 * 60, pm: 14 * 60 };
     var thr = (S.state.functionCoverage && S.state.functionCoverage.phaseThresholdMin) || 15;
-
     (team.members || []).forEach(function (mid) {
       var p = S.memberLine(mid);
       if (!p) return;
@@ -159,7 +141,6 @@ window.Scheduler = window.Scheduler || {};
           }
         }
         if (line) sh = S.getShift(line.shiftId);
-
         if (sh && sh.phase && sh.phase !== "auto") {
           var map = { opening: "Opening", am: "AM", pm: "PM", closing: "Closing" };
           phase = map[sh.phase] || "AM";
@@ -170,7 +151,6 @@ window.Scheduler = window.Scheduler || {};
         }
       }
     });
-
     var rank = { Opening: 0, AM: 1, PM: 2, Closing: 3 };
     return { startMin: best, phase: phase, rank: rank[phase] != null ? rank[phase] : 1 };
   };
@@ -184,7 +164,6 @@ window.Scheduler = window.Scheduler || {};
       if (ia.startMin !== ib.startMin) return ia.startMin - ib.startMin;
       return String(a.id).localeCompare(String(b.id));
     });
-
     var width = Math.max(2, String(S.teams.teams.length).length);
     S.teams.teams.forEach(function (t, i) {
       var info = S.teamPhaseInfo(t);
@@ -194,9 +173,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.removeTeam = function (id) {
-    S.teams.teams = S.teams.teams.filter(function (t) {
-      return t.id !== id;
-    });
+    S.teams.teams = S.teams.teams.filter(function (t) { return t.id !== id; });
     S.renderTeams();
   };
 
@@ -210,15 +187,11 @@ window.Scheduler = window.Scheduler || {};
     if (!team) return false;
     poolId = +poolId;
     if (team.members.indexOf(poolId) !== -1) return false;
-
     S.teams.teams.forEach(function (t) {
       if (t.id !== teamId) {
-        t.members = t.members.filter(function (m) {
-          return m !== poolId;
-        });
+        t.members = t.members.filter(function (m) { return m !== poolId; });
       }
     });
-
     team.members.push(poolId);
     return true;
   };
@@ -227,9 +200,7 @@ window.Scheduler = window.Scheduler || {};
     var team = S.getTeamById(teamId);
     if (!team) return;
     poolId = +poolId;
-    team.members = team.members.filter(function (m) {
-      return m !== poolId;
-    });
+    team.members = team.members.filter(function (m) { return m !== poolId; });
   };
 
   S.memberLine = function (poolId) {
@@ -243,18 +214,14 @@ window.Scheduler = window.Scheduler || {};
   S.assignedIds = function () {
     var set = {};
     S.teams.teams.forEach(function (t) {
-      t.members.forEach(function (m) {
-        set[m] = true;
-      });
+      t.members.forEach(function (m) { set[m] = true; });
     });
     return set;
   };
 
   S.unassignedPool = function () {
     var assigned = S.assignedIds();
-    return S.getFilteredPool().filter(function (p) {
-      return !assigned[p.id];
-    });
+    return S.getFilteredPool().filter(function (p) { return !assigned[p.id]; });
   };
 
   S.groupPoolByRole = function (list) {
@@ -268,12 +235,8 @@ window.Scheduler = window.Scheduler || {};
 
   S.getSelectedIds = function () {
     return Object.keys(S.teams.selected)
-      .filter(function (k) {
-        return S.teams.selected[k];
-      })
-      .map(function (k) {
-        return +k;
-      });
+      .filter(function (k) { return S.teams.selected[k]; })
+      .map(function (k) { return +k; });
   };
 
   S.clearSelection = function () {
@@ -285,7 +248,7 @@ window.Scheduler = window.Scheduler || {};
       STSO: { M: 0, F: 0 },
       LTSO: { M: 0, F: 0 },
       TSO: { M: 0, F: 0 },
-      total: 0,
+      total: 0
     };
     (team.members || []).forEach(function (mid) {
       var p = S.memberLine(mid);
@@ -308,17 +271,10 @@ window.Scheduler = window.Scheduler || {};
       var fPct = tot ? Math.round((100 * f) / tot) : 0;
       return (
         '<span class="team-count-chip">' +
-        role +
-        " " +
-        '<span class="sex-m">' +
-        m +
-        "M</span>/" +
-        '<span class="sex-f">' +
-        f +
-        "F</span>" +
-        ' <span class="muted">(' +
-        fPct +
-        "%F)</span>" +
+        role + " " +
+        '<span class="sex-m">' + m + "M</span>/" +
+        '<span class="sex-f">' + f + "F</span>" +
+        ' <span class="muted">(' + fPct + "%F)</span>" +
         "</span>"
       );
     }
@@ -328,15 +284,9 @@ window.Scheduler = window.Scheduler || {};
     var overallF = allT ? Math.round((100 * allF) / allT) : 0;
     return (
       '<span class="team-counts-header" title="Assigned by role and sex">' +
-      '<span class="team-count-total">' +
-      c.total +
-      "</span> " +
-      '<span class="team-count-chip">F% ' +
-      overallF +
-      "</span> " +
-      bit("STSO") +
-      bit("LTSO") +
-      bit("TSO") +
+      '<span class="team-count-total">' + c.total + "</span> " +
+      '<span class="team-count-chip">F% ' + overallF + "</span> " +
+      bit("STSO") + bit("LTSO") + bit("TSO") +
       "</span>"
     );
   };
@@ -372,29 +322,17 @@ window.Scheduler = window.Scheduler || {};
         emp = p.empClass === "PT" || p.empClass === "FT" ? p.empClass : "—";
       }
       return (
-        '<div class="team-line team-line-compact" data-id="' +
-        p.id +
-        '">' +
+        '<div class="team-line team-line-compact" data-id="' + p.id + '">' +
         '<span class="team-drag-handle" title="Drag">⋮⋮</span>' +
-        '<span class="tl-role">' +
-        p.role +
-        "</span>" +
-        '<span class="tl-sex ' +
-        sexCls +
-        '">' +
-        (p.sex || "—") +
-        "</span>" +
+        '<span class="tl-role">' + p.role + "</span>" +
+        '<span class="tl-sex ' + sexCls + '">' + (p.sex || "—") + "</span>" +
         '<span class="tl-hours muted" title="' +
         (p.shiftName || p.shiftId) +
         '">' +
         hours +
         "</span>" +
-        '<span class="tl-rdo muted" title="RDO">RDO ' +
-        (p.rdoLabel || "—") +
-        "</span>" +
-        '<span class="tl-emp muted">' +
-        emp +
-        "</span>" +
+        '<span class="tl-rdo muted" title="RDO">RDO ' + (p.rdoLabel || "—") + "</span>" +
+        '<span class="tl-emp muted">' + emp + "</span>" +
         removeBtn +
         "</div>"
       );
@@ -408,33 +346,19 @@ window.Scheduler = window.Scheduler || {};
         "></label>"
       : "";
     return (
-      '<div class="team-line" data-id="' +
-      p.id +
-      '">' +
+      '<div class="team-line" data-id="' + p.id + '">' +
       '<span class="team-drag-handle" title="Drag to move">⋮⋮</span>' +
       cb +
-      '<span class="team-line-code">' +
-      p.lineCode +
-      "</span>" +
+      '<span class="team-line-code">' + p.lineCode + "</span>" +
       '<span class="badge ' +
       (S.shiftBadge ? S.shiftBadge(p.shiftId) : "") +
       '">' +
       (p.shiftName || p.shiftId) +
       "</span>" +
-      '<span class="muted">' +
-      p.start +
-      "</span>" +
-      '<span class="muted">RDO ' +
-      p.rdoLabel +
-      "</span>" +
-      '<span class="' +
-      sexCls +
-      '">' +
-      p.sex +
-      "</span>" +
-      '<span class="muted">' +
-      p.empClass +
-      "</span>" +
+      '<span class="muted">' + p.start + "</span>" +
+      '<span class="muted">RDO ' + p.rdoLabel + "</span>" +
+      '<span class="' + sexCls + '">' + p.sex + "</span>" +
+      '<span class="muted">' + p.empClass + "</span>" +
       "</div>"
     );
   };
@@ -442,7 +366,6 @@ window.Scheduler = window.Scheduler || {};
   S.renderTeamFilters = function () {
     var bar = S.$("team-filters");
     if (!bar) return;
-
     var starts = {};
     S.teams.pool.forEach(function (p) {
       starts[p.start] = true;
@@ -452,21 +375,25 @@ window.Scheduler = window.Scheduler || {};
       Object.keys(starts)
         .sort()
         .map(function (s) {
-          return '<option value="' + s + '"' + (S.teams.filters.start === s ? " selected" : "") + ">" + s + "</option>";
+          return (
+            '<option value="' + s + '"' +
+            (S.teams.filters.start === s ? " selected" : "") +
+            ">" + s + "</option>"
+          );
         })
         .join("");
-
     var dayNames = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     var rdoOpts =
       '<option value="">Any RDO day</option>' +
       dayNames
         .map(function (name, i) {
           return (
-            '<option value="' + i + '"' + (String(S.teams.filters.rdo) === String(i) ? " selected" : "") + ">" + name + "</option>"
+            '<option value="' + i + '"' +
+            (String(S.teams.filters.rdo) === String(i) ? " selected" : "") +
+            ">" + name + "</option>"
           );
         })
         .join("");
-
     var teamOpts =
       '<option value="">— Select team —</option>' +
       S.teams.teams
@@ -474,49 +401,32 @@ window.Scheduler = window.Scheduler || {};
           return '<option value="' + t.id + '">' + (t.name || t.id) + "</option>";
         })
         .join("");
-
     var selCount = S.getSelectedIds().length;
     bar.innerHTML =
       '<label>Role <select id="team-filter-role">' +
-      '<option value="ALL"' +
-      (S.teams.filters.role === "ALL" ? " selected" : "") +
-      ">All</option>" +
-      '<option value="TSO"' +
-      (S.teams.filters.role === "TSO" ? " selected" : "") +
-      ">TSO</option>" +
-      '<option value="LTSO"' +
-      (S.teams.filters.role === "LTSO" ? " selected" : "") +
-      ">LTSO</option>" +
-      '<option value="STSO"' +
-      (S.teams.filters.role === "STSO" ? " selected" : "") +
-      ">STSO</option>" +
+      '<option value="ALL"' + (S.teams.filters.role === "ALL" ? " selected" : "") + ">All</option>" +
+      '<option value="TSO"' + (S.teams.filters.role === "TSO" ? " selected" : "") + ">TSO</option>" +
+      '<option value="LTSO"' + (S.teams.filters.role === "LTSO" ? " selected" : "") + ">LTSO</option>" +
+      '<option value="STSO"' + (S.teams.filters.role === "STSO" ? " selected" : "") + ">STSO</option>" +
       "</select></label>" +
-      '<label>Start <select id="team-filter-start">' +
-      startOpts +
-      "</select></label>" +
-      '<label>RDO <select id="team-filter-rdo">' +
-      rdoOpts +
-      "</select></label>" +
+      '<label>Start <select id="team-filter-start">' + startOpts + "</select></label>" +
+      '<label>RDO <select id="team-filter-rdo">' + rdoOpts + "</select></label>" +
       '<button type="button" class="btn" id="btn-team-clear-filters">Clear filters</button>' +
       '<span class="team-assign-bar">' +
-      "<label>Add selected to " +
-      '<select id="team-assign-target">' +
-      teamOpts +
-      "</select>" +
-      "</label>" +
-      '<button type="button" class="btn btn-amber" id="btn-team-assign">' +
-      "Add to team" +
-      (selCount ? " (" + selCount + ")" : "") +
-      "</button>" +
-      '<button type="button" class="btn" id="btn-team-select-all">Select all visible</button>' +
-      '<button type="button" class="btn" id="btn-team-clear-sel">Clear selection</button>' +
+        '<label>Add selected to ' +
+          '<select id="team-assign-target">' + teamOpts + "</select>" +
+        "</label>" +
+        '<button type="button" class="btn btn-amber" id="btn-team-assign">' +
+          "Add to team" + (selCount ? " (" + selCount + ")" : "") +
+        "</button>" +
+        '<button type="button" class="btn" id="btn-team-select-all">Select all visible</button>' +
+        '<button type="button" class="btn" id="btn-team-clear-sel">Clear selection</button>' +
       "</span>";
   };
 
   S.renderTeamPool = function () {
     var el = S.$("team-pool");
     if (!el) return;
-
     var groups = S.groupPoolByRole(S.unassignedPool());
     var html = "";
     ROLES.forEach(function (role) {
@@ -541,7 +451,7 @@ window.Scheduler = window.Scheduler || {};
     el.innerHTML = html || '<p class="muted">No unassigned lines match the filters. Generate a schedule first, or clear filters.</p>';
   };
 
-  S.teamBoardHtml = function (t) {
+  S.teamBoardHtml = function (t, isDock) {
     var roleRank = { STSO: 0, LTSO: 1, TSO: 2 };
     var sortedMembers = (t.members || []).slice().sort(function (a, b) {
       var pa = S.memberLine(a);
@@ -553,68 +463,71 @@ window.Scheduler = window.Scheduler || {};
     });
     t.members = sortedMembers;
 
-    var members = sortedMembers
-      .map(function (mid) {
-        var p = S.memberLine(mid);
-        return p ? S.lineCardHtml(p, { removable: true, compact: true, teamId: t.id }) : "";
-      })
-      .join("");
+    var members = "";
+    // Only render individual lines fully if it's the main board (NOT the docked board)
+    if (!isDock) {
+      members = sortedMembers
+        .map(function (mid) {
+          var p = S.memberLine(mid);
+          return p ? S.lineCardHtml(p, { removable: true, compact: true, teamId: t.id }) : "";
+        })
+        .join("");
+    }
+
     var followChecked = t.followMe ? " checked" : "";
     var phaseLbl = t.phase || (S.teamPhaseInfo ? S.teamPhaseInfo(t).phase : "");
+
+    // When inside the dock, just output a small summary container, not the full Sortable list structure
+    if (isDock) {
+        return (
+          '<div class="team-board" data-team-id="' + t.id + '" data-phase="' + (phaseLbl || "") + '">' +
+            '<div class="team-board-head" style="justify-content: space-between;">' +
+              '<div style="display:flex;align-items:center;gap:0.5rem;">' +
+                '<span style="font-weight:700;">' + (t.name || "").replace(/"/g, "&quot;") + '</span>' +
+                (phaseLbl ? '<span class="team-phase-badge" title="Phase group">' + phaseLbl + "</span>" : "") +
+              '</div>' +
+              S.teamCountsHeaderHtml(t) +
+            "</div>" +
+          "</div>"
+        );
+    }
+
     return (
-      '<div class="team-board" data-team-id="' +
-      t.id +
-      '" data-phase="' +
-      (phaseLbl || "") +
-      '">' +
+      '<div class="team-board" data-team-id="' + t.id + '" data-phase="' + (phaseLbl || "") + '">' +
       '<div class="team-board-head">' +
       '<input type="text" class="team-name-input" value="' +
       (t.name || "").replace(/"/g, "&quot;") +
-      '" data-team-id="' +
-      t.id +
-      '" title="Zero-padded for sort order">' +
-      (phaseLbl ? '<span class="team-phase-badge" title="Phase group">' + phaseLbl + "</span>" : "") +
+      '" data-team-id="' + t.id + '" title="Zero-padded for sort order">' +
+      (phaseLbl
+        ? '<span class="team-phase-badge" title="Phase group">' + phaseLbl + "</span>"
+        : "") +
       S.teamCountsHeaderHtml(t) +
       '<label class="follow-me-label follow-me-team" title="Dock this team top-right while scrolling">' +
-      '<input type="checkbox" data-team-follow="' +
-      t.id +
-      '"' +
-      followChecked +
-      "> Follow Me</label>" +
-      '<button type="button" class="btn btn-red btn-sm" data-remove-team="' +
-      t.id +
-      '">Remove</button>' +
+      '<input type="checkbox" data-team-follow="' + t.id + '"' + followChecked + "> Follow Me</label>" +
+      '<button type="button" class="btn btn-red btn-sm" data-remove-team="' + t.id + '">Remove</button>' +
       "</div>" +
       '<div class="team-line-cols muted">' +
       "<span></span><span>Role</span><span>Sex</span><span>Hours</span><span>RDO</span><span>FT/PT</span><span></span>" +
       "</div>" +
-      '<div class="team-board-list" data-team-id="' +
-      t.id +
-      '"' +
-      (members ? "" : ' data-empty="1"') +
-      ">" +
-      members +
+      '<div class="team-board-list" data-team-id="' + t.id + '"' +
+      (members ? "" : ' data-empty="1"') + ">" + members +
       "</div></div>"
     );
   };
 
-  S.teamBoardsHtml = function (teamsList) {
+  S.teamBoardsHtml = function (teamsList, isDock) {
     var list = teamsList || S.teams.teams;
     if (!list.length) {
       return '<p class="muted">No teams yet. Click "+ New team".</p>';
     }
-    return list.map(S.teamBoardHtml).join("");
+    return list.map(function(t) { return S.teamBoardHtml(t, isDock); }).join("");
   };
 
   S.renderTeamBoards = function () {
     var inline = S.$("team-boards");
     var dock = S.$("team-boards-follow");
-    var following = S.teams.teams.filter(function (t) {
-      return !!t.followMe;
-    });
-    var notFollowing = S.teams.teams.filter(function (t) {
-      return !t.followMe;
-    });
+    var following = S.teams.teams.filter(function (t) { return !!t.followMe; });
+    var notFollowing = S.teams.teams.filter(function (t) { return !t.followMe; });
 
     if (inline) {
       if (!S.teams.teams.length) {
@@ -623,13 +536,13 @@ window.Scheduler = window.Scheduler || {};
         inline.innerHTML =
           '<p class="muted">All teams are in Follow Me (top-right). Uncheck Follow Me on a team to pin it here.</p>';
       } else {
-        inline.innerHTML = S.teamBoardsHtml(notFollowing);
+        inline.innerHTML = S.teamBoardsHtml(notFollowing, false);
       }
     }
 
     if (dock) {
       dock.innerHTML = following.length
-        ? S.teamBoardsHtml(following)
+        ? S.teamBoardsHtml(following, true) // Pass 'true' to signify we are in the dock view
         : '<p class="muted">Check <strong>Follow Me</strong> on a team to dock it here.</p>';
     }
   };
@@ -654,7 +567,7 @@ window.Scheduler = window.Scheduler || {};
       total: total,
       assigned: assignedN,
       unassigned: total - assignedN,
-      teamRows: teamRows,
+      teamRows: teamRows
     };
   };
 
@@ -670,7 +583,9 @@ window.Scheduler = window.Scheduler || {};
           var m = c[r].M;
           var f = c[r].F;
           if (!m && !f) return "";
-          return r + ' <span class="sex-m">' + m + "M</span>/<span class=\"sex-f\">" + f + "F</span>";
+          return (
+            r + " <span class=\"sex-m\">" + m + "M</span>/<span class=\"sex-f\">" + f + "F</span>"
+          );
         })
         .filter(Boolean)
         .join(" · ");
@@ -690,9 +605,7 @@ window.Scheduler = window.Scheduler || {};
           "</strong> " +
           '<span class="muted">(' +
           row.counts.total +
-          " · " +
-          fPct +
-          "%F)</span> " +
+          " · " + fPct + "%F)</span> " +
           bits +
           (row.followMe ? ' <span class="team-follow-badge">follow</span>' : "") +
           "</div>"
@@ -722,9 +635,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.applyFollowMe = function () {
-    var following = S.teams.teams.some(function (t) {
-      return !!t.followMe;
-    });
+    var following = S.teams.teams.some(function (t) { return !!t.followMe; });
     var docks = S.$("team-follow-docks");
     if (docks) {
       if (following) {
@@ -740,11 +651,16 @@ window.Scheduler = window.Scheduler || {};
     }
   };
 
+  /** Resizable & Draggable Floating Panel Fixes */
   S.initFloatPanels = function () {
     if (S._floatPanelsBound) return;
     S._floatPanelsBound = true;
     var panels = document.querySelectorAll(".team-float-panel");
+
     panels.forEach(function (panel, idx) {
+      // Clear any forced inline widths/heights so CSS sizing takes control
+      panel.style.width = "";
+      panel.style.height = "";
       if (!panel.style.left && !panel.style.right) {
         if (idx === 0) {
           panel.style.right = "24rem";
@@ -754,15 +670,23 @@ window.Scheduler = window.Scheduler || {};
           panel.style.top = "7.5rem";
         }
       }
+
       var handle = panel.querySelector("[data-drag-handle]");
       if (!handle) return;
+
       handle.addEventListener("mousedown", function (e) {
         if (e.button !== 0) return;
         if (e.target && (e.target.tagName === "BUTTON" || e.target.closest("button"))) return;
         e.preventDefault();
+        
+        // Get starting layout measurements
         var rect = panel.getBoundingClientRect();
         var ox = e.clientX - rect.left;
         var oy = e.clientY - rect.top;
+
+        // Keep current width and height on drag start so size doesn't reset
+        panel.style.width = rect.width + "px";
+        panel.style.height = rect.height + "px";
         panel.style.left = rect.left + "px";
         panel.style.top = rect.top + "px";
         panel.style.right = "auto";
@@ -771,18 +695,185 @@ window.Scheduler = window.Scheduler || {};
         function onMove(ev) {
           var x = ev.clientX - ox;
           var y = ev.clientY - oy;
-          x = Math.max(0, Math.min(window.innerWidth - rect.width, x));
-          y = Math.max(0, Math.min(window.innerHeight - rect.height, y));
+          x = Math.max(0, Math.min(window.innerWidth - 80, x));
+          y = Math.max(0, Math.min(window.innerHeight - 40, y));
           panel.style.left = x + "px";
           panel.style.top = y + "px";
         }
+
         function onUp() {
           panel.classList.remove("is-dragging");
           document.removeEventListener("mousemove", onMove);
           document.removeEventListener("mouseup", onUp);
         }
+
         document.addEventListener("mousemove", onMove);
         document.addEventListener("mouseup", onUp);
+      });
+
+      // Touch drag
+      handle.addEventListener(
+        "touchstart",
+        function (e) {
+          if (!e.touches || !e.touches.length) return;
+          if (e.target && (e.target.tagName === "BUTTON" || e.target.closest("button"))) return;
+          var touch = e.touches[0];
+          var rect = panel.getBoundingClientRect();
+          var ox = touch.clientX - rect.left;
+          var oy = touch.clientY - rect.top;
+
+          panel.style.width = rect.width + "px";
+          panel.style.height = rect.height + "px";
+          panel.style.left = rect.left + "px";
+          panel.style.top = rect.top + "px";
+          panel.style.right = "auto";
+
+          function onMove(ev) {
+            if (!ev.touches || !ev.touches.length) return;
+            var t = ev.touches[0];
+            var x = t.clientX - ox;
+            var y = t.clientY - oy;
+            x = Math.max(0, Math.min(window.innerWidth - 80, x));
+            y = Math.max(0, Math.min(window.innerHeight - 40, y));
+            panel.style.left = x + "px";
+            panel.style.top = y + "px";
+          }
+
+          function onUp() {
+            document.removeEventListener("touchmove", onMove);
+            document.removeEventListener("touchend", onUp);
+          }
+
+          document.addEventListener("touchmove", onMove, { passive: true });
+          document.addEventListener("touchend", onUp);
+        },
+        { passive: true }
+      );
+    });
+  };
+
+  S.autoFormTeams = function () {
+    S.collectTeamPool();
+    var pool = S.teams.pool.slice();
+    if (!pool.length) {
+      if (S.updateStatus) S.updateStatus("Generate a schedule first so there are lines to group.");
+      return;
+    }
+    var stsoPer = Math.max(0, +(S.$("arch-stso") && S.$("arch-stso").value) || 1);
+    var ltsoPer = Math.max(0, +(S.$("arch-ltso") && S.$("arch-ltso").value) || 0);
+    var tsoPer = Math.max(0, +(S.$("arch-tso") && S.$("arch-tso").value) || 0);
+    var byRole = { STSO: [], LTSO: [], TSO: [] };
+    pool.forEach(function (p) {
+      if (byRole[p.role]) byRole[p.role].push(p);
+      else byRole.TSO.push(p);
+    });
+    var nTeams = byRole.STSO.length;
+    if (!nTeams) {
+      if (S.updateStatus) S.updateStatus("No STSO lines — cannot auto-form (teams = # of STSOs).");
+      return;
+    }
+    S.teams.teams = [];
+    teamSeq = 1;
+    for (var i = 0; i < nTeams; i++) {
+      S.createTeam();
+    }
+    var used = {};
+    function sexOf(p) { return p.sex === "F" ? "F" : "M"; }
+    function roleNeed(team, role) {
+      var c = S.teamMemberCounts(team);
+      var have = c[role].M + c[role].F;
+      var target = role === "STSO" ? stsoPer : role === "LTSO" ? ltsoPer : tsoPer;
+      return Math.max(0, target - have);
+    }
+    function teamAnchor(team) {
+      if (!team.members || !team.members.length) return null;
+      return S.memberLine(team.members[0]);
+    }
+    function fullMatch(p, anchor) {
+      if (!p || !anchor) return false;
+      if (String(p.start || "") !== String(anchor.start || "")) return false;
+      if (String(p.rdo || "") !== String(anchor.rdo || "")) return false;
+      return true;
+    }
+    byRole.STSO.sort(function (a, b) {
+      var sa = a.startMin != null ? a.startMin : 0;
+      var sb = b.startMin != null ? b.startMin : 0;
+      if (sa !== sb) return sa - sb;
+      return String(a.rdo || "").localeCompare(String(b.rdo || ""));
+    });
+    byRole.STSO.forEach(function (p, idx) {
+      var team = S.teams.teams[idx];
+      if (!team) return;
+      team.members.push(p.id);
+      used[p.id] = true;
+      team.name = S.padTeamNum(idx + 1, Math.max(2, String(nTeams).length));
+    });
+    S.renumberTeamsByStart();
+    function assignRoleExact(role) {
+      var candidates = byRole[role].filter(function (p) { return !used[p.id]; });
+      candidates.sort(function (a, b) {
+        if (a.start !== b.start) return String(a.start).localeCompare(String(b.start));
+        if (a.rdo !== b.rdo) return String(a.rdo).localeCompare(String(b.rdo));
+        return sexOf(a).localeCompare(sexOf(b));
+      });
+      candidates.forEach(function (p) {
+        var eligible = S.teams.teams.filter(function (t) {
+          if (roleNeed(t, role) <= 0) return false;
+          var anchor = teamAnchor(t);
+          return fullMatch(p, anchor);
+        });
+        if (!eligible.length) return;
+        eligible.sort(function (ta, tb) {
+          var ca = S.teamMemberCounts(ta);
+          var cb = S.teamMemberCounts(tb);
+          var fa = ca[role].F / Math.max(1, ca[role].M + ca[role].F);
+          var fb = cb[role].F / Math.max(1, cb[role].M + cb[role].F);
+          if (sexOf(p) === "F") return fa - fb;
+          return fb - fa;
+        });
+        eligible.sort(function (ta, tb) {
+          return roleNeed(tb, role) - roleNeed(ta, role);
+        });
+        eligible[0].members.push(p.id);
+        used[p.id] = true;
+      });
+    }
+    assignRoleExact("STSO");
+    assignRoleExact("LTSO");
+    assignRoleExact("TSO");
+    var assignedN = Object.keys(used).length;
+    var leftN = pool.length - assignedN;
+    S.renderTeams();
+    if (S.renderLines) S.renderLines();
+    if (S.updateStatus) {
+      S.updateStatus(
+        "Auto-formed " + nTeams + " team(s) · exact start+RDO only · " +
+          assignedN + " assigned · " + leftN + " left in pool for manual · arch " +
+          stsoPer + "/" + ltsoPer + "/" + tsoPer
+      );
+    }
+  };
+
+  S.destroySortables = function () {
+    (S.teams.sortables || []).forEach(function (s) {
+      try { s.destroy(); } catch (e) {}
+    });
+    S.teams.sortables = [];
+  };
+
+  S.syncTeamsFromDom = function () {
+    S.teams.teams.forEach(function (t) {
+      t.members = [];
+    });
+    document.querySelectorAll(".team-board-list[data-team-id]").forEach(function (board) {
+      var teamId = board.getAttribute("data-team-id");
+      var team = S.getTeamById(teamId);
+      if (!team) return;
+      board.querySelectorAll(".team-line[data-id]").forEach(function (node) {
+        var pid = +node.getAttribute("data-id");
+        if (!isNaN(pid) && team.members.indexOf(pid) === -1) {
+          team.members.push(pid);
+        }
       });
     });
   };
@@ -793,7 +884,6 @@ window.Scheduler = window.Scheduler || {};
       return;
     }
     S.destroySortables();
-
     function makeOpts(extra) {
       var opts = {
         group: { name: "teams", pull: true, put: true },
@@ -816,13 +906,11 @@ window.Scheduler = window.Scheduler || {};
             if (S.renderLines) S.renderLines();
             if (S.updateStatus) {
               var n = 0;
-              S.teams.teams.forEach(function (t) {
-                n += t.members.length;
-              });
+              S.teams.teams.forEach(function (t) { n += t.members.length; });
               S.updateStatus("Teams updated · " + n + " line(s) assigned");
             }
           }, 0);
-        },
+        }
       };
       if (extra) {
         for (var k in extra) {
@@ -831,12 +919,10 @@ window.Scheduler = window.Scheduler || {};
       }
       return opts;
     }
-
     var poolLists = document.querySelectorAll(".team-role-list");
     for (var i = 0; i < poolLists.length; i++) {
       S.teams.sortables.push(Sortable.create(poolLists[i], makeOpts({ sort: false })));
     }
-
     var boards = document.querySelectorAll(".team-board-list");
     for (var j = 0; j < boards.length; j++) {
       S.teams.sortables.push(Sortable.create(boards[j], makeOpts({})));
@@ -864,18 +950,57 @@ window.Scheduler = window.Scheduler || {};
       if (hint) {
         var tc = S.teams.teams.length;
         var mc = 0;
-        S.teams.teams.forEach(function (t) {
-          mc += (t.members || []).length;
-        });
+        S.teams.teams.forEach(function (t) { mc += (t.members || []).length; });
         hint.textContent = tc
           ? tc + " team(s) · " + mc + " assigned · " + S.unassignedPool().length + " in pool (filtered)"
           : "No teams yet — click + New team";
       }
+
+      function ensureBtn(id, insertParent) {
+        var btn = document.getElementById(id);
+        if (btn) return btn;
+        if (!insertParent) return null;
+        btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "btn btn-amber";
+        btn.id = id;
+        btn.textContent = "+ New team";
+        btn.style.marginRight = "0.5rem";
+        insertParent.insertBefore(btn, insertParent.firstChild);
+        return btn;
+      }
+      var topToolbar = document.querySelector("#tab-teams .card .toolbar");
+      var b1 = ensureBtn("btn-team-new", topToolbar);
+      var boardsCard = document.querySelector("#tab-teams .card:last-child .section-title");
+      var b2 = document.getElementById("btn-team-new-2");
+      if (!b2 && boardsCard) {
+        b2 = document.createElement("button");
+        b2.type = "button";
+        b2.className = "btn btn-amber";
+        b2.id = "btn-team-new-2";
+        b2.textContent = "+ New team";
+        boardsCard.appendChild(b2);
+      }
+      [b1, b2].forEach(function (btn) {
+        if (!btn || btn.getAttribute("data-bound") === "1") return;
+        btn.setAttribute("data-bound", "1");
+        btn.addEventListener("click", function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          if (S.onNewTeam) {
+            S.onNewTeam(e);
+            return;
+          }
+          var t = S.createTeam();
+          S.renderTeams();
+          if (S.updateStatus) S.updateStatus("Created " + (t && t.name ? t.name : "team"));
+        });
+      });
     } finally {
       S._renderingTeams = false;
     }
   };
-  
+
   S.assignSelectedToTeam = function () {
     var target = S.$("team-assign-target");
     if (!target || !target.value) {
@@ -947,9 +1072,17 @@ window.Scheduler = window.Scheduler || {};
       if (!t) return;
       if (t.id === "btn-team-auto-form") {
         S.autoFormTeams();
-      } else if (t.id === "btn-team-new" || t.id === "btn-team-new-2" || t.id === "btn-team-new-dock") {
-        S.createTeam();
+      } else if (t.id === "btn-team-build") {
+        // Restore the "Build" button functionality on F4 page
+        if (S.renderLines) S.renderLines();
         S.renderTeams();
+        if (S.updateStatus) S.updateStatus("Teams successfully built from current lines.");
+      } else if (t.id === "btn-team-new-dock") {
+        if (S.onNewTeam) S.onNewTeam(e);
+        else {
+          S.createTeam();
+          S.renderTeams();
+        }
       } else if (t.id === "btn-team-clear-filters") {
         S.teams.filters = { role: "ALL", start: "", rdo: "" };
         S.renderTeams();
@@ -965,4 +1098,25 @@ window.Scheduler = window.Scheduler || {};
       } else if (t.getAttribute && t.getAttribute("data-remove-member") != null) {
         var mid = t.getAttribute("data-remove-member");
         var tid = t.getAttribute("data-from-team");
-        S.removeMemberFromTeam(tid, mid
+        S.removeMemberFromTeam(tid, mid);
+        S.renderTeams();
+        if (S.renderLines) S.renderLines();
+      }
+    });
+  };
+
+  S.initTeams = function () {
+    S.bindTeamUI();
+    S.collectTeamPool();
+    S.renderTeams();
+  };
+
+  var prevRenderAll = S.renderAll;
+  S.renderAll = function () {
+    if (typeof prevRenderAll === "function") prevRenderAll.apply(this, arguments);
+    S.collectTeamPool();
+    if (S.$("tab-teams") && S.$("tab-teams").classList.contains("active")) {
+      S.renderTeams();
+    }
+  };
+})(window.Scheduler);
