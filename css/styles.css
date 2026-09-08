@@ -33,6 +33,26 @@ body {
   top: 0;
   z-index: 20;
 }
+/* ================================================================= */
+/* == STYLED DRAGGABLE RESIZE HANDLES FOR FLOATING PANELS         == */
+/* ================================================================= */
+
+/* Unlock sizing box structures */
+.team-float-panel {
+  resize: both !important;
+  overflow: auto !important;
+  min-width: 250px !important;
+  min-height: 180px !important;
+}
+
+/* Custom styled glowing grab handle in bottom-right corner */
+.team-float-panel::-webkit-resizer {
+  background: var(--amber) !important;
+  border-left: 3px solid var(--bg) !important;
+  border-top: 3px solid var(--bg) !important;
+  box-shadow: -2px -2px 10px rgba(240, 165, 0, 0.45) !important;
+}
+
 .brand { font-weight: 700; letter-spacing: 0.02em; }
 .brand span { color: var(--amber); }
 .topbar-actions {
