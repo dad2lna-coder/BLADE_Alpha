@@ -1,6 +1,9 @@
 /** Teams Build overlay — loaded after teams.js */
+
 window.Scheduler = window.Scheduler || {};
+
 (function (S) {
+
   "use strict";
 
   if (!S.teams) S.teams = {};
@@ -221,13 +224,44 @@ window.Scheduler = window.Scheduler || {};
     }
   };
 
+  // =================================================================
+  // == MODIFIED SECTION: This function is replaced with the fix.   ==
+  // =================================================================
   var prevInitSort = S.initSortables;
   S.initSortables = function () {
+    // Call any previously defined initSortables function (maintains app structure)
     if (typeof prevInitSort === "function") prevInitSort();
-    if (typeof Sortable === "undefined" || typeof Sortable.create !== "function") return;
+
+    if (typeof Sortable === "undefined" || typeof Sortable.create !== "function") {
+      console.warn("Sortable.js not found, cannot initialize team builder drag-and-drop.");
+      return;
+    }
+
+    // Initialize the Unassigned Pool as a DRAG SOURCE
+    var unassignedPool = document.getElementById("team-pool");
+    if (unassignedPool) {
+      Sortable.create(unassignedPool, {
+        group: {
+          name: "teams", // The group name MUST match the drop targets
+          pull: "clone", // "clone" makes it so the original item isn't removed from the pool
+          put: false     // Prevents dropping items INTO the unassigned pool
+        },
+        animation: 150,
+        sort: false // The unassigned pool probably shouldn't be sortable itself
+      });
+      console.log("Team Builder: Unassigned pool initialized as a drag source.");
+    } else {
+      console.warn("Team Builder: #team-pool element not found.");
+    }
+
+    // Initialize the Team Summary Cards as DROP TARGETS (Your existing code)
     document.querySelectorAll(".team-summary-card").forEach(function (el) {
-      S.teams.sortables.push(Sortable.create(el, {
-        group: { name: "teams", pull: false, put: true },
+      Sortable.create(el, {
+        group: {
+          name: "teams", // The group name MUST match the drag source
+          pull: false,   // Prevents dragging items OUT of a team card
+          put: true      // Allows dropping items ONTO this card
+        },
         animation: 120,
         draggable: ".team-line",
         filter: "button, input, select, label",
@@ -236,12 +270,18 @@ window.Scheduler = window.Scheduler || {};
           var teamId = el.getAttribute("data-drop-team") || el.getAttribute("data-summary-team");
           var item = evt.item;
           var pid = item && item.getAttribute("data-id");
-          if (item && item.parentNode) item.parentNode.removeChild(item);
+          if (item && item.parentNode) {
+            item.parentNode.removeChild(item);
+          }
           S.addLineToTeamAndRefresh(teamId, pid);
         }
-      }));
+      });
     });
+    console.log("Team Builder: Team cards initialized as drop targets.");
   };
+  // =================================================================
+  // == END MODIFIED SECTION                                        ==
+  // =================================================================
 
   function handleTeamPointer(e) {
     var t = e.target;
@@ -340,4 +380,5 @@ window.Scheduler = window.Scheduler || {};
     };
     S.renderTeams._oddTop = true;
   }
+
 })(window.Scheduler);
