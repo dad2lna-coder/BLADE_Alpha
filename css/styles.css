@@ -390,34 +390,15 @@ select:focus {
   color: var(--text);
 }
 
-/* ================================================================= */
-/* == THIS IS THE CORRECTED AND FINAL MODAL RULE                  == */
-/* ================================================================= */
 .modal-content {
   background-color: var(--panel);
   margin: 5% auto;
   padding: 20px;
   border: 1px solid var(--border);
   border-radius: 10px;
+  width: 90%;
+  max-width: 960px;
   position: relative;
-  
-  /* --- MODIFICATIONS START HERE --- */
-  
-  /* 1. Set a default starting width instead of a percentage. */
-  width: 600px; 
-  
-  /* 2. Remove the maximum width constraint entirely. */
-  max-width: none;
-  
-  /* 3. Add the properties to enable the resize handle. */
-  overflow: auto;
-  resize: both;
-  
-  /* 4. Set minimum dimensions to prevent it from becoming unusable. */
-  min-width: 320px;
-  min-height: 250px;
-  
-  /* --- MODIFICATIONS END HERE --- */
 }
 
 .modal-close {
@@ -853,11 +834,8 @@ select {
     padding: 0.75rem;
   }
   
-  /* This rule was also contributing to the problem on smaller screens. */
-  /* It has been updated to also have no max-width. */
   .modal-content {
     width: 96%;
-    max-width: none; /* Make sure it can be resized here too */
     margin: 3% auto;
     max-height: 92vh;
     overflow-y: auto;
@@ -1118,15 +1096,18 @@ select {
   font-size: 0.7rem;
 }
 
+/* ================================================================= */
+/* == THIS IS THE CORRECTED AND FINAL FLOAT PANEL RULE            == */
+/* ================================================================= */
 .team-stats-dock {
-  width: 18rem;
+  width: 30rem; /* Increased default width */
   height: 22rem;
   max-width: 90vw;
   max-height: 80vh;
 }
 
 .team-boards-dock {
-  width: 22rem;
+  width: 45rem; /* Increased default width */
   height: 28rem;
   max-width: 90vw;
   max-height: 80vh;
