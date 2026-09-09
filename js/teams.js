@@ -520,28 +520,109 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderTeamBoards = function () {
-    var inline = S.$("team-boards");
+    const mainContainer = document.getElementById('team-boards');
+    if (!mainContainer) return;
+
+    // 1. Create the new collapsible structure for AM/PM teams
+    mainContainer.innerHTML = `
+      <details class="team-group-container" open>
+        <summary class="section-title">AM Teams (Before 11:00 AM)</summary>
+        <div id="am-teams-boards" class="team-boards"></div>
+      </details>
+      <details class="team-group-container" open>
+        <summary class="section-title">PM Teams (11:00 AM and After)</summary>
+        <div id="pm-teams-boards" class="team-boards"></div>
+      </details>
+    `;
+
+    const amContainer = document.getElementById('am-teams-boards');
+    const pmContainer = document.getElementById('pm-teams-boards');
+    const teams = S.teams.teams || [];
+
+    // Helper to determine a line's start time in minutes
+    const getLineStartMin = (lineId) => {
+        const line = S.memberLine(lineId);
+        return line ? line.startMin : null;
+    };
+
+    // 2. Iterate through teams and sort them into the correct container
+    teams.forEach(team => {
+      let amCount = 0;
+      let pmCount = 0;
+
+      // Determine the team's AM/PM status by a majority vote of its members' start times
+      (team.members || []).forEach(memberLineId => {
+        const startMin = getLineStartMin(memberLineId);
+        if (startMin === null) return;
+        if (startMin < 660) { // 11:00 AM is 660 minutes from midnight
+          amCount++;
+        } else {
+          pmCount++;
+        }
+      });
+
+      // If no members, default to AM. Otherwise, majority rules.
+      const isAmTeam = amCount >= pmCount;
+      const teamLocked = team.isLocked || false;
+
+      // Create the individual team board element
+      const board = document.createElement('div');
+      // Add a 'locked' class if the team is locked to disable interactions via CSS
+      board.className = `team-board card ${teamLocked ? 'locked' : ''}`;
+      board.setAttribute('data-team-id', team.id);
+
+      const membersHtml = (team.members || [])
+        .map(lineId => {
+            const p = S.memberLine(lineId);
+            return p ? S.lineCardHtml(p, { removable: !teamLocked, compact: true, teamId: team.id }) : "";
+        }).join('');
+
+      // 3. Build the board's inner HTML, now including a Lock/Unlock button
+      board.innerHTML = `
+        <div class="team-board-head">
+          <input type="text" class="team-name-input" value="${(team.name || '').replace(/"/g, "&quot;")}" data-team-id="${team.id}" ${teamLocked ? 'disabled' : ''}>
+          ${S.teamCountsHeaderHtml(team)}
+          <button type="button" class="btn btn-sm btn-lock ${teamLocked ? 'btn-red' : ''}" data-team-id="${team.id}">
+            ${teamLocked ? 'Unlock' : 'Lock'}
+          </button>
+          <button type="button" class="btn btn-red btn-sm" data-remove-team="${team.id}" ${teamLocked ? 'disabled' : ''}>Remove</button>
+        </div>
+        <div class="team-line-cols muted">
+          <span></span><span>Role</span><span>Sex</span><span>Hours</span><span>RDO</span><span>FT/PT</span><span></span>
+        </div>
+        <div class="team-board-list" data-team-id="${team.id}" ${membersHtml ? "" : ' data-empty="1"'}>${membersHtml}</div>
+      `;
+
+      // Append the newly created board to the correct AM or PM container
+      if (isAmTeam) {
+        amContainer.appendChild(board);
+      } else {
+        pmContainer.appendChild(board);
+      }
+    });
+
+    // Add event listeners for the new lock buttons
+    mainContainer.querySelectorAll('.btn-lock').forEach(button => {
+        button.addEventListener('click', (e) => {
+            const teamId = e.target.getAttribute('data-team-id');
+            const team = S.getTeamById(teamId);
+            if (team) {
+                team.isLocked = !team.isLocked; // Toggle the lock state
+                S.renderTeams(); // Re-render the UI to apply the locked styles and behavior
+            }
+        });
+    });
+
+    // The rest of the original function's logic (handling 'Follow Me' docks) remains unchanged.
     var dock = S.$("team-boards-follow");
     var following = S.teams.teams.filter(function (t) { return !!t.followMe; });
-    var notFollowing = S.teams.teams.filter(function (t) { return !t.followMe; });
-
-    // Only one live board per team (avoids duplicate Sortable lists)
-    if (inline) {
-      if (!S.teams.teams.length) {
-        inline.innerHTML = '<p class="muted">No teams yet. Click "+ New team".</p>';
-      } else if (!notFollowing.length && following.length) {
-        inline.innerHTML =
-          '<p class="muted">All teams are in Follow Me (top-right). Uncheck Follow Me on a team to pin it here.</p>';
-      } else {
-        inline.innerHTML = S.teamBoardsHtml(notFollowing);
-      }
-    }
-    if (dock) {
+     if (dock) {
       dock.innerHTML = following.length
-        ? S.teamBoardsHtml(following)
+        ? S.teamBoardsHtml(following) // This function still works for the dock
         : '<p class="muted">Check <strong>Follow Me</strong> on a team to dock it here.</p>';
     }
   };
+
 
   /** AM = start before 11:00, PM = 11:00 or later */
   S.isShiftAM = function (startMin) {
