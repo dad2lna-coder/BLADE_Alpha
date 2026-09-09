@@ -65,18 +65,21 @@
           <div class="toolbar" style="margin-top:0.75rem"><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button><span class="muted">FTE + function coverage only. No lines.</span></div>
         </div>
       </details>
-      <details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
-        <div class="fc-pool-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center">
-          <label>DFO STSO <input type="number" id="fc-pool-stso" min="0" value="0" style="width:4rem" /></label>
-          <label>DFO LTSO <input type="number" id="fc-pool-ltso" min="0" value="0" style="width:4rem" /></label>
-          <label>DFO TSO <input type="number" id="fc-pool-tso" min="0" value="0" style="width:4rem" /></label>
-          <label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
-          <label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
-          <button type="button" class="btn" id="fc-add-band">+ Add band</button>
-        </div>
-        <div class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
-        <p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
-      </details>
+     <details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
+  <div class="fc-pool-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center">
+    <label>DFO STSO <input type="number" id="fc-pool-stso" min="0" value="0" style="width:4rem" /></label>
+    <label>DFO LTSO <input type="number" id="fc-pool-ltso" min="0" value="0" style="width:4rem" /></label>
+    <label>DFO TSO <input type="number" id="fc-pool-tso" min="0" value="0" style="width:4rem" /></label>
+    <label>BAG Pool <input type="number" id="fc-pool-bag" min="0" value="0" style="width:4rem" /></label>
+    <label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
+    <label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
+    <button type="button" class="btn" id="fc-add-band">+ Add band</button>
+  </div>
+  <div class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
+  <p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
+</details>
+
+
       <div class="card"><div class="section-title">Shifts</div><div class="toolbar"><button type="button" class="btn" id="btn-add-shift">+ Add shift</button></div><div class="lines-scroll" style="max-height:none"><table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Phase</th><th>Paid h</th><th>TSO force</th><th>LTSO force</th><th>STSO force</th><th>Hard RDOs (Sun–Sat)</th><th>Day times</th></tr></thead><tbody id="shifts-tbody"></tbody></table></div></div>
       <div id="issues"></div>
     </section>
