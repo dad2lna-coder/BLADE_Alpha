@@ -498,35 +498,57 @@ window.Scheduler = window.Scheduler || {};
     );
   };
 
+   // --- REPLACEMENT START: New rendering logic for AM/PM split ---
+
   S.teamBoardsHtml = function (teamsList) {
-    var list = teamsList || S.teams.teams;
-    if (!list.length) {
-      return '<p class="muted">No teams yet. Click "+ New team".</p>';
+    if (!teamsList || !teamsList.length) {
+      // Provide a message when a section has no teams.
+      return '<p class="muted" style="padding: 0 1rem 1rem;">No teams in this group.</p>';
     }
-    return list.map(S.teamBoardHtml).join("");
+    // This function now simply maps the team data to the existing card HTML function.
+    return teamsList.map(S.teamBoardHtml).join("");
   };
 
   S.renderTeamBoards = function () {
-    var inline = S.$("team-boards");
+    // The logic for the "Follow Me" floating docks remains unchanged.
     var dock = S.$("team-boards-follow");
     var following = S.teams.teams.filter(function (t) { return !!t.followMe; });
-    var notFollowing = S.teams.teams.filter(function (t) { return !t.followMe; });
-    if (inline) {
-      if (!S.teams.teams.length) {
-        inline.innerHTML = '<p class="muted">No teams yet. Click "+ New team".</p>';
-      } else if (!notFollowing.length && following.length) {
-        inline.innerHTML =
-          '<p class="muted">All teams are in Follow Me (top-right). Uncheck Follow Me on a team to pin it here.</p>';
-      } else {
-        inline.innerHTML = S.teamBoardsHtml(notFollowing);
-      }
-    }
     if (dock) {
       dock.innerHTML = following.length
         ? S.teamBoardsHtml(following)
         : '<p class="muted">Check <strong>Follow Me</strong> on a team to dock it here.</p>';
     }
+
+    // --- New Logic for AM/PM Split ---
+    var notFollowing = S.teams.teams.filter(function (t) { return !t.followMe; });
+    var amTeams = [];
+    var pmTeams = [];
+
+    // Sort teams into AM and PM buckets based on their phase.
+    notFollowing.forEach(function(t) {
+      var info = S.teamPhaseInfo(t);
+      // "Opening" and "AM" phases belong to the AM group.
+      if (info.phase === 'PM' || info.phase === 'Closing') {
+        pmTeams.push(t);
+      } else {
+        amTeams.push(t);
+      }
+    });
+
+    var amContainer = S.$("team-boards-am");
+    var pmContainer = S.$("team-boards-pm");
+
+    // Populate the respective containers with the generated HTML.
+    if (amContainer) {
+      amContainer.innerHTML = S.teamBoardsHtml(amTeams);
+    }
+    if (pmContainer) {
+      pmContainer.innerHTML = S.teamBoardsHtml(pmTeams);
+    }
   };
+
+  // --- REPLACEMENT END ---
+
 
   S.isShiftAM = function (startMin) {
     return (startMin || 0) < 11 * 60;
