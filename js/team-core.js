@@ -1,4 +1,4 @@
-/** Consolidated Teams Module for BLADE Alpha Build - CORRECTED */
+/** Consolidated Teams Module for BLADE Alpha Build - FINAL CORRECTED */
 window.Scheduler = window.Scheduler || {};
 
 (function (S) {
@@ -830,33 +830,11 @@ window.Scheduler = window.Scheduler || {};
     }
 
     S.teams.teams = [];
-    teamSeq = 1; // Reset sequence for new teams
+    teamSeq = 1;
     for (var i = 0; i < nTeams; i++) S.createTeam();
 
     var used = {};
     function sexOf(p) { return p.sex === "F" ? "F" : "M"; }
-    function roleNeed(team, role) {
-      var c = S.teamMemberCounts(team);
-      var have = c[role].M + c[role].F;
-      var target = role === "STSO" ? stsoPer : role === "LTSO" ? ltsoPer : tsoPer;
-      return Math.max(0, target - have);
-    }
-    function teamAnchor(team) {
-      if (!team.members || !team.members.length) return null;
-      return S.memberLine(team.members[0]);
-    }
-    function matchQuality(p, anchor) {
-      if (!p || !anchor) return 0;
-      if (!startsClose(p, anchor, windowMin)) return 0;
-      if (rdoExact(p, anchor)) return 3;
-      if (allowOne && rdoOverlap(p, anchor) >= 1) return 1;
-      return 0;
-    }
-    function oppositeSup(p, anchor, role) {
-      if (role !== "LTSO" && role !== "STSO") return 0;
-      if (!anchor) return 0;
-      return sexOf(p) !== sexOf(anchor) ? 1 : 0;
-    }
 
     byRole.STSO.sort(function (a, b) {
       var sa = startMins(a) != null ? startMins(a) : 0;
@@ -871,50 +849,55 @@ window.Scheduler = window.Scheduler || {};
       team.members.push(p.id);
       used[p.id] = true;
     });
-    if (S.renumberTeamsByStart) S.renumberTeamsByStart();
+    S.renumberTeamsByStart();
 
-    function assignRole(role) {
-      var candidates = byRole[role].filter(function (p) { return !used[p.id]; });
-      candidates.sort(function (a, b) {
-        if (sexOf(a) !== sexOf(b)) return sexOf(a) === "F" ? -1 : 1;
-        var sa = startMins(a) != null ? startMins(a) : 0;
-        var sb = startMins(b) != null ? startMins(b) : 0;
-        return sa - sb;
-      });
+    // --- REFACTORED LOGIC ---
+    var rolesToFill = ["STSO", "LTSO", "TSO"];
 
-      candidates.forEach(function (p) {
-        var scored = [];
-        S.teams.teams.forEach(function (t) {
-          if (roleNeed(t, role) <= 0) return;
-          var anchor = teamAnchor(t);
-          var q = matchQuality(p, anchor);
-          if (!q) return;
-          scored.push({
-            team: t,
+    S.teams.teams.forEach(function (team) {
+      var anchor = S.memberLine(team.members[0]);
+      if (!anchor) return;
+
+      rolesToFill.forEach(function (role) {
+        var c = S.teamMemberCounts(team);
+        var have = c[role].M + c[role].F;
+        var target = role === "STSO" ? stsoPer : role === "LTSO" ? ltsoPer : tsoPer;
+        var need = Math.max(0, target - have);
+        if (need === 0) return;
+
+        var candidates = byRole[role].filter(function (p) { return !used[p.id]; });
+
+        var scored = candidates.map(function (p) {
+          var q = 0;
+          if (startsClose(p, anchor, windowMin)) {
+              if (rdoExact(p, anchor)) q = 3;
+              else if (allowOne && rdoOverlap(p, anchor) >= 1) q = 1;
+          }
+          return {
+            p: p,
             q: q,
-            opp: oppositeSup(p, anchor, role),
-            need: roleNeed(t, role),
-            teamSex: teamSexScore(t, p),
-            roleSex: roleSexScore(t, role, p)
-          });
-        });
-        if (!scored.length) return;
+            opp: (role === "LTSO" && sexOf(p) !== sexOf(anchor)) ? 1 : 0,
+            teamSex: teamSexScore(team, p),
+            roleSex: roleSexScore(team, role, p)
+          };
+        }).filter(function (c) { return c.q > 0; });
+
         scored.sort(function (a, b) {
-          if (b.q !== a.q) return b.q - a.q;
-          if (b.opp !== a.opp) return b.opp - a.opp;
-          if (a.teamSex !== b.teamSex) return a.teamSex - b.teamSex;
-          if (a.roleSex !== b.roleSex) return a.roleSex - b.roleSex;
-          return b.need - a.need;
+          if (b.q !== a.q) return b.q - a.q; // Best match quality first
+          if (b.opp !== a.opp) return b.opp - a.opp; // Opposite sex supervisor preferred
+          if (a.teamSex !== b.teamSex) return a.teamSex - b.teamSex; // Better overall team sex balance
+          if (a.roleSex !== b.roleSex) return a.roleSex - b.roleSex; // Better role sex balance
+          return 0;
         });
-        scored[0].team.members.push(p.id);
-        used[p.id] = true;
+
+        var chosen = scored.slice(0, need);
+        chosen.forEach(function (item) {
+          team.members.push(item.p.id);
+          used[item.p.id] = true;
+        });
       });
-    }
-
-    assignRole("STSO");
-    assignRole("LTSO");
-    assignRole("TSO");
-
+    });
+    
     var assignedN = Object.keys(used).length;
     var leftN = pool.length - assignedN;
     S.renderTeams();
@@ -922,8 +905,8 @@ window.Scheduler = window.Scheduler || {};
     if (S.updateStatus) {
       S.updateStatus(
         "Auto-formed " + nTeams + " team(s) · window " + windowMin + " min" +
-          (allowOne ? " · 1-RDO allowed" : " · exact RDO") +
-          " · opposite STSO/LTSO sex preferred · " + assignedN + " assigned · " + leftN + " in pool"
+          (allowOne ? " · 1-RDO allowed" : "") +
+          " · " + assignedN + " assigned · " + leftN + " in pool"
       );
     }
   };
@@ -1005,7 +988,6 @@ window.Scheduler = window.Scheduler || {};
 
   S._renderingTeams = false;
   
-  // --- Injected from team-flags.js ---
   function archTarget() {
     var stso = Math.max(0, +(S.$("arch-stso") && S.$("arch-stso").value) || 1);
     var ltso = Math.max(0, +(S.$("arch-ltso") && S.$("arch-ltso").value) || 0);
@@ -1107,7 +1089,7 @@ window.Scheduler = window.Scheduler || {};
         var mc = 0;
         S.teams.teams.forEach(function (t) { mc += (t.members || []).length; });
         hint.textContent = tc
-          ? tc + " team(s) · " + mc + " assigned · " + S.unassignedPool().length + " in pool (filtered)"
+          ? tc + " team(s) · " + mc + " assigned · " + (pool.length - mc) + " in pool (filtered)"
           : "No teams yet — click + New team";
       }
 
@@ -1208,7 +1190,6 @@ window.Scheduler = window.Scheduler || {};
     if (S.updateStatus) S.updateStatus("Team builder closed");
   };
 
-  // --- Injected from team-close.js ---
   document.addEventListener("click", function (e) {
     var t = e.target;
     if (!t || !t.closest) return;
@@ -1292,12 +1273,10 @@ window.Scheduler = window.Scheduler || {};
     S.renderTeams();
   };
 
-  // Hook into renderAll to keep the pool fresh
   var prevRenderAll = S.renderAll;
   S.renderAll = function () {
     if (typeof prevRenderAll === "function") prevRenderAll.apply(this, arguments);
     S.collectTeamPool();
-    // Only render if the tab is active to save performance
     if (document.querySelector("#tab-teams.active")) {
       S.renderTeams();
     }
