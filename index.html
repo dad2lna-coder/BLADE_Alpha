@@ -7,7 +7,6 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
 <link rel="stylesheet" href="css/styles.css?v=20260902i" />
 <link rel="stylesheet" href="css/line-print.css?v=20260902i" />
-<!-- Removed redundant team-build.css -->
 <link rel="stylesheet" href="css/intro.css?v=20260904b" />
 <link rel="stylesheet" href="css/console.css?v=20260904c" />
 </head>
@@ -89,22 +88,17 @@
     }
     .team-pool-columns {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
     }
-    .team-boards-split-container {
-      display: grid;
-      grid-template-columns: 1fr; /* Single column by default */
-      gap: 1rem;
-    }
-    @media (min-width: 1200px) {
-      .team-boards-split-container {
-        grid-template-columns: 1fr 1fr; /* Two columns for wider screens */
+    @media (max-width: 900px) {
+      .team-pool-columns {
+        grid-template-columns: 1fr;
       }
     }
     .team-boards-horizontal {
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
       gap: 1rem;
     }
   </style>
@@ -121,23 +115,22 @@
   <div class="card">
     <div class="section-title">Unassigned pool</div>
     <div id="team-pool" class="team-pool-columns">
-      <!-- JS will populate this area with three columns -->
+      <!-- The JS will now correctly create three columns here -->
     </div>
   </div>
 
-  <!-- Container for the collapsible AM/PM Team cards -->
-  <div id="team-boards-container" class="team-boards-split-container">
-    <details class="card" id="am-teams-card" open>
-      <summary class="section-title">AM Teams</summary>
-      <div id="team-boards-am" class="team-boards-horizontal"></div>
-    </details>
-    <details class="card" id="pm-teams-card" open>
-      <summary class="section-title">PM Teams</summary>
-      <div id="team-boards-pm" class="team-boards-horizontal"></div>
-    </details>
-  </div>
+  <!-- Collapsible AM Teams Card (Full-width) -->
+  <details class="card" id="am-teams-card" open>
+    <summary class="section-title">AM Teams</summary>
+    <div id="team-boards-am" class="team-boards-horizontal"></div>
+  </details>
+  
+  <!-- Collapsible PM Teams Card (Full-width) -->
+  <details class="card" id="pm-teams-card" open>
+    <summary class="section-title">PM Teams</summary>
+    <div id="team-boards-pm" class="team-boards-horizontal"></div>
+  </details>
 </section>
-
 <section class="panel" id="tab-capacity"><div class="card"><div class="section-title">Checkpoint capacity (TSO / STSO / LTSO)</div><p class="muted" id="capacity-summary">Open Airfield to set lanes and TSO cost per program.</p><div class="lines-scroll"><table class="data-table"><thead><tr><th>Terminal</th><th>Checkpoint</th><th>From</th><th>Lanes</th><th>Program</th><th>TSO / lane</th><th>TSO needed</th><th>Sup seats</th></tr></thead><tbody id="capacity-tbody"></tbody></table></div></div></section>
 <section class="panel" id="tab-reports"><div class="card"><div class="section-title">Management reports</div><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="radio" name="report-which" value="passenger" checked /> Passenger</label><label class="follow-me-label"><input type="radio" name="report-which" value="baggage" /> Baggage / DFO duty</label><label class="follow-me-label"><input type="radio" name="report-which" value="total" /> Total</label><label class="follow-me-label"><input type="radio" name="report-which" value="dfoPool" /> DFO pool</label></div><div id="report-main"></div></div><div class="card"><div id="report-gender"></div></div></section>
 </main>
