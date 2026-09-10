@@ -69,7 +69,6 @@
 <label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
 <label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
 <button type="button" class="btn" id="fc-add-band">+ Add band</button>
-<!-- ADD THIS BUTTON -->
 <button type="button" class="btn btn-amber" id="fc-generate">Generate DFO Assignments</button>
 </div>
 <div class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
@@ -80,7 +79,53 @@
 </section>
 <section class="panel" id="tab-coverage"><div class="card"><div class="section-title">30-minute headcount by day of week (Sun–Sat)</div><p class="muted" id="coverage-summary">Generate to compute staffing by 30-minute slot and day.</p><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="checkbox" id="cov-role-stso" /> STSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-ltso" /> LTSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-tso" checked /> TSO</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="all" checked /> All</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="bag" /> Baggage</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="pax" /> PAX</label></div><div class="lines-scroll"><table class="data-table cov-matrix" id="coverage-matrix"><thead id="coverage-matrix-head"></thead><tbody id="coverage-matrix-body"></tbody></table></div></div><div class="card"><div class="section-title">Typical day profile (bars)</div><div class="cov-bars" id="coverage-bars"></div></div><div class="card"><div class="section-title">Shift mix</div><table class="data-table"><thead><tr><th>Shift</th><th>Window</th><th>FT M/F</th><th>PT M/F</th><th>LTSO M/F</th><th>STSO M/F</th><th>TSO tot</th><th>All</th></tr></thead><tbody id="shift-summary-body"></tbody></table></div></section>
 <section class="panel" id="tab-lines"><div class="card"><div class="section-title">Bid lines</div><div class="toolbar" id="lines-toolbar"><label>Filter role <select id="lines-filter-role"><option value="ALL" selected>All</option><option value="STSO">STSO</option><option value="LTSO">LTSO</option><option value="TSO">TSO (FT/PT)</option></select></label><label>Filter shift <select id="lines-filter-shift"><option value="">All shifts</option></select></label><label>Filter sex <select id="lines-filter-sex"><option value="">All</option><option value="M">M</option><option value="F">F</option></select></label><label>Filter team <select id="lines-filter-team"><option value="">All</option><option value="\__none_\_">Unassigned</option></select></label><button type="button" class="btn btn-amber" id="btn-export-lines-excel">Export Excel (.xlsx)</button></div><div class="lines-scroll lines-scroll-wide"><table class="data-table lines-editable"><thead id="lines-thead"></thead><tbody id="lines-tbody"></tbody></table></div></div></section>
-<section class="panel" id="tab-teams"><div class="card"><div class="section-title">Team forming</div><div class="toolbar"><button type="button" class="btn btn-amber" id="btn-team-new">+ New team</button><button type="button" class="btn btn-amber" id="btn-team-build">Build</button><span class="muted" id="team-count-hint">No teams yet</span></div><div class="toolbar team-arch-bar" id="team-architecture"><label>STSO <input type="number" id="arch-stso" min="0" max="20" value="1" style="width:3.5rem"></label><label>LTSO <input type="number" id="arch-ltso" min="0" max="20" value="1" style="width:3.5rem"></label><label>TSO <input type="number" id="arch-tso" min="0" max="50" value="6" style="width:3.5rem"></label><button type="button" class="btn btn-amber" id="btn-team-auto-form">Auto-form teams</button><span class="muted" id="arch-hint"></span></div><div class="toolbar" id="team-filters"></div></div><div class="card"><div class="section-title">Unassigned pool</div><div id="team-pool" class="team-pool"></div></div><div class="card" id="team-boards-card"><div class="section-title"><span>Teams</span><button type="button" class="btn btn-amber" id="btn-team-new-2">+ New team</button></div><div id="team-boards" class="team-boards"></div></div></section>
+<section class="panel" id="tab-teams">
+<div class="card">
+<div class="section-title">Team forming</div>
+<div class="toolbar"><button type="button" class="btn btn-amber" id="btn-team-new">+ New team</button><button type="button" class="btn btn-amber" id="btn-team-build">Build</button><span class="muted" id="team-count-hint">No teams yet</span></div>
+<div class="toolbar team-arch-bar" id="team-architecture"><label>STSO <input type="number" id="arch-stso" min="0" max="20" value="1" style="width:3.5rem"></label><label>LTSO <input type="number" id="arch-ltso" min="0" max="20" value="1" style="width:3.5rem"></label><label>TSO <input type="number" id="arch-tso" min="0" max="50" value="6" style="width:3.5rem"></label><button type="button" class="btn btn-amber" id="btn-team-auto-form">Auto-form teams</button><span class="muted" id="arch-hint"></span></div>
+<div class="toolbar" id="team-filters"></div>
+</div>
+<div class="card">
+<div class="section-title">Unassigned pool</div>
+<div id="team-pool" class="team-pool"></div>
+</div>
+<!-- START: New AM/PM Team Board Structure -->
+<style>
+  .team-boards-split-container {
+    display: grid;
+    grid-template-columns: 1fr; /* Default to single column */
+    gap: 1rem;
+    grid-row: span 2 / span 2; /* Make container span across grid rows if needed */
+  }
+  @media (min-width: 1200px) {
+    .team-boards-split-container {
+      grid-template-columns: 1fr 1fr; /* Two columns for wider screens */
+    }
+  }
+  #tab-teams {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1rem;
+  }
+  .team-boards-horizontal {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+</style>
+<div id="team-boards-container" class="team-boards-split-container">
+  <details class="card" id="am-teams-card" open>
+    <summary class="section-title">AM Teams</summary>
+    <div id="team-boards-am" class="team-boards-horizontal"></div>
+  </details>
+  <details class="card" id="pm-teams-card" open>
+    <summary class="section-title">PM Teams</summary>
+    <div id="team-boards-pm" class="team-boards-horizontal"></div>
+  </details>
+</div>
+<!-- END: New AM/PM Team Board Structure -->
+</section>
 <section class="panel" id="tab-capacity"><div class="card"><div class="section-title">Checkpoint capacity (TSO / STSO / LTSO)</div><p class="muted" id="capacity-summary">Open Airfield to set lanes and TSO cost per program.</p><div class="lines-scroll"><table class="data-table"><thead><tr><th>Terminal</th><th>Checkpoint</th><th>From</th><th>Lanes</th><th>Program</th><th>TSO / lane</th><th>TSO needed</th><th>Sup seats</th></tr></thead><tbody id="capacity-tbody"></tbody></table></div></div></section>
 <section class="panel" id="tab-reports"><div class="card"><div class="section-title">Management reports</div><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="radio" name="report-which" value="passenger" checked /> Passenger</label><label class="follow-me-label"><input type="radio" name="report-which" value="baggage" /> Baggage / DFO duty</label><label class="follow-me-label"><input type="radio" name="report-which" value="total" /> Total</label><label class="follow-me-label"><input type="radio" name="report-which" value="dfoPool" /> DFO pool</label></div><div id="report-main"></div></div><div class="card"><div id="report-gender"></div></div></section>
 </main>
