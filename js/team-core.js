@@ -1,7 +1,9 @@
 /** Consolidated Teams Module for BLADE Alpha Build - FINAL CORRECTED */
+
 window.Scheduler = window.Scheduler || {};
 
 (function (S) {
+
   "use strict";
 
   // --- CRITICAL FIX: Add the missing helper function ---
@@ -303,6 +305,29 @@ window.Scheduler = window.Scheduler || {};
     if (p.empClass === "PT") return "PT";
     return "FT";
   };
+  
+  S.teamBoardHtml = function (t) {
+    var membersHtml = t.members.map(function (mid) {
+        var p = S.memberLine(mid);
+        return p ? S.lineCardHtml(p, { removable: true, teamId: t.id }) : "";
+      }).join("");
+
+    return (
+      '<div class="team-board card" data-team-id="' + t.id + '">' +
+        '<div class="team-board-head section-title">' +
+          '<input type="text" class="team-name-input" value="' + String(t.name || "").replace(/"/g, "&quot;") + '" data-team-id="' + t.id + '">' +
+          S.teamCountsHeaderHtml(t) +
+          '<div class="team-board-actions">' +
+            '<label class="follow-me-label" title="Follow Me (dock this team on screen)"><input type="checkbox" data-team-follow="' + t.id + '" ' + (t.followMe ? "checked" : "") + '> Follow</label>' +
+            '<button type="button" class="btn btn-red" data-remove-team="' + t.id + '">✕</button>' +
+          '</div>' +
+        '</div>' +
+        '<div class="team-board-list" data-team-id="' + t.id + '">' +
+          (membersHtml || '<div class="team-board-empty muted">Drag lines here</div>') +
+        '</div>' +
+      '</div>'
+    );
+  };
 
   S.lineCardHtml = function (p, opts) {
     opts = opts || {};
@@ -315,6 +340,7 @@ window.Scheduler = window.Scheduler || {};
         (opts.teamId || "") +
         '">✕</button>'
       : "";
+
     if (opts.compact || opts.removable) {
       var hours =
         (p.start || "") +
@@ -343,6 +369,7 @@ window.Scheduler = window.Scheduler || {};
         "</div>"
       );
     }
+
     var cb = opts.selectable
       ? '<label class="team-line-check"><input type="checkbox" data-select-line="' +
         p.id +
@@ -429,33 +456,52 @@ window.Scheduler = window.Scheduler || {};
       "</span>";
   };
 
-  // --- REPLACEMENT START: Corrected rendering logic ---
-
   S.renderTeamPool = function () {
     var el = S.$("team-pool");
     if (!el) return;
+
     var groups = S.groupPoolByRole(S.unassignedPool());
-    var html = "";
+    el.innerHTML = ""; // Clear existing content first
+
+    // Use forEach on ROLES to maintain order: TSO, LTSO, STSO
     ROLES.forEach(function (role) {
       var list = groups[role];
-      if (!list.length) return;
-      html +=
-        '<div class="team-role-group"><div class="team-role-title">' +
-        role +
-        ' <span class="muted">(' +
-        list.length +
-        ")</span></div>" +
-        '<div class="team-role-list" data-role="' +
-        role +
-        '">' +
-        list
-          .map(function (p) {
-            return S.lineCardHtml(p, { selectable: true });
-          })
-          .join("") +
-        "</div></div>";
+      
+      // Create the column div
+      var column = document.createElement('div');
+      column.className = 'team-role-group';
+      
+      // Create the title element
+      var title = document.createElement('div');
+      title.className = 'team-role-title';
+      title.innerHTML = role + ' <span class="muted">(' + list.length + ')</span>';
+      
+      // Create the list container that Sortable.js will attach to
+      var roleList = document.createElement('div');
+      roleList.className = 'team-role-list';
+      roleList.setAttribute('data-role', role);
+      
+      // Populate with line cards if any exist for this role
+      if (list.length > 0) {
+        roleList.innerHTML = list.map(function (p) {
+          return S.lineCardHtml(p, { selectable: true });
+        }).join("");
+      } else {
+        roleList.innerHTML = '<p class="muted" style="text-align: center; padding: 1rem;">(empty)</p>';
+      }
+
+      // Append title and list to the column, then append column to the main element
+      column.appendChild(title);
+      column.appendChild(roleList);
+      el.appendChild(column);
     });
-    el.innerHTML = html || '<p class="muted">No unassigned lines match the filters. Generate a schedule first, or clear filters.</p>';
+
+    // Handle case where no lines match filters at all
+    if (S.unassignedPool().length === 0 && S.teams.pool.length > 0) {
+        el.innerHTML = '<p class="muted" style="grid-column: 1 / -1;">No unassigned lines match the active filters.</p>';
+    } else if (S.teams.pool.length === 0) {
+        el.innerHTML = '<p class="muted" style="grid-column: 1 / -1;">Generate a schedule first to populate the pool.</p>';
+    }
   };
 
   S.teamBoardsHtml = function (teamsList) {
@@ -497,10 +543,6 @@ window.Scheduler = window.Scheduler || {};
       pmContainer.innerHTML = S.teamBoardsHtml(pmTeams);
     }
   };
-
-  // --- REPLACEMENT END ---
-
-
 
   S.isShiftAM = function (startMin) {
     return (startMin || 0) < 11 * 60;
@@ -787,11 +829,13 @@ window.Scheduler = window.Scheduler || {};
       if (S.updateStatus) S.updateStatus("Generate a schedule first so there are lines to group.");
       return;
     }
+
     var stsoPer = Math.max(0, +(S.$("arch-stso") && S.$("arch-stso").value) || 1);
     var ltsoPer = Math.max(0, +(S.$("arch-ltso") && S.$("arch-ltso").value) || 0);
     var tsoPer = Math.max(0, +(S.$("arch-tso") && S.$("arch-tso").value) || 0);
     var windowMin = Math.max(0, +((S.$("form-start-window") && S.$("form-start-window").value) || S.teams.formOpts.startWindowMin || 0));
     var allowOne = !!(S.$("form-allow-one-rdo") && S.$("form-allow-one-rdo").checked);
+
     S.teams.formOpts.startWindowMin = windowMin;
     S.teams.formOpts.allowOneRdo = allowOne;
 
@@ -800,6 +844,7 @@ window.Scheduler = window.Scheduler || {};
       if (byRole[p.role]) byRole[p.role].push(p);
       else byRole.TSO.push(p);
     });
+
     var nTeams = byRole.STSO.length;
     if (!nTeams) {
       if (S.updateStatus) S.updateStatus("No STSO lines — cannot auto-form (teams = # of STSOs).");
@@ -811,7 +856,6 @@ window.Scheduler = window.Scheduler || {};
     for (var i = 0; i < nTeams; i++) S.createTeam();
 
     var used = {};
-
     byRole.STSO.sort(function (a, b) {
       var sa = startMins(a) != null ? startMins(a) : 0;
       var sb = startMins(b) != null ? startMins(b) : 0;
@@ -825,10 +869,10 @@ window.Scheduler = window.Scheduler || {};
       team.members.push(p.id);
       used[p.id] = true;
     });
+
     S.renumberTeamsByStart();
 
     var rolesToFill = ["STSO", "LTSO", "TSO"];
-
     S.teams.teams.forEach(function (team) {
       var anchor = S.memberLine(team.members[0]);
       if (!anchor) return;
@@ -916,6 +960,7 @@ window.Scheduler = window.Scheduler || {};
       return;
     }
     S.destroySortables();
+
     function makeOpts(extra) {
       var opts = {
         group: { name: "teams", pull: true, put: true },
@@ -951,10 +996,12 @@ window.Scheduler = window.Scheduler || {};
       }
       return opts;
     }
+
     var poolLists = document.querySelectorAll(".team-role-list");
     for (var i = 0; i < poolLists.length; i++) {
       S.teams.sortables.push(Sortable.create(poolLists[i], makeOpts({ sort: false })));
     }
+
     var boards = document.querySelectorAll(".team-board-list");
     for (var j = 0; j < boards.length; j++) {
       S.teams.sortables.push(Sortable.create(boards[j], makeOpts({})));
@@ -1063,38 +1110,35 @@ window.Scheduler = window.Scheduler || {};
         var tc = S.teams.teams.length;
         var mc = 0;
         S.teams.teams.forEach(function (t) { mc += (t.members || []).length; });
-        // --- FINAL FIX: Use the correct function to get the unassigned count ---
         hint.textContent = tc
           ? tc + " team(s) · " + mc + " assigned · " + S.unassignedPool().length + " in pool (filtered)"
           : "No teams yet — click + New team";
       }
 
       function ensureBtn(id, insertParent) {
-        var btn = S.$(id);
-        if (btn) return btn;
-        if (!insertParent) return null;
-        btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "btn btn-amber";
-        btn.id = id;
-        btn.textContent = "+ New team";
-        btn.style.marginRight = "0.5rem";
-        insertParent.insertBefore(btn, insertParent.firstChild);
-        return btn;
+          var btn = S.$(id);
+          if (btn) return btn;
+          if (!insertParent) return null;
+          btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "btn btn-amber";
+          btn.id = id;
+          btn.textContent = "+ New team";
+          btn.style.marginRight = "0.5rem";
+          
+          var buildBtn = S.$("btn-team-build");
+          if(buildBtn) {
+            buildBtn.insertAdjacentElement('beforebegin', btn);
+          } else {
+            insertParent.insertBefore(btn, insertParent.firstChild);
+          }
+          return btn;
       }
+      
       var topToolbar = document.querySelector("#tab-teams .card .toolbar");
       var b1 = ensureBtn("btn-team-new", topToolbar);
-      var boardsCard = document.querySelector("#tab-teams .card:last-child .section-title");
-      var b2 = S.$("btn-team-new-2");
-      if (!b2 && boardsCard) {
-        b2 = document.createElement("button");
-        b2.type = "button";
-        b2.className = "btn btn-amber";
-        b2.id = "btn-team-new-2";
-        b2.textContent = "+ New team";
-        boardsCard.appendChild(b2);
-      }
-      [b1, b2].forEach(function (btn) {
+
+      [b1].forEach(function (btn) {
         if (!btn || btn.getAttribute("data-bound") === "1") return;
         btn.setAttribute("data-bound", "1");
         btn.addEventListener("click", function (e) {
@@ -1109,6 +1153,7 @@ window.Scheduler = window.Scheduler || {};
           if (S.updateStatus) S.updateStatus("Created " + (t && t.name ? t.name : "team"));
         });
       });
+
     } finally {
       S._renderingTeams = false;
     }
@@ -1179,6 +1224,7 @@ window.Scheduler = window.Scheduler || {};
   S.bindTeamUI = function () {
     if (S._teamUIBound) return;
     S._teamUIBound = true;
+
     document.addEventListener("change", function (e) {
       var t = e.target;
       if (!t) return;
@@ -1209,6 +1255,7 @@ window.Scheduler = window.Scheduler || {};
         }
       }
     });
+
     document.addEventListener("click", function (e) {
       var t = e.target;
       if (!t) return;
