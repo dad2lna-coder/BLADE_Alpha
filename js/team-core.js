@@ -18,6 +18,7 @@ window.Scheduler = window.Scheduler || {};
   function startOf(line) { var sh = S.getShift ? S.getShift(line.shiftId) : null; return sh ? S.timeToMin(sh.start) : 0; }
   function startLabel(line) { var sh = S.getShift ? S.getShift(line.shiftId) : null; return sh ? sh.start : "—"; }
   S.teamRoleOf = roleOf; S.teamRdoKey = rdoKey; S.teamRdoLabel = rdoLabel; S.teamStartOf = startOf; S.teamStartLabel = startLabel;
+  
   S.collectTeamPool = function () {
     var lines = (S.state && S.state.lines) ? S.state.lines : [];
     S.teams.pool = lines.map(function (l) {
@@ -45,6 +46,7 @@ window.Scheduler = window.Scheduler || {};
     S.teams.teams.push(t);
     return t;
   };
+  
   S.teamPhaseInfo = function (team) {
     var best = 24 * 60; var phase = "AM";
     var anchors = S.computeShiftAnchors ? S.computeShiftAnchors() : { am: 8 * 60, pm: 14 * 60 };
@@ -88,6 +90,7 @@ window.Scheduler = window.Scheduler || {};
   S.groupPoolByRole = function (list) { var groups = { TSO: [], LTSO: [], STSO: [] }; list.forEach(function (p) { if (groups[p.role]) groups[p.role].push(p); else groups.TSO.push(p); }); return groups; };
   S.getSelectedIds = function () { return Object.keys(S.teams.selected).filter(function (k) { return S.teams.selected[k]; }).map(function (k) { return +k; }); };
   S.clearSelection = function () { S.teams.selected = {}; };
+  
   S.teamMemberCounts = function (team) {
     var c = { STSO: { M: 0, F: 0 }, LTSO: { M: 0, F: 0 }, TSO: { M: 0, F: 0 }, total: 0 };
     (team.members || []).forEach(function (mid) { var p = S.memberLine(mid); if (!p) return; c.total++; var role = p.role === "STSO" || p.role === "LTSO" ? p.role : "TSO"; c[role][sexOf(p)]++; });
@@ -141,6 +144,7 @@ window.Scheduler = window.Scheduler || {};
     if (S.unassignedPool().length === 0 && S.teams.pool.length > 0) el.innerHTML = '<p class="muted" style="grid-column: 1 / -1;">No unassigned lines match the active filters.</p>';
     else if (S.teams.pool.length === 0) el.innerHTML = '<p class="muted" style="grid-column: 1 / -1;">Generate a schedule first to populate the pool.</p>';
   };
+  
   S.teamBoardsHtml = function (teamsList) { if (!teamsList || !teamsList.length) return '<p class="muted" style="padding: 0 1rem 1rem;">No teams in this group.</p>'; return teamsList.map(S.teamBoardHtml).join(""); };
   function teamAnchorMeta(team) {
     var best = null, bestMin = 24 * 60;
@@ -220,11 +224,24 @@ window.Scheduler = window.Scheduler || {};
     var rows = s.teamRows.map(function (row) { var bits = roleBits(row.counts) || "—"; var c = row.counts; var allM = c.STSO.M + c.LTSO.M + c.TSO.M; var allF = c.STSO.F + c.LTSO.F + c.TSO.F; var fPct = allM + allF ? Math.round((100 * allF) / (allM + allF)) : 0; return '<div class="team-stat-team-line"><strong>' + String(row.name).replace(/</g, "&lt;") + '</strong> <span class="muted">(' + row.counts.total + " · " + fPct + '%F)</span> ' + bits + (row.followMe ? ' <span class="team-follow-badge">follow</span>' : "") + '</div>'; }).join("");
     body.innerHTML = '<div class="team-stat-summary"><div><strong>' + s.assigned + '</strong> / ' + s.total + ' assigned (' + pct + '%)</div><div class="muted">' + s.unassigned + ' still in pool</div><div class="team-stat-bar"><div class="team-stat-bar-fill" style="width:' + pct + '%"></div></div></div><div class="team-stat-teams">' + (rows || '<p class="muted">No teams yet.</p>') + '</div>';
   };
+  
   S.applyFollowMe = function () {
+    var teamsTabActive = document.querySelector("#tab-teams.active") !== null;
     var following = S.teams.teams.some(function (t) { return !!t.followMe; });
-    var show = following || !!S.teams.buildOpen;
+    var show = teamsTabActive && (following || !!S.teams.buildOpen);
     var docks = S.$("team-follow-docks");
-    if (docks) { if (show) { docks.hidden = false; docks.classList.add("is-active"); document.body.classList.add("team-follow-active"); S.initFloatPanels(); } else { docks.hidden = true; docks.classList.remove("is-active"); document.body.classList.remove("team-follow-active"); } }
+    if (docks) { 
+      if (show) { 
+        docks.hidden = false; 
+        docks.classList.add("is-active"); 
+        document.body.classList.add("team-follow-active"); 
+        S.initFloatPanels(); 
+      } else { 
+        docks.hidden = true; 
+        docks.classList.remove("is-active"); 
+        document.body.classList.remove("team-follow-active"); 
+      } 
+    }
   };
   S.initFloatPanels = function () {
     if (S._floatPanelsBound) return; S._floatPanelsBound = true;
@@ -250,6 +267,7 @@ window.Scheduler = window.Scheduler || {};
       }, { passive: true });
     });
   };
+  
   S.teams.formOpts = S.teams.formOpts || { startWindowMin: 30, allowOneRdo: false };
   function parseRdoDays(p) {
     if (p && Array.isArray(p.rdoDays)) return p.rdoDays.map(Number).filter(function (d) { return d >= 0 && d <= 6; });
@@ -302,6 +320,7 @@ window.Scheduler = window.Scheduler || {};
     S.renderTeams(); if (S.renderLines) S.renderLines();
     if (S.updateStatus) S.updateStatus("Auto-formed " + nTeams + " team(s) · window " + windowMin + " min" + (allowOne ? " · 1-RDO allowed" : "") + " · " + assignedN + " assigned · " + leftN + " in pool");
   };
+  
   S.destroySortables = function () { (S.teams.sortables || []).forEach(function (s) { try { s.destroy(); } catch (e) {} }); S.teams.sortables = []; };
   S.syncTeamsFromDom = function () {
     S.teams.teams.forEach(function (t) { t.members = []; });
@@ -363,6 +382,7 @@ window.Scheduler = window.Scheduler || {};
     if (S.applyFollowMe) S.applyFollowMe(); var docks = S.$("team-follow-docks"); if (docks) { docks.hidden = true; docks.classList.remove("is-active"); } document.body.classList.remove("team-follow-active"); if (S.renderTeams) S.renderTeams(); if (S.updateStatus) S.updateStatus("Team builder closed");
   };
   document.addEventListener("click", function (e) { var t = e.target; if (!t || !t.closest) return; var x = t.closest("#btn-build-close, #team-detail-close"); if (!x) return; e.preventDefault(); e.stopPropagation(); S.closeTeamUi(); }, true);
+  
   S.bindTeamUI = function () {
     if (S._teamUIBound) return; S._teamUIBound = true;
     document.addEventListener("change", function (e) {
