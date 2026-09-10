@@ -113,11 +113,17 @@
 
   <!-- Card for the Unassigned Pool with 3 columns -->
   <div class="card">
-    <div class="section-title">Unassigned pool</div>
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
+      <span>Unassigned pool</span>
+      <label class="follow-me-label" style="font-size: 0.8rem; font-weight: normal; margin: 0;">
+        <input type="checkbox" id="pool-group-by-role" checked> Group by Role
+      </label>
+    </div>
     <div id="team-pool" class="team-pool-columns">
-      <!-- The JS will now correctly create three columns here -->
+      <!-- JS will populate this area -->
     </div>
   </div>
+
 
   <!-- Collapsible AM Teams Card (Full-width) -->
   <details class="card" id="am-teams-card" open>
