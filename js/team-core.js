@@ -429,102 +429,43 @@ window.Scheduler = window.Scheduler || {};
       "</span>";
   };
 
-  // --- REPLACEMENT for renderTeamPool to support 3-column layout ---
+  // --- REPLACEMENT START: Corrected rendering logic ---
+
   S.renderTeamPool = function () {
     var el = S.$("team-pool");
     if (!el) return;
-
     var groups = S.groupPoolByRole(S.unassignedPool());
-    el.innerHTML = ""; // Clear existing content
-
+    var html = "";
     ROLES.forEach(function (role) {
       var list = groups[role];
-      var column = document.createElement('div');
-      column.className = 'team-role-group';
-      
-      var title = document.createElement('div');
-      title.className = 'team-role-title';
-      title.innerHTML = role + ' <span class="muted">(' + list.length + ")</span>";
-      
-      var roleList = document.createElement('div');
-      roleList.className = 'team-role-list';
-      roleList.setAttribute('data-role', role);
-      
-      if (list.length > 0) {
-        roleList.innerHTML = list.map(function (p) {
-          return S.lineCardHtml(p, { selectable: true });
-        }).join("");
-      }
-
-      column.appendChild(title);
-      column.appendChild(roleList);
-      el.appendChild(column);
+      if (!list.length) return;
+      html +=
+        '<div class="team-role-group"><div class="team-role-title">' +
+        role +
+        ' <span class="muted">(' +
+        list.length +
+        ")</span></div>" +
+        '<div class="team-role-list" data-role="' +
+        role +
+        '">' +
+        list
+          .map(function (p) {
+            return S.lineCardHtml(p, { selectable: true });
+          })
+          .join("") +
+        "</div></div>";
     });
-
-    // Handle case where no lines match filters at all
-    if (S.unassignedPool().length === 0) {
-        el.innerHTML = '<p class="muted" style="grid-column: 1 / -1;">No unassigned lines match the filters. Generate a schedule first, or clear filters.</p>';
-    }
-  };
-
     el.innerHTML = html || '<p class="muted">No unassigned lines match the filters. Generate a schedule first, or clear filters.</p>';
   };
 
-  S.teamBoardHtml = function (t) {
-    var roleRank = { STSO: 0, LTSO: 1, TSO: 2 };
-    var sortedMembers = (t.members || []).slice().sort(function (a, b) {
-      var pa = S.memberLine(a);
-      var pb = S.memberLine(b);
-      var ra = pa ? (roleRank[pa.role] != null ? roleRank[pa.role] : 3) : 3;
-      var rb = pb ? (roleRank[pb.role] != null ? roleRank[pb.role] : 3) : 3;
-      if (ra !== rb) return ra - rb;
-      return +a - +b;
-    });
-    t.members = sortedMembers;
-    var members = sortedMembers
-      .map(function (mid) {
-        var p = S.memberLine(mid);
-        return p ? S.lineCardHtml(p, { removable: true, compact: true, teamId: t.id }) : "";
-      })
-      .join("");
-    var followChecked = t.followMe ? " checked" : "";
-    var phaseLbl = t.phase || (S.teamPhaseInfo ? S.teamPhaseInfo(t).phase : "");
-    return (
-      '<div class="team-board" data-team-id="' + t.id + '" data-phase="' + (phaseLbl || "") + '">' +
-      '<div class="team-board-head">' +
-      '<input type="text" class="team-name-input" value="' +
-      (t.name || "").replace(/"/g, "&quot;") +
-      '" data-team-id="' + t.id + '" title="Zero-padded for sort order">' +
-      (phaseLbl
-        ? '<span class="team-phase-badge" title="Phase group">' + phaseLbl + "</span>"
-        : "") +
-      S.teamCountsHeaderHtml(t) +
-      '<label class="follow-me-label follow-me-team" title="Dock this team top-right while scrolling">' +
-      '<input type="checkbox" data-team-follow="' + t.id + '"' + followChecked + "> Follow Me</label>" +
-      '<button type="button" class="btn btn-red btn-sm" data-remove-team="' + t.id + '">Remove</button>' +
-      "</div>" +
-      '<div class="team-line-cols muted">' +
-      "<span></span><span>Role</span><span>Sex</span><span>Hours</span><span>RDO</span><span>FT/PT</span><span></span>" +
-      "</div>" +
-      '<div class="team-board-list" data-team-id="' + t.id + '"' +
-      (members ? "" : ' data-empty="1"') + ">" + members +
-      "</div></div>"
-    );
-  };
-
-   // --- REPLACEMENT START: New rendering logic for AM/PM split ---
-
   S.teamBoardsHtml = function (teamsList) {
     if (!teamsList || !teamsList.length) {
-      // Provide a message when a section has no teams.
       return '<p class="muted" style="padding: 0 1rem 1rem;">No teams in this group.</p>';
     }
-    // This function now simply maps the team data to the existing card HTML function.
     return teamsList.map(S.teamBoardHtml).join("");
   };
 
   S.renderTeamBoards = function () {
-    // The logic for the "Follow Me" floating docks remains unchanged.
     var dock = S.$("team-boards-follow");
     var following = S.teams.teams.filter(function (t) { return !!t.followMe; });
     if (dock) {
@@ -533,15 +474,12 @@ window.Scheduler = window.Scheduler || {};
         : '<p class="muted">Check <strong>Follow Me</strong> on a team to dock it here.</p>';
     }
 
-    // --- New Logic for AM/PM Split ---
     var notFollowing = S.teams.teams.filter(function (t) { return !t.followMe; });
     var amTeams = [];
     var pmTeams = [];
 
-    // Sort teams into AM and PM buckets based on their phase.
     notFollowing.forEach(function(t) {
       var info = S.teamPhaseInfo(t);
-      // "Opening" and "AM" phases belong to the AM group.
       if (info.phase === 'PM' || info.phase === 'Closing') {
         pmTeams.push(t);
       } else {
@@ -552,7 +490,6 @@ window.Scheduler = window.Scheduler || {};
     var amContainer = S.$("team-boards-am");
     var pmContainer = S.$("team-boards-pm");
 
-    // Populate the respective containers with the generated HTML.
     if (amContainer) {
       amContainer.innerHTML = S.teamBoardsHtml(amTeams);
     }
@@ -562,6 +499,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   // --- REPLACEMENT END ---
+
 
 
   S.isShiftAM = function (startMin) {
