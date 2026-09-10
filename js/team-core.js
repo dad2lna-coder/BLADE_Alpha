@@ -429,30 +429,44 @@ window.Scheduler = window.Scheduler || {};
       "</span>";
   };
 
+  // --- REPLACEMENT for renderTeamPool to support 3-column layout ---
   S.renderTeamPool = function () {
     var el = S.$("team-pool");
     if (!el) return;
+
     var groups = S.groupPoolByRole(S.unassignedPool());
-    var html = "";
+    el.innerHTML = ""; // Clear existing content
+
     ROLES.forEach(function (role) {
       var list = groups[role];
-      if (!list.length) return;
-      html +=
-        '<div class="team-role-group"><div class="team-role-title">' +
-        role +
-        ' <span class="muted">(' +
-        list.length +
-        ")</span></div>" +
-        '<div class="team-role-list" data-role="' +
-        role +
-        '">' +
-        list
-          .map(function (p) {
-            return S.lineCardHtml(p, { selectable: true });
-          })
-          .join("") +
-        "</div></div>";
+      var column = document.createElement('div');
+      column.className = 'team-role-group';
+      
+      var title = document.createElement('div');
+      title.className = 'team-role-title';
+      title.innerHTML = role + ' <span class="muted">(' + list.length + ")</span>";
+      
+      var roleList = document.createElement('div');
+      roleList.className = 'team-role-list';
+      roleList.setAttribute('data-role', role);
+      
+      if (list.length > 0) {
+        roleList.innerHTML = list.map(function (p) {
+          return S.lineCardHtml(p, { selectable: true });
+        }).join("");
+      }
+
+      column.appendChild(title);
+      column.appendChild(roleList);
+      el.appendChild(column);
     });
+
+    // Handle case where no lines match filters at all
+    if (S.unassignedPool().length === 0) {
+        el.innerHTML = '<p class="muted" style="grid-column: 1 / -1;">No unassigned lines match the filters. Generate a schedule first, or clear filters.</p>';
+    }
+  };
+
     el.innerHTML = html || '<p class="muted">No unassigned lines match the filters. Generate a schedule first, or clear filters.</p>';
   };
 
