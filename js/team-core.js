@@ -1228,6 +1228,9 @@ window.Scheduler = window.Scheduler || {};
     document.addEventListener("change", function (e) {
       var t = e.target;
       if (!t) return;
+      if (t.id === 'pool-group-by-role') {
+        S.renderTeams(); // Re-render the entire teams tab to correctly re-init Sortable.js
+      } else 
       if (t.getAttribute && t.getAttribute("data-team-follow") != null) {
         var tid = t.getAttribute("data-team-follow");
         var team = S.getTeamById(tid);
