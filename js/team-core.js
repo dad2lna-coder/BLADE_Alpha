@@ -95,7 +95,7 @@ window.Scheduler = window.Scheduler || {};
   };
   S.teamCountsHeaderHtml = function (team) {
     var c = S.teamMemberCounts(team);
-    function bit(role) { var m = c[role].M, f = c[role].F; if (!m && !f) return ""; var tot = m + f; var fPct = tot ? Math.round((100 * f) / tot) : 0; return '<span class="team-count-chip">' + role + " " + '<span class="sex-m">' + m + "M</span>/" + '<span class="sex-f">' + f + 'F</span> <span class="muted">(' + fPct + '%F)</span></span>"; }
+    function bit(role) { var m = c[role].M, f = c[role].F; if (!m && !f) return ""; var tot = m + f; var fPct = tot ? Math.round((100 * f) / tot) : 0; return '<span class="team-count-chip">' + role + " " + '<span class="sex-m">' + m + "M</span>/" + '<span class="sex-f">' + f + 'F</span> <span class="muted">(' + fPct + '%F)</span></span>'; }
     var allM = c.STSO.M + c.LTSO.M + c.TSO.M; var allF = c.STSO.F + c.LTSO.F + c.TSO.F; var allT = allM + allF; var overallF = allT ? Math.round((100 * allF) / allT) : 0;
     return '<span class="team-counts-header" title="Assigned by role and sex"><span class="team-count-total">' + c.total + '</span> <span class="team-count-chip">F% ' + overallF + "</span> " + bit("STSO") + bit("LTSO") + bit("TSO") + "</span>";
   };
