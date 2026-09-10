@@ -1,8 +1,11 @@
-/** Consolidated Teams Module for BLADE Alpha Build */
+/** Consolidated Teams Module for BLADE Alpha Build - CORRECTED */
 window.Scheduler = window.Scheduler || {};
 
 (function (S) {
   "use strict";
+
+  // --- CRITICAL FIX: Add the missing helper function ---
+  S.$ = S.$ || function (id) { return document.getElementById(id); };
 
   var ROLES = ["TSO", "LTSO", "STSO"];
   var teamSeq = 1;
@@ -361,7 +364,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderTeamFilters = function () {
-    var bar = document.getElementById("team-filters");
+    var bar = S.$("team-filters");
     if (!bar) return;
     var starts = {};
     S.teams.pool.forEach(function (p) {
@@ -422,7 +425,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderTeamPool = function () {
-    var el = document.getElementById("team-pool");
+    var el = S.$("team-pool");
     if (!el) return;
     var groups = S.groupPoolByRole(S.unassignedPool());
     var html = "";
@@ -499,8 +502,8 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderTeamBoards = function () {
-    var inline = document.getElementById("team-boards");
-    var dock = document.getElementById("team-boards-follow");
+    var inline = S.$("team-boards");
+    var dock = S.$("team-boards-follow");
     var following = S.teams.teams.filter(function (t) { return !!t.followMe; });
     var notFollowing = S.teams.teams.filter(function (t) { return !t.followMe; });
     if (inline) {
@@ -545,7 +548,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderTeamStats = function () {
-    var body = document.getElementById("team-stats-body");
+    var body = S.$("team-stats-body");
     if (!body) return;
     var s = S.computeTeamStats();
     var pct = s.total ? Math.round((100 * s.assigned) / s.total) : 0;
@@ -606,7 +609,7 @@ window.Scheduler = window.Scheduler || {};
 
   S.applyFollowMe = function () {
     var following = S.teams.teams.some(function (t) { return !!t.followMe; });
-    var docks = document.getElementById("team-follow-docks");
+    var docks = S.$("team-follow-docks");
     if (docks) {
       if (following) {
         docks.hidden = false;
@@ -757,8 +760,8 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function injectControls() {
-    var bar = document.getElementById("team-architecture");
-    if (!bar || document.getElementById("form-start-window")) return;
+    var bar = S.$("team-architecture");
+    if (!bar || S.$("form-start-window")) return;
     var wrap = document.createElement("span");
     wrap.className = "team-form-opts";
     wrap.style.cssText = "display:inline-flex;flex-wrap:wrap;gap:0.6rem;align-items:center;";
@@ -769,13 +772,13 @@ window.Scheduler = window.Scheduler || {};
       '" style="width:4rem"></label>' +
       '<label class="follow-me-label" title="Also place people who share at least one RDO day and fall in the start window">' +
       '<input type="checkbox" id="form-allow-one-rdo"> Allow 1 matching RDO</label>';
-    var hint = document.getElementById("arch-hint");
+    var hint = S.$("arch-hint");
     if (hint) bar.insertBefore(wrap, hint);
     else bar.appendChild(wrap);
-    document.getElementById("form-start-window").addEventListener("change", function () {
+    S.$("form-start-window").addEventListener("change", function () {
       S.teams.formOpts.startWindowMin = Math.max(0, Math.min(180, +this.value || 0));
     });
-    document.getElementById("form-allow-one-rdo").addEventListener("change", function () {
+    S.$("form-allow-one-rdo").addEventListener("change", function () {
       S.teams.formOpts.allowOneRdo = !!this.checked;
     });
   }
@@ -807,11 +810,11 @@ window.Scheduler = window.Scheduler || {};
       if (S.updateStatus) S.updateStatus("Generate a schedule first so there are lines to group.");
       return;
     }
-    var stsoPer = Math.max(0, +(document.getElementById("arch-stso") && document.getElementById("arch-stso").value) || 1);
-    var ltsoPer = Math.max(0, +(document.getElementById("arch-ltso") && document.getElementById("arch-ltso").value) || 0);
-    var tsoPer = Math.max(0, +(document.getElementById("arch-tso") && document.getElementById("arch-tso").value) || 0);
-    var windowMin = Math.max(0, +((document.getElementById("form-start-window") && document.getElementById("form-start-window").value) || S.teams.formOpts.startWindowMin || 0));
-    var allowOne = !!(document.getElementById("form-allow-one-rdo") && document.getElementById("form-allow-one-rdo").checked);
+    var stsoPer = Math.max(0, +(S.$("arch-stso") && S.$("arch-stso").value) || 1);
+    var ltsoPer = Math.max(0, +(S.$("arch-ltso") && S.$("arch-ltso").value) || 0);
+    var tsoPer = Math.max(0, +(S.$("arch-tso") && S.$("arch-tso").value) || 0);
+    var windowMin = Math.max(0, +((S.$("form-start-window") && S.$("form-start-window").value) || S.teams.formOpts.startWindowMin || 0));
+    var allowOne = !!(S.$("form-allow-one-rdo") && S.$("form-allow-one-rdo").checked);
     S.teams.formOpts.startWindowMin = windowMin;
     S.teams.formOpts.allowOneRdo = allowOne;
 
@@ -827,6 +830,7 @@ window.Scheduler = window.Scheduler || {};
     }
 
     S.teams.teams = [];
+    teamSeq = 1; // Reset sequence for new teams
     for (var i = 0; i < nTeams; i++) S.createTeam();
 
     var used = {};
@@ -866,7 +870,6 @@ window.Scheduler = window.Scheduler || {};
       if (!team) return;
       team.members.push(p.id);
       used[p.id] = true;
-      team.name = S.padTeamNum ? S.padTeamNum(idx + 1, Math.max(2, String(nTeams).length)) : String(idx + 1);
     });
     if (S.renumberTeamsByStart) S.renumberTeamsByStart();
 
@@ -1004,9 +1007,9 @@ window.Scheduler = window.Scheduler || {};
   
   // --- Injected from team-flags.js ---
   function archTarget() {
-    var stso = Math.max(0, +(document.getElementById("arch-stso") && document.getElementById("arch-stso").value) || 1);
-    var ltso = Math.max(0, +(document.getElementById("arch-ltso") && document.getElementById("arch-ltso").value) || 0);
-    var tso = Math.max(0, +(document.getElementById("arch-tso") && document.getElementById("arch-tso").value) || 0);
+    var stso = Math.max(0, +(S.$("arch-stso") && S.$("arch-stso").value) || 1);
+    var ltso = Math.max(0, +(S.$("arch-ltso") && S.$("arch-ltso").value) || 0);
+    var tso = Math.max(0, +(S.$("arch-tso") && S.$("arch-tso").value) || 0);
     return { stso: stso, ltso: ltso, tso: tso, size: stso + ltso + tso };
   }
 
@@ -1045,7 +1048,7 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function ensureBanner() {
-    var existing = document.getElementById("team-oddity-top");
+    var existing = S.$("team-oddity-top");
     if (existing) return existing;
     var bar = document.createElement("div");
     bar.id = "team-oddity-top";
@@ -1098,7 +1101,7 @@ window.Scheduler = window.Scheduler || {};
       S.renderTeamBoards();
       S.renderTeamStats();
       S.initSortables();
-      var hint = document.getElementById("team-count-hint");
+      var hint = S.$("team-count-hint");
       if (hint) {
         var tc = S.teams.teams.length;
         var mc = 0;
@@ -1109,7 +1112,7 @@ window.Scheduler = window.Scheduler || {};
       }
 
       function ensureBtn(id, insertParent) {
-        var btn = document.getElementById(id);
+        var btn = S.$(id);
         if (btn) return btn;
         if (!insertParent) return null;
         btn = document.createElement("button");
@@ -1124,7 +1127,7 @@ window.Scheduler = window.Scheduler || {};
       var topToolbar = document.querySelector("#tab-teams .card .toolbar");
       var b1 = ensureBtn("btn-team-new", topToolbar);
       var boardsCard = document.querySelector("#tab-teams .card:last-child .section-title");
-      var b2 = document.getElementById("btn-team-new-2");
+      var b2 = S.$("btn-team-new-2");
       if (!b2 && boardsCard) {
         b2 = document.createElement("button");
         b2.type = "button";
@@ -1154,7 +1157,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.assignSelectedToTeam = function () {
-    var target = document.getElementById("team-assign-target");
+    var target = S.$("team-assign-target");
     if (!target || !target.value) {
       if (S.updateStatus) S.updateStatus("Pick a team from the dropdown first.");
       return;
@@ -1189,13 +1192,13 @@ window.Scheduler = window.Scheduler || {};
     S.teams.buildOpen = false;
     (S.teams.teams || []).forEach(function (t) { t.followMe = false; });
     if (S.teams.selected) S.teams.selected = {};
-    var md = document.getElementById("team-detail-modal");
+    var md = S.$("team-detail-modal");
     if (md) {
       md.style.display = "none";
       md.classList.remove("is-open");
     }
     if (S.applyFollowMe) S.applyFollowMe();
-    var docks = document.getElementById("team-follow-docks");
+    var docks = S.$("team-follow-docks");
     if (docks) {
       docks.hidden = true;
       docks.classList.remove("is-active");
@@ -1242,7 +1245,7 @@ window.Scheduler = window.Scheduler || {};
         var id = +t.getAttribute("data-select-line");
         if (t.checked) S.teams.selected[id] = true;
         else delete S.teams.selected[id];
-        var btn = document.getElementById("btn-team-assign");
+        var btn = S.$("btn-team-assign");
         if (btn) {
           var n = S.getSelectedIds().length;
           btn.textContent = "Add to team" + (n ? " (" + n + ")" : "");
