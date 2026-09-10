@@ -7,6 +7,11 @@ window.Scheduler = window.Scheduler || {};
   // --- CRITICAL FIX: Add the missing helper function ---
   S.$ = S.$ || function (id) { return document.getElementById(id); };
 
+  // --- CRITICAL FIX 2: Move sexOf to the global scope within the IIFE ---
+  function sexOf(p) {
+    return p && p.sex === "F" ? "F" : "M";
+  }
+
   var ROLES = ["TSO", "LTSO", "STSO"];
   var teamSeq = 1;
 
@@ -257,8 +262,8 @@ window.Scheduler = window.Scheduler || {};
       if (!p) return;
       c.total++;
       var role = p.role === "STSO" || p.role === "LTSO" ? p.role : "TSO";
-      var sex = p.sex === "F" ? "F" : "M";
-      c[role][sex]++;
+      var s = sexOf(p);
+      c[role][s]++;
     });
     return c;
   };
@@ -301,7 +306,7 @@ window.Scheduler = window.Scheduler || {};
 
   S.lineCardHtml = function (p, opts) {
     opts = opts || {};
-    var sexCls = p.sex === "M" ? "sex-m" : "sex-f";
+    var sexCls = sexOf(p) === "M" ? "sex-m" : "sex-f";
     var checked = opts.selectable && S.teams.selected[p.id] ? " checked" : "";
     var removeBtn = opts.removable
       ? '<button type="button" class="btn btn-red btn-sm" data-remove-member="' +
@@ -707,7 +712,6 @@ window.Scheduler = window.Scheduler || {};
     });
   };
 
-  // --- Injected from team-form-smart.js ---
   S.teams.formOpts = S.teams.formOpts || {
     startWindowMin: 30,
     allowOneRdo: false
@@ -801,7 +805,6 @@ window.Scheduler = window.Scheduler || {};
     else m++;
     return Math.abs(m - f) / Math.max(1, m + f);
   }
-  // --- End of injected helpers ---
 
   S.autoFormTeams = function () {
     S.collectTeamPool();
@@ -834,7 +837,6 @@ window.Scheduler = window.Scheduler || {};
     for (var i = 0; i < nTeams; i++) S.createTeam();
 
     var used = {};
-    function sexOf(p) { return p.sex === "F" ? "F" : "M"; }
 
     byRole.STSO.sort(function (a, b) {
       var sa = startMins(a) != null ? startMins(a) : 0;
@@ -851,7 +853,6 @@ window.Scheduler = window.Scheduler || {};
     });
     S.renumberTeamsByStart();
 
-    // --- REFACTORED LOGIC ---
     var rolesToFill = ["STSO", "LTSO", "TSO"];
 
     S.teams.teams.forEach(function (team) {
@@ -883,10 +884,10 @@ window.Scheduler = window.Scheduler || {};
         }).filter(function (c) { return c.q > 0; });
 
         scored.sort(function (a, b) {
-          if (b.q !== a.q) return b.q - a.q; // Best match quality first
-          if (b.opp !== a.opp) return b.opp - a.opp; // Opposite sex supervisor preferred
-          if (a.teamSex !== b.teamSex) return a.teamSex - b.teamSex; // Better overall team sex balance
-          if (a.roleSex !== b.roleSex) return a.roleSex - b.roleSex; // Better role sex balance
+          if (b.q !== a.q) return b.q - a.q;
+          if (b.opp !== a.opp) return b.opp - a.opp;
+          if (a.teamSex !== b.teamSex) return a.teamSex - b.teamSex;
+          if (a.roleSex !== b.roleSex) return a.roleSex - b.roleSex;
           return 0;
         });
 
@@ -1088,8 +1089,9 @@ window.Scheduler = window.Scheduler || {};
         var tc = S.teams.teams.length;
         var mc = 0;
         S.teams.teams.forEach(function (t) { mc += (t.members || []).length; });
+        // --- FINAL FIX: Use the correct function to get the unassigned count ---
         hint.textContent = tc
-          ? tc + " team(s) · " + mc + " assigned · " + (pool.length - mc) + " in pool (filtered)"
+          ? tc + " team(s) · " + mc + " assigned · " + S.unassignedPool().length + " in pool (filtered)"
           : "No teams yet — click + New team";
       }
 
