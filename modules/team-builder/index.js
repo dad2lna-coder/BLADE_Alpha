@@ -1,12 +1,17 @@
 /**
  * ▲ BLADE AIRPORT OPS v2.0 // TEAM BUILDER MODULE
  * PATH: /modules/team-builder/index.js
+ * 
+ * This file is executed as an ES Module. It maintains its own private scope
+ * and explicitly registers a lifecycle bridge on the window object to 
+ * coordinate state updates with the legacy terminal scheduler.
  */
 
 // ==========================================
-// 1. MODULE-LEVEL PRIVATE STATE
+// 1. MODULE-LEVEL STATE (DYNAMIC OVERRIDES)
 // ==========================================
 const state = {
+    // Falls back to mock structures ONLY if the legacy app exposes no programmatic teams
     teams: [
         { id: "team-alpha", name: "Alpha Gate Ramp", members: [] },
         { id: "team-bravo", name: "Bravo Baggage Ops", members: [] },
@@ -19,13 +24,47 @@ const state = {
 // 2. STATE SYNCHRONIZATION & RENDERING
 // ==========================================
 
-function syncStateWithLegacy(scheduler) {
-    if (!scheduler || !scheduler.staff) return;
+/**
+ * Resolves the active operational teams by reading from the core scheduler state.
+ * @param {object} scheduler - The legacy scheduler instance
+ * @returns {Array} List of active operational team objects
+ */
+function getActiveTeams(scheduler) {
+    if (scheduler && Array.isArray(scheduler.teams)) {
+        return scheduler.teams;
+    }
+    if (window.state && Array.isArray(window.state.teams)) {
+        return window.state.teams;
+    }
+    // Fallback to local default array if legacy scheduler contains no teams
+    return state.teams;
+}
 
-    // 1. Gather all currently assigned staff members across all teams
+/**
+ * Syncs the local unassigned pool with the legacy scheduler's staff list.
+ * Prevents duplicates by checking which staff are already assigned to active teams.
+ * @param {object} scheduler - The legacy scheduler instance
+ */
+function syncStateWithLegacy(scheduler) {
+    if (!scheduler) return;
+
+    // Dynamically align local team references with the core application's active teams
+    const activeTeams = getActiveTeams(scheduler);
+    if (activeTeams !== state.teams) {
+        state.teams = activeTeams;
+    }
+
+    if (!scheduler.staff) {
+        state.unassignedStaff = [];
+        return;
+    }
+
+    // 1. Gather all currently assigned staff members across all active teams
     const assignedStaffNames = new Set();
     state.teams.forEach(team => {
-        team.members.forEach(member => assignedStaffNames.add(member));
+        if (Array.isArray(team.members)) {
+            team.members.forEach(member => assignedStaffNames.add(member));
+        }
     });
 
     // 2. Filter unassigned pool to contain only staff not currently on teams
@@ -35,32 +74,47 @@ function syncStateWithLegacy(scheduler) {
 
     console.log("Team Builder synced with legacy state:", {
         assigned: Array.from(assignedStaffNames),
-        unassigned: state.unassignedStaff
+        unassigned: state.unassignedStaff,
+        teamsCount: state.teams.length
     });
 }
 
+/**
+ * Main render function that draws the retro terminal components
+ * into the DOM containers on the index page.
+ */
 function renderTeamBuilder() {
     const teamRoot = document.getElementById("team-builder-root");
     const poolRoot = document.getElementById("unassigned-pool-root");
 
-    if (!teamRoot || !poolRoot) return;
+    // Safety check: Exit if the elements do not exist in the DOM
+    if (!teamRoot || !poolRoot) {
+        return;
+    }
+
+    // Ensure we are referencing the correct active teams
+    const activeTeams = getActiveTeams(window.mySchedulerInstance);
 
     // --- RENDER TEAMS PANEL ---
     let teamsHTML = '';
-    state.teams.forEach(team => {
+    activeTeams.forEach(team => {
+        const membersList = Array.isArray(team.members) ? team.members : [];
+        const teamId = team.id || team.name.toLowerCase().replace(/\s+/g, '-');
+        const teamName = team.name || "Unnamed Team";
+
         teamsHTML += `
             <div class="team-card" style="border: 1px solid var(--term-green); margin-bottom: 15px; padding: 10px; background: rgba(0,20,0,0.2);">
-                <div style="font-weight: bold; border-bottom: 1px dashed var(--term-green); padding-bottom: 5px; margin-bottom: 8px;">
-                    ▶ ${team.name.toUpperCase()} [${team.members.length} / 4]
+                <div style="font-weight: bold; border-bottom: 1px dashed var(--term-green); padding-bottom: 5px; margin-bottom: 8px; color: var(--term-green);">
+                    ▶ ${teamName.toUpperCase()} [${membersList.length} / 4]
                 </div>
                 <div class="team-members-list" style="min-height: 40px; display: flex; flex-direction: column; gap: 5px;">
-                    ${team.members.length === 0 
+                    ${membersList.length === 0 
                         ? `<span style="color: var(--term-dim); font-style: italic;">[ NO STAFF ASSIGNED ]</span>` 
-                        : team.members.map(member => `
+                        : membersList.map(member => `
                             <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(51, 255, 51, 0.1); padding: 3px 6px;">
-                                <span>⚡ ${member}</span>
-                                <button class="action-btn remove-btn" data-team-id="${team.id}" data-member-name="${member}" 
-                                        style="background: transparent; border: 1px solid red; color: red; font-family: inherit; font-size: 0.8rem; cursor: pointer;">
+                                <span style="color: var(--term-green);">⚡ ${member}</span>
+                                <button class="action-btn remove-btn" data-team-id="${teamId}" data-member-name="${member}" 
+                                        style="background: transparent; border: 1px solid red; color: red; font-family: inherit; font-size: 0.8rem; cursor: pointer; padding: 2px 6px; border-radius: 4px;">
                                     RELEASE
                                 </button>
                             </div>
@@ -75,7 +129,7 @@ function renderTeamBuilder() {
     // --- RENDER UNASSIGNED POOL ---
     if (state.unassignedStaff.length === 0) {
         poolRoot.innerHTML = `
-            <div class="status-box" style="border-color: var(--term-amber); color: var(--term-amber); padding: 10px; border: 1px dashed var(--term-amber); text-align: center;">
+            <div class="status-box" style="border: 1px dashed var(--term-amber); color: var(--term-amber); padding: 15px; text-align: center; background: rgba(240, 165, 0, 0.05); font-family: var(--mono); font-size: 0.85rem;">
                 ALL OPERATIONS STAFF ASSIGNED. NO IDLE WORKERS IN POOL.
             </div>
         `;
@@ -83,15 +137,19 @@ function renderTeamBuilder() {
         let poolHTML = '<ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">';
         state.unassignedStaff.forEach(staff => {
             poolHTML += `
-                <li style="display: flex; justify-content: space-between; align-items: center; border: 1px dashed var(--term-green); padding: 6px 10px; background: rgba(0, 10, 0, 0.4);">
-                    <span>👤 ${staff.toUpperCase()}</span>
+                <li style="display: flex; justify-content: space-between; align-items: center; border: 1px dashed var(--term-green); padding: 6px 10px; background: rgba(0, 10, 0, 0.4); border-radius: 4px;">
+                    <span style="color: var(--term-green); font-family: var(--mono); font-size: 0.85rem;">👤 ${staff.toUpperCase()}</span>
                     <div style="display: flex; gap: 5px;">
-                        ${state.teams.map(team => `
-                            <button class="action-btn assign-btn" data-team-id="${team.id}" data-member-name="${staff}"
-                                    style="background: var(--term-dim); border: 1px solid var(--term-green); color: var(--term-green); font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 2px 4px;">
-                                + ${team.name.split(' ')[0]}
-                            </button>
-                        `).join('')}
+                        ${activeTeams.map(team => {
+                            const teamId = team.id || team.name.toLowerCase().replace(/\s+/g, '-');
+                            const shortLabel = (team.name || "").split(' ')[0] || "Team";
+                            return `
+                                <button class="action-btn assign-btn" data-team-id="${teamId}" data-member-name="${staff}"
+                                        style="background: rgba(0,20,0,0.3); border: 1px solid var(--term-green); color: var(--term-green); font-family: inherit; font-size: 0.75rem; cursor: pointer; padding: 3px 6px; border-radius: 4px;">
+                                    + ${shortLabel}
+                                </button>
+                            `;
+                        }).join('')}
                     </div>
                 </li>
             `;
@@ -108,7 +166,7 @@ function setupEventListeners() {
     const f4Panel = document.getElementById("tab-teams");
     if (!f4Panel) return;
 
-    // Remove any prior listeners by using single parent element listener
+    // Attach single listener to container root to avoid orphaned handlers during rewrites
     f4Panel.addEventListener("click", (event) => {
         const target = event.target;
 
@@ -130,13 +188,20 @@ function setupEventListeners() {
     // --- BIND AUTO-FORM TEAMS BUTTON ---
     const autoFormBtn = document.getElementById("btn-team-auto-form");
     if (autoFormBtn) {
-        autoFormBtn.addEventListener("click", autoFormTeams);
+        autoFormBtn.addEventListener("click", () => {
+            autoFormTeams();
+        });
     }
 }
 
 function assignStaffToTeam(memberName, teamId) {
-    const team = state.teams.find(t => t.id === teamId);
+    const activeTeams = getActiveTeams(window.mySchedulerInstance);
+    const team = activeTeams.find(t => (t.id === teamId || t.name.toLowerCase().replace(/\s+/g, '-') === teamId));
     if (!team) return;
+
+    if (!Array.isArray(team.members)) {
+        team.members = [];
+    }
 
     if (team.members.length >= 4) {
         alert("CRITICAL WARNING: Team capacity limit reached (MAX 4 per team).");
@@ -145,20 +210,25 @@ function assignStaffToTeam(memberName, teamId) {
 
     if (!team.members.includes(memberName)) {
         team.members.push(memberName);
+        // Resynchronize and update UI
         syncStateWithLegacy(window.mySchedulerInstance);
         renderTeamBuilder();
-        console.log(`Assigned ${memberName} to ${team.name}`);
+        console.log(`Assigned ${memberName} to ${team.name || teamId}`);
     }
 }
 
 function removeStaffFromTeam(memberName, teamId) {
-    const team = state.teams.find(t => t.id === teamId);
+    const activeTeams = getActiveTeams(window.mySchedulerInstance);
+    const team = activeTeams.find(t => (t.id === teamId || t.name.toLowerCase().replace(/\s+/g, '-') === teamId));
     if (!team) return;
 
-    team.members = team.members.filter(member => member !== memberName);
+    if (Array.isArray(team.members)) {
+        team.members = team.members.filter(member => member !== memberName);
+    }
+    // Resynchronize and update UI
     syncStateWithLegacy(window.mySchedulerInstance);
     renderTeamBuilder();
-    console.log(`Released ${memberName} from ${team.name}`);
+    console.log(`Released ${memberName} from ${team.name || teamId}`);
 }
 
 // ==========================================
@@ -166,8 +236,15 @@ function removeStaffFromTeam(memberName, teamId) {
 // ==========================================
 function autoFormTeams() {
     const scheduler = window.mySchedulerInstance;
-    if (!scheduler || !scheduler.staff) {
-        alert("ERROR: No legacy scheduler staff list found.");
+    if (!scheduler || !scheduler.staff || scheduler.staff.length === 0) {
+        alert("WARNING: No operations staff lines found.\n\nPlease configure your FTE variables in the [F1] SETUP tab and click the global '[GEN] GENERATE' button at the top header first to compile your staff registry.");
+        return;
+    }
+
+    // Retrieve active dynamic teams list from core state
+    const activeTeams = getActiveTeams(scheduler);
+    if (activeTeams.length === 0) {
+        alert("WARNING: No active operational teams exist to form. Please build or add a team first.");
         return;
     }
 
@@ -176,44 +253,49 @@ function autoFormTeams() {
     const archLtso = parseInt(document.getElementById("arch-ltso")?.value) || 0;
     const archTso = parseInt(document.getElementById("arch-tso")?.value) || 0;
 
-    // Clear existing assignments
-    state.teams.forEach(team => {
+    // Clear existing assignments for all dynamic teams
+    activeTeams.forEach(team => {
         team.members = [];
     });
 
-    // Make copy of staff to distribute
+    // Create a pool of unassigned staff to distribute
     const pool = [...scheduler.staff];
 
-    // Filter staff by roles based on identifiers (if role tags exist)
+    // Filter staff by roles based on typical name-string roles
     const stsoStaff = pool.filter(name => name.toUpperCase().includes("STSO"));
     const ltsoStaff = pool.filter(name => name.toUpperCase().includes("LTSO"));
     const tsoStaff = pool.filter(name => !name.toUpperCase().includes("STSO") && !name.toUpperCase().includes("LTSO"));
 
-    // Distribute into teams based on architectural requirements
-    state.teams.forEach(team => {
-        // 1. Assign STSO members
+    // Distribute among the active teams according to architectural inputs
+    activeTeams.forEach(team => {
+        if (!Array.isArray(team.members)) {
+            team.members = [];
+        }
+
+        // Assign STSOs
         for (let i = 0; i < archStso; i++) {
-            if (stsoStaff.length > 0) {
+            if (stsoStaff.length > 0 && team.members.length < 4) {
                 team.members.push(stsoStaff.shift());
             }
         }
-        // 2. Assign LTSO members
+        // Assign LTSOs
         for (let i = 0; i < archLtso; i++) {
-            if (ltsoStaff.length > 0) {
+            if (ltsoStaff.length > 0 && team.members.length < 4) {
                 team.members.push(ltsoStaff.shift());
             }
         }
-        // 3. Assign TSO members
+        // Assign TSOs
         for (let i = 0; i < archTso; i++) {
-            if (tsoStaff.length > 0) {
+            if (tsoStaff.length > 0 && team.members.length < 4) {
                 team.members.push(tsoStaff.shift());
             }
         }
     });
 
+    // Update pool synchronization and re-render
     syncStateWithLegacy(scheduler);
     renderTeamBuilder();
-    console.log("Teams auto-formed dynamically with architecture layout.");
+    console.log("Operational teams auto-formed dynamically using current team listings.");
 }
 
 // ==========================================
@@ -247,17 +329,22 @@ function installLegacyMonkeyPatch(schedulerInstance) {
 // ==========================================
 // 6. GLOBAL INTERFACE INITIALIZATION (THE BRIDGE)
 // ==========================================
+
+/**
+ * Boots the modular script and coordinates with the legacy scheduler instance.
+ * @param {object} schedulerInstance - Instantiated legacy driver object
+ */
 let teamBuilderInitialized = false;
 
 export function initTeamBuilder(schedulerInstance) {
     if (teamBuilderInitialized) return;
     teamBuilderInitialized = true;
 
-    // Establish the window-level bridge
+    // Mount the scheduler reference to the window scope for access by event tasks
     window.mySchedulerInstance = schedulerInstance;
 
     if (!hasTeamBuilderDom()) {
-        console.warn("Bootstrap aborted: Team Builder containers are missing from the DOM.");
+        console.warn("Modular Team Builder containers missing from DOM. Aborting initialization.");
         return;
     }
 
@@ -267,4 +354,5 @@ export function initTeamBuilder(schedulerInstance) {
     renderTeamBuilder();
 }
 
+// Bind directly to global scope so Main index Page's bootstrap script can find it
 window.initTeamBuilder = initTeamBuilder;
