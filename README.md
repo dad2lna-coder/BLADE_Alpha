@@ -1,8 +1,8 @@
 # BLADE_Alpha
 
-**Offline airport staffing scheduler for TSO / LTSO / STSO positions.**
+**Offline staffing scheduler.**
 
-BrokeSched is a lightweight, single-page HTML/JavaScript application that generates optimized workforce schedules for airport Transportation Security Officer (TSO) teams. Works entirely offline—no backend, no database, no cloud calls.
+Blade_Alpha is a lightweight, single-page HTML/JavaScript application that generates optimized workforce schedules teams. Works entirely offline—no backend, no database, no cloud calls.
 
 [![GitHub Pages](https://img.shields.io/badge/live-GitHub%20Pages-blue?logo=github)](https://dad2lna-coder.github.io/BLADE_Alpha/)
 ![License](https://img.shields.io/badge/license-MIT-green)
