@@ -9,22 +9,6 @@
 <link rel="stylesheet" href="css/line-print.css?v=20260902i" />
 <link rel="stylesheet" href="css/intro.css?v=20260904b" />
 <link rel="stylesheet" href="css/console.css?v=20260904c" />
-<style>
-#tab-teams.active { display:flex; flex-direction:column; gap:1rem; }
-.team-pool-columns {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-}
-@media (max-width: 900px) {
-  .team-pool-columns { grid-template-columns: 1fr; }
-}
-.team-boards-horizontal {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
-}
-</style>
 </head>
 <body class="console-skin">
 <div id="blade-intro"><div class="bezel"><div class="crt"><div class="scan"></div><h1 class="banner">**** CHAOS BASIC V2 ****</h1><div class="sub">64K RAM SYSTEM&nbsp;&nbsp;38911 BYTES FREE</div><div id="blade-term"></div><pre id="blade-art"></pre><div id="blade-greet"></div></div><div class="chrome"><span><span class="led"></span>BLADE CONSOLE</span><span>PRESS Y / N WHEN PROMPTED</span></div></div></div>
@@ -95,25 +79,59 @@
 <section class="panel" id="tab-coverage"><div class="card"><div class="section-title">30-minute headcount by day of week (Sun–Sat)</div><p class="muted" id="coverage-summary">Generate to compute staffing by 30-minute slot and day.</p><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="checkbox" id="cov-role-stso" /> STSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-ltso" /> LTSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-tso" checked /> TSO</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="all" checked /> All</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="bag" /> Baggage</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="pax" /> PAX</label></div><div class="lines-scroll"><table class="data-table cov-matrix" id="coverage-matrix"><thead id="coverage-matrix-head"></thead><tbody id="coverage-matrix-body"></tbody></table></div></div><div class="card"><div class="section-title">Typical day profile (bars)</div><div class="cov-bars" id="coverage-bars"></div></div><div class="card"><div class="section-title">Shift mix</div><table class="data-table"><thead><tr><th>Shift</th><th>Window</th><th>FT M/F</th><th>PT M/F</th><th>LTSO M/F</th><th>STSO M/F</th><th>TSO tot</th><th>All</th></tr></thead><tbody id="shift-summary-body"></tbody></table></div></section>
 <section class="panel" id="tab-lines"><div class="card"><div class="section-title">Bid lines</div><div class="toolbar" id="lines-toolbar"><label>Filter role <select id="lines-filter-role"><option value="ALL" selected>All</option><option value="STSO">STSO</option><option value="LTSO">LTSO</option><option value="TSO">TSO (FT/PT)</option></select></label><label>Filter shift <select id="lines-filter-shift"><option value="">All shifts</option></select></label><label>Filter sex <select id="lines-filter-sex"><option value="">All</option><option value="M">M</option><option value="F">F</option></select></label><label>Filter team <select id="lines-filter-team"><option value="">All</option><option value="\__none_\_">Unassigned</option></select></label><button type="button" class="btn btn-amber" id="btn-export-lines-excel">Export Excel (.xlsx)</button></div><div class="lines-scroll lines-scroll-wide"><table class="data-table lines-editable"><thead id="lines-thead"></thead><tbody id="lines-tbody"></tbody></table></div></div></section>
 <section class="panel" id="tab-teams">
+  <!-- Embedded styles for the new layout. You can move this to your CSS file. -->
+  <style>
+    #tab-teams {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .team-pool-columns {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+    @media (max-width: 900px) {
+      .team-pool-columns {
+        grid-template-columns: 1fr;
+      }
+    }
+    .team-boards-horizontal {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 1rem;
+    }
+  </style>
+
+  <!-- Card for Team Forming Controls -->
   <div class="card">
     <div class="section-title">Team forming</div>
     <div class="toolbar"><button type="button" class="btn btn-amber" id="btn-team-new">+ New team</button><button type="button" class="btn btn-amber" id="btn-team-build">Build</button><span class="muted" id="team-count-hint">No teams yet</span></div>
     <div class="toolbar team-arch-bar" id="team-architecture"><label>STSO <input type="number" id="arch-stso" min="0" max="20" value="1" style="width:3.5rem"></label><label>LTSO <input type="number" id="arch-ltso" min="0" max="20" value="1" style="width:3.5rem"></label><label>TSO <input type="number" id="arch-tso" min="0" max="50" value="6" style="width:3.5rem"></label><button type="button" class="btn btn-amber" id="btn-team-auto-form">Auto-form teams</button><span class="muted" id="arch-hint"></span></div>
     <div class="toolbar" id="team-filters"></div>
   </div>
+
+  <!-- Card for the Unassigned Pool with 3 columns -->
   <div class="card">
-    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+    <div class="section-title" style="display: flex; justify-content: space-between; align-items: center;">
       <span>Unassigned pool</span>
-      <label class="follow-me-label" style="font-size:0.8rem; font-weight:normal; margin:0;">
+      <label class="follow-me-label" style="font-size: 0.8rem; font-weight: normal; margin: 0;">
         <input type="checkbox" id="pool-group-by-role" checked> Group by Role
       </label>
     </div>
-    <div id="team-pool" class="team-pool-columns"></div>
+    <div id="team-pool" class="team-pool-columns">
+      <!-- JS will populate this area -->
+    </div>
   </div>
+
+
+  <!-- Collapsible AM Teams Card (Full-width) -->
   <details class="card" id="am-teams-card" open>
     <summary class="section-title">AM Teams</summary>
     <div id="team-boards-am" class="team-boards-horizontal"></div>
   </details>
+  
+  <!-- Collapsible PM Teams Card (Full-width) -->
   <details class="card" id="pm-teams-card" open>
     <summary class="section-title">PM Teams</summary>
     <div id="team-boards-pm" class="team-boards-horizontal"></div>
@@ -147,19 +165,12 @@
 <script src="js/capacity.js?v=20260905b"></script>
 <script src="js/modset-board.js?v=20260905b"></script>
 <script src="js/export-board.js?v=20260905c"></script>
-<script src="js/instructions.js?v=20260903a"></script>
+  <script src="js/team-core.js?v=20260905_aligned"></script>
+  <script src="js/instructions.js?v=20260903a"></script>
 <script src="js/main.js?v=20260904f"></script>
 <script src="js/console-chrome.js?v=20260904f"></script>
 <script src="js/airfield-boot.js?v=20260905g"></script>
 <script src="js/setup-ui.js?v=20260905h"></script>
 <script src="js/intro.js?v=20260905g"></script>
 <script src="js/coverage-cuts.js?v=20260904m"></script>
-<script type="module">
-import { initTeamBuilder } from './team-builder/index.js';
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.Scheduler) initTeamBuilder(window.Scheduler);
-  else console.error('Scheduler missing');
-});
-</script>
 </body>
-</html>
