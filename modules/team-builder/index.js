@@ -178,15 +178,14 @@ function bindTeamUI() {
  */
 export function initTeamBuilder(scheduler) {
     window.Scheduler = window.Scheduler || scheduler;
-    injectAutoFormControls();
-    bindTeamUI();
 
-    // Perform the first render ONLY when the tab is switched to
     const teamsTab = document.querySelector('.tab-btn[data-tab="teams"]');
     if (teamsTab) {
         teamsTab.addEventListener('click', () => {
             // Only run the full init/render if it hasn't been done yet
-            if (!document.querySelector('#team-pool').children.length) {
+            if (document.querySelector('#team-pool') && !document.querySelector('#team-pool').children.length) {
+                injectAutoFormControls();
+                bindTeamUI();
                 collectTeamPool();
                 renderAll();
                 initFloatPanels();
