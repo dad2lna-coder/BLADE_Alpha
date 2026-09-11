@@ -155,44 +155,11 @@
 <script src="js/intro.js?v=20260905g"></script>
 <script src="js/coverage-cuts.js?v=20260904m"></script>
 <script type="module">
-import { initTeamBuilder } from './team-builder/index.js?v=20260911a';
-
-let teamBuilderStarted = false;
-
-function bootTeamBuilder() {
-  if (teamBuilderStarted) return;
-
-  if (window.Scheduler) {
-    teamBuilderStarted = true;
-    initTeamBuilder(window.Scheduler);
-    console.info('Team Builder initialized.');
-    return;
-  }
-
-  let attempts = 0;
-  const maxAttempts = 50;
-
-  const timer = setInterval(() => {
-    attempts++;
-
-    if (window.Scheduler) {
-      clearInterval(timer);
-      teamBuilderStarted = true;
-      initTeamBuilder(window.Scheduler);
-      console.info('Team Builder initialized after waiting for Scheduler.');
-    } else if (attempts >= maxAttempts) {
-      clearInterval(timer);
-      console.error('Scheduler missing. Team Builder could not initialize.');
-    }
-  }, 100);
-}
-
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootTeamBuilder);
-} else {
-  bootTeamBuilder();
-}
+import { initTeamBuilder } from './team-builder/index.js';
+document.addEventListener('DOMContentLoaded', () => {
+  if (window.Scheduler) initTeamBuilder(window.Scheduler);
+  else console.error('Scheduler missing');
+});
 </script>
-
 </body>
 </html>
