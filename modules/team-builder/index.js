@@ -1,10 +1,6 @@
 /**
  * ▲ BLADE AIRPORT OPS v2.0 // TEAM BUILDER MODULE
  * PATH: /modules/team-builder/index.js
- * 
- * This file is executed as an ES Module. It maintains its own private scope
- * and explicitly registers a lifecycle bridge on the window object to 
- * coordinate state updates with the legacy terminal scheduler.
  */
 
 // ==========================================
@@ -23,11 +19,6 @@ const state = {
 // 2. STATE SYNCHRONIZATION & RENDERING
 // ==========================================
 
-/**
- * Syncs the local unassigned pool with the legacy scheduler's staff list.
- * Prevents duplicates by checking which staff are already assigned to active teams.
- * @param {object} scheduler - The legacy scheduler instance
- */
 function syncStateWithLegacy(scheduler) {
     if (!scheduler || !scheduler.staff) return;
 
@@ -48,18 +39,11 @@ function syncStateWithLegacy(scheduler) {
     });
 }
 
-/**
- * Main render function that draws the retro terminal components
- * into the DOM containers on the index page.
- */
 function renderTeamBuilder() {
     const teamRoot = document.getElementById("team-builder-root");
     const poolRoot = document.getElementById("unassigned-pool-root");
 
-    // Safety check: Exit if the elements do not exist in the DOM
-    if (!teamRoot || !poolRoot) {
-        return;
-    }
+    if (!teamRoot || !poolRoot) return;
 
     // --- RENDER TEAMS PANEL ---
     let teamsHTML = '';
@@ -91,7 +75,7 @@ function renderTeamBuilder() {
     // --- RENDER UNASSIGNED POOL ---
     if (state.unassignedStaff.length === 0) {
         poolRoot.innerHTML = `
-            <div class="status-box" style="border-color: var(--term-amber); color: var(--term-amber);">
+            <div class="status-box" style="border-color: var(--term-amber); color: var(--term-amber); padding: 10px; border: 1px dashed var(--term-amber); text-align: center;">
                 ALL OPERATIONS STAFF ASSIGNED. NO IDLE WORKERS IN POOL.
             </div>
         `;
@@ -124,7 +108,7 @@ function setupEventListeners() {
     const f4Panel = document.getElementById("tab-teams");
     if (!f4Panel) return;
 
-    // Attach single listener to container root to avoid orphaned handlers during rewrites
+    // Remove any prior listeners by using single parent element listener
     f4Panel.addEventListener("click", (event) => {
         const target = event.target;
 
@@ -142,6 +126,12 @@ function setupEventListeners() {
             removeStaffFromTeam(memberName, teamId);
         }
     });
+
+    // --- BIND AUTO-FORM TEAMS BUTTON ---
+    const autoFormBtn = document.getElementById("btn-team-auto-form");
+    if (autoFormBtn) {
+        autoFormBtn.addEventListener("click", autoFormTeams);
+    }
 }
 
 function assignStaffToTeam(memberName, teamId) {
@@ -155,7 +145,6 @@ function assignStaffToTeam(memberName, teamId) {
 
     if (!team.members.includes(memberName)) {
         team.members.push(memberName);
-        // Resynchronize and update UI
         syncStateWithLegacy(window.mySchedulerInstance);
         renderTeamBuilder();
         console.log(`Assigned ${memberName} to ${team.name}`);
@@ -167,14 +156,68 @@ function removeStaffFromTeam(memberName, teamId) {
     if (!team) return;
 
     team.members = team.members.filter(member => member !== memberName);
-    // Resynchronize and update UI
     syncStateWithLegacy(window.mySchedulerInstance);
     renderTeamBuilder();
     console.log(`Released ${memberName} from ${team.name}`);
 }
 
 // ==========================================
-// 4. THE MONKEY PATCH SYNC PLUG
+// 4. AUTO-FORMING ALGORITHM
+// ==========================================
+function autoFormTeams() {
+    const scheduler = window.mySchedulerInstance;
+    if (!scheduler || !scheduler.staff) {
+        alert("ERROR: No legacy scheduler staff list found.");
+        return;
+    }
+
+    // Retrieve active configuration inputs
+    const archStso = parseInt(document.getElementById("arch-stso")?.value) || 0;
+    const archLtso = parseInt(document.getElementById("arch-ltso")?.value) || 0;
+    const archTso = parseInt(document.getElementById("arch-tso")?.value) || 0;
+
+    // Clear existing assignments
+    state.teams.forEach(team => {
+        team.members = [];
+    });
+
+    // Make copy of staff to distribute
+    const pool = [...scheduler.staff];
+
+    // Filter staff by roles based on identifiers (if role tags exist)
+    const stsoStaff = pool.filter(name => name.toUpperCase().includes("STSO"));
+    const ltsoStaff = pool.filter(name => name.toUpperCase().includes("LTSO"));
+    const tsoStaff = pool.filter(name => !name.toUpperCase().includes("STSO") && !name.toUpperCase().includes("LTSO"));
+
+    // Distribute into teams based on architectural requirements
+    state.teams.forEach(team => {
+        // 1. Assign STSO members
+        for (let i = 0; i < archStso; i++) {
+            if (stsoStaff.length > 0) {
+                team.members.push(stsoStaff.shift());
+            }
+        }
+        // 2. Assign LTSO members
+        for (let i = 0; i < archLtso; i++) {
+            if (ltsoStaff.length > 0) {
+                team.members.push(ltsoStaff.shift());
+            }
+        }
+        // 3. Assign TSO members
+        for (let i = 0; i < archTso; i++) {
+            if (tsoStaff.length > 0) {
+                team.members.push(tsoStaff.shift());
+            }
+        }
+    });
+
+    syncStateWithLegacy(scheduler);
+    renderTeamBuilder();
+    console.log("Teams auto-formed dynamically with architecture layout.");
+}
+
+// ==========================================
+// 5. THE MONKEY PATCH SYNC PLUG
 // ==========================================
 function hasTeamBuilderDom() {
     return !!(document.getElementById("team-builder-root") && document.getElementById("unassigned-pool-root"));
@@ -202,20 +245,19 @@ function installLegacyMonkeyPatch(schedulerInstance) {
 }
 
 // ==========================================
-// 5. GLOBAL INTERFACE INITIALIZATION (THE BRIDGE)
+// 6. GLOBAL INTERFACE INITIALIZATION (THE BRIDGE)
 // ==========================================
-
-/**
- * Boots the modular script and coordinates with the legacy scheduler instance.
- * @param {object} schedulerInstance - Instantiated legacy driver object
- */
 let teamBuilderInitialized = false;
 
 export function initTeamBuilder(schedulerInstance) {
     if (teamBuilderInitialized) return;
     teamBuilderInitialized = true;
 
+    // Establish the window-level bridge
+    window.mySchedulerInstance = schedulerInstance;
+
     if (!hasTeamBuilderDom()) {
+        console.warn("Bootstrap aborted: Team Builder containers are missing from the DOM.");
         return;
     }
 
@@ -225,5 +267,4 @@ export function initTeamBuilder(schedulerInstance) {
     renderTeamBuilder();
 }
 
-// Bind directly to global scope so Main index Page's bootstrap script can find it
 window.initTeamBuilder = initTeamBuilder;
