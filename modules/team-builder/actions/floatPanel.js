@@ -1,10 +1,10 @@
-﻿import { teams, buildOpen, getTeamById, selected } from '../stores/teamBuilderStore.js';
+import { teams, buildOpen, getTeamById, selected, setBuildOpen } from '../stores/teamBuilderStore.js';
 
 let floatPanelsBound = false;
 
 export function applyFollowMe(forceOpen = false) {
     const S = window.Scheduler; // Bridge to legacy app
-    if(forceOpen) buildOpen = true;
+    if (forceOpen) setBuildOpen(true);
 
     const teamsTabActive = document.querySelector("#tab-teams.active") !== null;
     const following = teams.some(t => !!t.followMe);
@@ -80,15 +80,13 @@ export function toggleTeamPin(teamId) {
     const team = getTeamById(teamId);
     if (!team) return;
     team.followMe = !team.followMe;
-    if (team.followMe) buildOpen = true;
+    if (team.followMe) setBuildOpen(true);
 }
 
 export function closeTeamUi() {
-    buildOpen = false;
+    setBuildOpen(false);
     teams.forEach(t => { t.followMe = false; });
 
-    // This is tricky because `selected` is exported, not a function.
-    // The best way to handle this without a full store pattern is to mutate it here.
     for (const key in selected) {
         delete selected[key];
     }

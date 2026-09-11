@@ -1,4 +1,4 @@
-﻿import { pool, teams, formOpts, createTeam } from '../stores/teamBuilderStore.js';
+import { pool, teams, formOpts, createTeam, syncSchedulerBridge } from '../stores/teamBuilderStore.js';
 import { collectTeamPool, memberLine } from './pool.js';
 import { renumberTeamsByStart, teamMemberCounts, sexOf } from './team.js';
 import { startMins, startsClose } from './time.js';
@@ -59,7 +59,7 @@ export function autoFormTeams() {
     const nTeams = byRole.STSO.length;
     if (!nTeams) return;
 
-    teams.length = 0; // Clear existing teams
+    teams.length = 0; // Clear existing teams (in place)
     for (let i = 0; i < nTeams; i++) createTeam();
 
     const used = {};
@@ -101,4 +101,8 @@ export function autoFormTeams() {
             });
         });
     });
+
+    if (S) syncSchedulerBridge(S);
+    if (S && typeof S.renderLines === "function") S.renderLines();
+    if (S && typeof S.updateStatus === "function") S.updateStatus("Teams auto-formed");
 }
