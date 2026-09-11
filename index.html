@@ -1,275 +1,171 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="console">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BLADE AIRPORT OPS V2.0 - TERMINAL CONSOLE</title>
-    <style>
-        /* RETRO CRT GREEN TERMINAL STYLING */
-        :root {
-            --term-green: #33ff33;
-            --term-dim: #004400;
-            --term-bg: #0a0a0a;
-            --term-amber: #ffb000;
-        }
-
-        body {
-            background-color: var(--term-bg);
-            color: var(--term-green);
-            font-family: 'Courier New', Courier, monospace;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        /* CRT SCANLINE EFFECTS */
-        body::before {
-            content: " ";
-            display: block;
-            position: fixed;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%);
-            background-size: 100% 4px;
-            z-index: 2000;
-            pointer-events: none;
-        }
-
-        header {
-            border-bottom: 2px double var(--term-green);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .system-title {
-            font-size: 1.8rem;
-            font-weight: bold;
-            text-shadow: 0 0 5px var(--term-green);
-        }
-
-        /* TAB NAVIGATION SYSTEM (F1 - F6) */
-        nav.console-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .tab-btn {
-            background: var(--term-bg);
-            border: 1px solid var(--term-green);
-            color: var(--term-green);
-            padding: 8px 16px;
-            cursor: pointer;
-            font-family: inherit;
-            text-transform: uppercase;
-        }
-
-        .tab-btn.active, .tab-btn:hover {
-            background: var(--term-green);
-            color: var(--term-bg);
-            box-shadow: 0 0 10px var(--term-green);
-        }
-
-        /* TAB PANELS */
-        .tab-content {
-            display: none;
-            border: 1px dashed var(--term-green);
-            padding: 20px;
-            min-height: 400px;
-            background: rgba(0, 15, 0, 0.5);
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* UTILITIES */
-        .status-box {
-            border: 1px solid var(--term-amber);
-            color: var(--term-amber);
-            padding: 10px;
-            margin-bottom: 15px;
-            background: rgba(20, 10, 0, 0.3);
-        }
-
-        .grid-layout {
-            display: grid;
-            grid-template-columns: 2fr 1fr;
-            gap: 20px;
-        }
-
-        pre {
-            background: #001100;
-            padding: 10px;
-            border: 1px solid var(--term-dim);
-            overflow-x: auto;
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>BLADE Alpha Build</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<link rel="stylesheet" href="css/styles.css?v=20260902i" />
+<link rel="stylesheet" href="css/line-print.css?v=20260902i" />
+<link rel="stylesheet" href="css/intro.css?v=20260904b" />
+<link rel="stylesheet" href="css/console.css?v=20260904c" />
+<style>
+#tab-teams.active { display:flex; flex-direction:column; gap:1rem; }
+.team-pool-columns {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+@media (max-width: 900px) {
+  .team-pool-columns { grid-template-columns: 1fr; }
+}
+.team-boards-horizontal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+}
+</style>
 </head>
-<body>
-
-    <header>
-        <div class="system-title">▲ BLADE AIRPORT OPS v2.0 // RETRO CONSOLE</div>
-        <div>STATION: LAX-MAIN-TERMINAL // SYSTEM STATUS: OPERATIONAL</div>
-    </header>
-
-    <!-- PHYSICAL TAB SWITCHERS (F1 - F6 KEYS SIMULATOR) -->
-    <nav class="console-tabs">
-        <button class="tab-btn active" onclick="switchTab('tab-flights')">[F1] FLIGHTS</button>
-        <button class="tab-btn" onclick="switchTab('tab-scheduling')">[F2] SCHEDULES</button>
-        <button class="tab-btn" onclick="switchTab('tab-comms')">[F3] COMM-LINK</button>
-        <button class="tab-btn" id="f4-tab-trigger" onclick="switchTab('tab-teams')">[F4] TEAM BUILDER</button>
-        <button class="tab-btn" onclick="switchTab('tab-system')">[F5] DIAGNOSTICS</button>
-    </nav>
-
-    <!-- F1 PANEL: FLIGHTS -->
-    <div id="tab-flights" class="tab-content active">
-        <h2>FLIGHT OPERATIONS MONITOR</h2>
-        <div class="status-box">SYSTEM BROADCAST: Incoming arrivals from JKF currently on time.</div>
-        <p>Active flights layout grid goes here...</p>
+<body class="console-skin">
+<div id="blade-intro"><div class="bezel"><div class="crt"><div class="scan"></div><h1 class="banner">**** CHAOS BASIC V2 ****</h1><div class="sub">64K RAM SYSTEM&nbsp;&nbsp;38911 BYTES FREE</div><div id="blade-term"></div><pre id="blade-art"></pre><div id="blade-greet"></div></div><div class="chrome"><span><span class="led"></span>BLADE CONSOLE</span><span>PRESS Y / N WHEN PROMPTED</span></div></div></div>
+<header class="topbar">
+<div class="console-mast">
+<div class="brand">BLADE AIRPORT OPS V2.0<span>WORKFORCE ALLOCATION SYSTEM</span></div>
+<div class="console-meta">AIRPORT: <b id="console-airport">DFW</b></div>
+<div class="console-meta">SCHEDULE WEEKS: <b id="console-weeks">1</b></div>
+<div class="console-meta">STAFF TOTAL: <b id="console-staff">—</b></div>
+<div class="console-meta">SYSTEM TIME: <b id="console-time">--:--:--</b></div>
+<div class="console-meta">DATE: <b id="console-date">--/--/----</b></div>
+<div class="console-status-chip">STATUS: READY</div>
+</div>
+<div class="topbar-actions">
+<button class="btn" id="btn-instructions">[HLP] INSTRUCTIONS</button>
+<button class="btn" id="btn-airport-config">[CFG] AIRFIELD</button>
+<button class="btn btn-amber" id="btn-generate">[GEN] GENERATE</button>
+<button class="btn" id="btn-export">[EXP] EXPORT</button>
+<button class="btn" id="btn-import">[IMP] IMPORT</button>
+<input type="file" id="file-import" accept="application/json,.json" style="display:none" />
+<button class="btn btn-red" id="btn-clear">[CLR] CLEAR</button>
+</div>
+</header>
+<div class="status" id="status">Loading…</div>
+<nav class="tabs">
+<button class="tab-btn active" data-tab="setup">[F1] SETUP</button>
+<button class="tab-btn" data-tab="coverage">[F2] COVERAGE</button>
+<button class="tab-btn" data-tab="lines">[F3] LINES</button>
+<button class="tab-btn" data-tab="teams">[F4] TEAMS</button>
+<button class="tab-btn" data-tab="reports">[F5] REPORTS</button>
+<button class="tab-btn" data-tab="capacity">[F6] CAPACITY</button>
+</nav>
+<main>
+<section class="panel active" id="tab-setup">
+<div class="card"><div class="section-title">What this is</div><p class="muted" style="margin:0"><strong>BLADE</strong> staffing balancer. <strong>FT / PT</strong> are operational TSO. <strong>LTSO/STSO M/F</strong> are management.</p></div>
+<input type="hidden" id="cfg-open" value="03:30" /><input type="hidden" id="cfg-close" value="23:00" />
+<div class="card" id="card-period"><div class="section-title">Schedule period</div><div class="period-row" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center"><label>Schedule start <input type="date" id="cfg-start" /></label><label>Weeks <input type="number" id="cfg-weeks" min="1" max="8" value="1" style="width:4.5rem" /></label></div></div>
+<details class="card setup-fold" id="card-fte"><summary class="section-title">FTE</summary>
+<div class="fte-block">
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">FT TSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ft-m" min="0" value="10" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ft-f" min="0" value="10" style="width:4.5rem" /></label></div>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">PT TSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-pt-m" min="0" value="4" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-pt-f" min="0" value="4" style="width:4.5rem" /></label></div>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">LTSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ltso-m" min="0" value="1" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ltso-f" min="0" value="1" style="width:4.5rem" /></label></div>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">STSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-stso-m" min="0" value="2" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-stso-f" min="0" value="2" style="width:4.5rem" /></label></div>
+<div class="toolbar" style="margin-top:0.75rem"><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button><span class="muted">FTE + function coverage only. No lines.</span></div>
+</div>
+</details>
+<details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
+<div class="fc-pool-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center">
+<label>DFO STSO <input type="number" id="fc-pool-stso" min="0" value="0" style="width:4rem" /></label>
+<label>DFO LTSO <input type="number" id="fc-pool-ltso" min="0" value="0" style="width:4rem" /></label>
+<label>DFO TSO <input type="number" id="fc-pool-tso" min="0" value="0" style="width:4rem" /></label>
+<label>BAG Pool <input type="number" id="fc-pool-bag" min="0" value="0" style="width:4rem" /></label>
+<label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
+<label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
+<button type="button" class="btn" id="fc-add-band">+ Add band</button>
+<button type="button" class="btn btn-amber" id="fc-generate">Generate DFO Assignments</button>
+</div>
+<div class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
+<p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
+</details>
+<div class="card"><div class="section-title">Shifts</div><div class="toolbar"><button type="button" class="btn" id="btn-add-shift">+ Add shift</button></div><div class="lines-scroll" style="max-height:none"><table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Phase</th><th>Paid h</th><th>TSO force</th><th>LTSO force</th><th>STSO force</th><th>Hard RDOs (Sun–Sat)</th><th>Day times</th></tr></thead><tbody id="shifts-tbody"></tbody></table></div></div>
+<div id="issues"></div>
+</section>
+<section class="panel" id="tab-coverage"><div class="card"><div class="section-title">30-minute headcount by day of week (Sun–Sat)</div><p class="muted" id="coverage-summary">Generate to compute staffing by 30-minute slot and day.</p><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="checkbox" id="cov-role-stso" /> STSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-ltso" /> LTSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-tso" checked /> TSO</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="all" checked /> All</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="bag" /> Baggage</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="pax" /> PAX</label></div><div class="lines-scroll"><table class="data-table cov-matrix" id="coverage-matrix"><thead id="coverage-matrix-head"></thead><tbody id="coverage-matrix-body"></tbody></table></div></div><div class="card"><div class="section-title">Typical day profile (bars)</div><div class="cov-bars" id="coverage-bars"></div></div><div class="card"><div class="section-title">Shift mix</div><table class="data-table"><thead><tr><th>Shift</th><th>Window</th><th>FT M/F</th><th>PT M/F</th><th>LTSO M/F</th><th>STSO M/F</th><th>TSO tot</th><th>All</th></tr></thead><tbody id="shift-summary-body"></tbody></table></div></section>
+<section class="panel" id="tab-lines"><div class="card"><div class="section-title">Bid lines</div><div class="toolbar" id="lines-toolbar"><label>Filter role <select id="lines-filter-role"><option value="ALL" selected>All</option><option value="STSO">STSO</option><option value="LTSO">LTSO</option><option value="TSO">TSO (FT/PT)</option></select></label><label>Filter shift <select id="lines-filter-shift"><option value="">All shifts</option></select></label><label>Filter sex <select id="lines-filter-sex"><option value="">All</option><option value="M">M</option><option value="F">F</option></select></label><label>Filter team <select id="lines-filter-team"><option value="">All</option><option value="\__none_\_">Unassigned</option></select></label><button type="button" class="btn btn-amber" id="btn-export-lines-excel">Export Excel (.xlsx)</button></div><div class="lines-scroll lines-scroll-wide"><table class="data-table lines-editable"><thead id="lines-thead"></thead><tbody id="lines-tbody"></tbody></table></div></div></section>
+<section class="panel" id="tab-teams">
+  <div class="card">
+    <div class="section-title">Team forming</div>
+    <div class="toolbar"><button type="button" class="btn btn-amber" id="btn-team-new">+ New team</button><button type="button" class="btn btn-amber" id="btn-team-build">Build</button><span class="muted" id="team-count-hint">No teams yet</span></div>
+    <div class="toolbar team-arch-bar" id="team-architecture"><label>STSO <input type="number" id="arch-stso" min="0" max="20" value="1" style="width:3.5rem"></label><label>LTSO <input type="number" id="arch-ltso" min="0" max="20" value="1" style="width:3.5rem"></label><label>TSO <input type="number" id="arch-tso" min="0" max="50" value="6" style="width:3.5rem"></label><button type="button" class="btn btn-amber" id="btn-team-auto-form">Auto-form teams</button><span class="muted" id="arch-hint"></span></div>
+    <div class="toolbar" id="team-filters"></div>
+  </div>
+  <div class="card">
+    <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+      <span>Unassigned pool</span>
+      <label class="follow-me-label" style="font-size:0.8rem; font-weight:normal; margin:0;">
+        <input type="checkbox" id="pool-group-by-role" checked> Group by Role
+      </label>
     </div>
-
-    <!-- F2 PANEL: SCHEDULING (Legacy Controller Core) -->
-    <div id="tab-scheduling" class="tab-content">
-        <h2>LEGACY SHIFT SCHEDULER</h2>
-        <p>This panel triggers updates to the core schedule engine.</p>
-        <button onclick="triggerLegacyRedraw()" class="tab-btn">Force Scheduler Redraw (Simulate Shift Modification)</button>
-        <pre id="scheduler-console">> Legacy Scheduler waiting for commands...</pre>
-    </div>
-
-    <!-- F3 PANEL: COMM-LINK -->
-    <div id="tab-comms" class="tab-content">
-        <h2>COMMUNICATIONS SUBSYSTEM</h2>
-        <p>Incoming terminal relays...</p>
-    </div>
-
-    <!-- F4 PANEL: TEAM BUILDER (MODULARIZED COMPONENT HOUSING) -->
-    <div id="tab-teams" class="tab-content">
-        <h2>TEAM BUILDER CONSOLE v2.0</h2>
-        <div class="status-box" style="border-color: var(--term-green); color: var(--term-green);">
-            MODULE PIPELINE: Loaded from <code>/modules/team-builder/index.js</code>
-        </div>
-        
-        <div class="grid-layout">
-            <!-- Active Teams Board Area -->
-            <div>
-                <h3>[ ACTIVE DIVISIONAL TEAMS ]</h3>
-                <div id="team-builder-root">
-                    <p class="status-box">System Initializing modules...</p>
-                </div>
-            </div>
-            
-            <!-- Unassigned Operations Staff Pool -->
-            <div>
-                <h3>[ UNASSIGNED STAFF POOL ]</h3>
-                <div id="unassigned-pool-root">
-                    <!-- Target for collectTeamPool() rendering -->
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- F5 PANEL: DIAGNOSTICS -->
-    <div id="tab-system" class="tab-content">
-        <h2>SYSTEM DIAGNOSTICS</h2>
-        <p>CORS/MIME Type testing protocols:</p>
-        <ul style="line-height: 1.6;">
-            <li>Server Protocol: <span id="diag-protocol" style="color: var(--term-amber)">Checking...</span></li>
-            <li>Browser ES6 Module Support: <span style="color: var(--term-green)">PASS</span></li>
-        </ul>
-    </div>
-
-    <!-- ========================================== -->
-    <!--          1. CORE LEGACY ENGINE CODE        -->
-    <!-- ========================================== -->
-    <script>
-        // Legacy Scheduler Simulator (Drives the App State)
-        class LegacyScheduler {
-            constructor() {
-                this.shifts = ["Morning Duty", "Midday Ops", "Night Ramp"];
-                this.staff = ["Staff-Alpha", "Staff-Beta", "Staff-Gamma"];
-                console.log("LegacyScheduler initialized.");
-            }
-
-            renderAll() {
-                const log = document.getElementById("scheduler-console");
-                if (log) {
-                    log.innerHTML += `\n[${new Date().toLocaleTimeString()}] >> Executing renderAll() Redraw...`;
-                }
-                console.log("LegacyScheduler: Redrawing all schedules.");
-            }
-        }
-
-        // Instantiate the driver globally
-        const mySchedulerInstance = new LegacyScheduler();
-
-        // Simulate manual actions on F2
-        function triggerLegacyRedraw() {
-            mySchedulerInstance.renderAll();
-        }
-
-        // Classic tab switcher routing
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            
-            // Highlight matching button
-            const clickedBtn = Array.from(document.querySelectorAll('.tab-btn')).find(btn => btn.getAttribute('onclick').includes(tabId));
-            if (clickedBtn) clickedBtn.classList.add('active');
-
-            // Hook into Team Builder update if F4 tab becomes active
-            if (tabId === 'tab-teams') {
-                console.log("F4 Console Opened: Forcing state collection.");
-                // If modular file loaded, trigger its sync
-                if (typeof window.initTeamBuilder === 'function') {
-                     mySchedulerInstance.renderAll(); 
-                }
-            }
-        }
-
-        // Diagnostics check
-        document.addEventListener("DOMContentLoaded", () => {
-            const protocol = window.location.protocol;
-            const diag = document.getElementById("diag-protocol");
-            if (diag) {
-                diag.textContent = protocol;
-                if (protocol.startsWith("file")) {
-                    diag.style.color = "red";
-                    diag.innerHTML = "FILE:// PROTOCOL (CORS BLOCKED - Please use a local web server like Live Server)";
-                } else {
-                    diag.style.color = "var(--term-green)";
-                }
-            }
-        });
-    </script>
-
-    <!-- ========================================== -->
-    <!--         2. MODERN MODULAR BRIDGE           -->
-    <!-- ========================================== -->
-    
-    <!-- CRITICAL FIX: Script tag configured with type="module" targeting new subfolder path -->
-    <script type="module" src="modules/team-builder/index.js"></script>
-
-    <!-- Safe Init Bootstrapper handles Deferred execution seamlessly -->
-    <script>
-        document.addEventListener("DOMContentLoaded", () => {
-            // Check if the module has attached its initialization function to the global scope yet
-            if (typeof window.initTeamBuilder === "function") {
-                console.log("Modules ready on DOMContentLoaded. Running initializer.");
-                window.initTeamBuilder(mySchedulerInstance);
-            } else {
-                console.log("Module loading deferred. Registering secondary window load fallback.");
-                // Fallback if modules are still compiling/fetching
-                window.addEventListener("load", () => {
-                    if (typeof window.initTeamBuilder === "function") {
-                        window.initTeamBuilder(mySchedulerInstance);
-                    } else {
-                        console.error("CRITICAL BOOT ERROR: initTeamBuilder failed to register on global scope.");
-                    }
-                });
-            }
-        });
-    </script>
+    <div id="team-pool" class="team-pool-columns"></div>
+  </div>
+  <details class="card" id="am-teams-card" open>
+    <summary class="section-title">AM Teams</summary>
+    <div id="team-boards-am" class="team-boards-horizontal"></div>
+  </details>
+  <details class="card" id="pm-teams-card" open>
+    <summary class="section-title">PM Teams</summary>
+    <div id="team-boards-pm" class="team-boards-horizontal"></div>
+  </details>
+</section>
+<section class="panel" id="tab-capacity"><div class="card"><div class="section-title">Checkpoint capacity (TSO / STSO / LTSO)</div><p class="muted" id="capacity-summary">Open Airfield to set lanes and TSO cost per program.</p><div class="lines-scroll"><table class="data-table"><thead><tr><th>Terminal</th><th>Checkpoint</th><th>From</th><th>Lanes</th><th>Program</th><th>TSO / lane</th><th>TSO needed</th><th>Sup seats</th></tr></thead><tbody id="capacity-tbody"></tbody></table></div></div></section>
+<section class="panel" id="tab-reports"><div class="card"><div class="section-title">Management reports</div><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="radio" name="report-which" value="passenger" checked /> Passenger</label><label class="follow-me-label"><input type="radio" name="report-which" value="baggage" /> Baggage / DFO duty</label><label class="follow-me-label"><input type="radio" name="report-which" value="total" /> Total</label><label class="follow-me-label"><input type="radio" name="report-which" value="dfoPool" /> DFO pool</label></div><div id="report-main"></div></div><div class="card"><div id="report-gender"></div></div></section>
+</main>
+<div id="airport-config-modal" class="modal"><div class="modal-content"><span class="modal-close" id="modal-close-btn">&times;</span><div class="modal-header"><h2 class="modal-title">Airport Configuration</h2></div><div class="config-section"><h3 class="config-section-title">Global Airport Settings</h3><div class="grid-2"><label>Airport Start Time <input type="time" id="airport-start-time" step="900"></label><label>Airport End Time <input type="time" id="airport-end-time" step="900"></label></div></div><div class="config-section"><h3 class="config-section-title">Terminals <button class="btn" id="add-terminal-btn">+ Add Terminal</button></h3><div id="terminals-list" class="item-list"></div></div><div id="detail-view" style="display:none;"><div class="modal-tabs" id="detail-tabs"></div><div id="detail-panels"></div></div></div></div>
+<div id="shift-day-times-modal" class="modal"><div class="modal-content"><span class="modal-close" id="shift-day-times-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="shift-day-times-title">Day times</h2></div><table class="data-table"><thead><tr><th>Day</th><th></th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody id="shift-day-times-tbody"></tbody></table><div class="toolbar" style="margin-top:1rem"><button type="button" class="btn" id="btn-sdt-clear">Clear all overrides</button><button type="button" class="btn btn-amber" id="btn-sdt-save">Save</button><button type="button" class="btn" id="btn-sdt-cancel">Cancel</button></div></div></div>
+<div id="team-detail-modal" class="modal"><div class="modal-content"><span class="modal-close" id="team-detail-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="team-detail-title">Team Details</h2></div><div id="team-detail-content"></div></div></div>
+<div id="instructions-modal" class="modal"><div class="modal-content"><span class="modal-close" id="instructions-modal-close">&times;</span><div class="modal-header"><h2 class="modal-title">Instructions</h2></div><div id="instructions-content" class="instructions-container" style="max-height:70vh;overflow:auto;white-space:pre-wrap"></div></div></div>
+<div id="team-follow-docks" class="team-follow-docks" hidden><div id="team-stats-dock" class="team-float-panel team-stats-dock card" data-float="stats"><div class="float-panel-head" data-drag-handle><span class="section-title" style="margin:0">Assignment</span><button type="button" class="btn btn-sm" id="btn-build-close">✕</button></div><div id="team-stats-body" class="team-stats-body"></div></div><div id="team-boards-dock" class="team-float-panel team-boards-dock card" data-float="boards"><div class="float-panel-head" data-drag-handle><span class="section-title" style="margin:0">Teams</span><button type="button" class="btn btn-amber btn-sm" id="btn-team-new-dock">+ New</button></div><div id="team-boards-follow" class="team-boards team-boards-follow"></div></div></div>
+<footer class="console-footer"><span>SYSTEM STATUS: <b>READY</b></span><span>LINES GENERATED: <b id="console-lines">0</b></span><span>NAV: F1–F6</span></footer>
+<script src="lib/dayjs.min.js?v=20260902i"></script>
+<script src="lib/Sortable.min.js?v=20260902i"></script>
+<script src="lib/luxon.min.js?v=20260902i"></script>
+<script src="lib/exceljs.min.js?v=20260902i"></script>
+<script src="js/constants.js?v=20260902i"></script>
+<script src="js/state.js?v=20260902i"></script>
+<script src="js/utils.js?v=20260902i"></script>
+<script src="js/shifts.js?v=20260902i"></script>
+<script src="js/allocation.js?v=20260902i"></script>
+<script src="js/functions.js?v=20260902i"></script>
+<script src="js/render.js?v=20260902i"></script>
+<script src="js/line-colors.js?v=20260905b"></script>
+<script src="js/reports.js?v=20260902i"></script>
+<script src="js/schedule.js?v=20260902i"></script>
+<script src="js/io.js?v=20260905a"></script>
+<script src="js/airport.js?v=20260902i"></script>
+<script src="js/capacity.js?v=20260905b"></script>
+<script src="js/modset-board.js?v=20260905b"></script>
+<script src="js/export-board.js?v=20260905c"></script>
+<script src="js/instructions.js?v=20260903a"></script>
+<script src="js/main.js?v=20260904f"></script>
+<script src="js/console-chrome.js?v=20260904f"></script>
+<script src="js/airfield-boot.js?v=20260905g"></script>
+<script src="js/setup-ui.js?v=20260905h"></script>
+<script src="js/intro.js?v=20260905g"></script>
+<script src="js/coverage-cuts.js?v=20260904m"></script>
+<script type="module">
+import { initTeamBuilder } from './team-builder/index.js';
+document.addEventListener('DOMContentLoaded', () => {
+  // Check both window.scheduler and window.Scheduler to guarantee we capture the active instance
+  const schedulerInstance = window.scheduler || window.Scheduler;
+  
+  if (schedulerInstance && typeof schedulerInstance.renderAll === 'function') {
+    initTeamBuilder(schedulerInstance);
+  } else {
+    console.error('Integration Error: A running scheduler instance was not found in the global scope (window.scheduler/window.Scheduler).');
+  }
+});
+</script>
 </body>
 </html>
