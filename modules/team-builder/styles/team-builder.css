@@ -1,22 +1,6 @@
-﻿/*
-  This file is a placeholder for your styles.
-  In the original `team-core.txt`, many styles were applied inline via JavaScript.
-  As you continue to refactor, you can move those inline styles into classes
-  and define them here.
-
-  For example:
-  .team-board {
-    background-color: #f9f9f9;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-  }
-
-  .team-line-compact {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0.25rem;
-    font-size: 0.8rem;
-  }
-*/
+/* Team builder module styles */
+.team-boards-horizontal {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+}
