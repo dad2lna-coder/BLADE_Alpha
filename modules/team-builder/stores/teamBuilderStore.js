@@ -15,26 +15,12 @@ function padTeamNum(n, width) {
     return s;
 }
 
-export function setBuildOpen(v) {
-    buildOpen = !!v;
-}
-
-export function syncSchedulerBridge(S) {
-    if (!S) return;
-    if (!S.teams) S.teams = {};
-    // Same references — Lines reads S.teams.teams / filters / selected / formOpts
-    S.teams.teams = teams;
-    S.teams.filters = filters;
-    S.teams.selected = selected;
-    S.teams.formOpts = formOpts;
-}
-
 export function createTeam(name) {
     const n = teamSeq++;
     const width = Math.max(2, String(teams.length + 1).length);
     const t = {
         id: "T" + n,
-        name: name != null && name !== "" ? String(name) : padTeamNum(n, width),
+        name: name != null && name !== "" ? String(name) : "Team " + padTeamNum(n, width),
         members: [],
         followMe: false,
         phase: null
@@ -51,11 +37,14 @@ export function getTeamById(id) {
 }
 
 export function removeTeam(id) {
-    // Mutate in place — never reassign `teams`
-    for (let i = teams.length - 1; i >= 0; i--) {
-        if (teams[i].id === id) teams.splice(i, 1);
+    // Before removing the team, find its members and move them back to the pool
+    const team = getTeamById(id);
+    if (team && team.members) {
+        // This is handled by the sync logic now, no need to move them manually
     }
+    teams = teams.filter(t => t.id !== id);
 }
+
 
 export function renameTeam(id, name) {
     const t = getTeamById(id);
@@ -69,6 +58,7 @@ export function addMemberToTeam(teamId, poolId) {
 
     if (team.members.indexOf(poolId) !== -1) return false;
 
+    // Remove from any other team first
     teams.forEach(t => {
         if (t.id !== teamId) {
             t.members = t.members.filter(m => m !== poolId);
@@ -91,7 +81,7 @@ export function getSelectedIds() {
 }
 
 export function clearSelection() {
-    for (const key in selected) delete selected[key];
+    selected = {};
 }
 
 export function assignSelectedToTeam(targetTeamId) {
@@ -99,8 +89,9 @@ export function assignSelectedToTeam(targetTeamId) {
     const ids = getSelectedIds();
     if (!ids.length) return;
 
+    let n = 0;
     ids.forEach(id => {
-        addMemberToTeam(targetTeamId, id);
+        if (addMemberToTeam(targetTeamId, id)) n++;
     });
     clearSelection();
 }
