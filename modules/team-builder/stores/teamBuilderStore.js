@@ -15,6 +15,17 @@ function padTeamNum(n, width) {
     return s;
 }
 
+export function setBuildOpen(v) {
+    buildOpen = !!v;
+}
+
+/** Keep Scheduler.teams.teams pointing at THIS array. Never reassign `teams`. */
+export function syncSchedulerBridge(S) {
+    if (!S) return;
+    S.teams = S.teams || {};
+    S.teams.teams = teams;
+}
+
 export function createTeam(name) {
     const n = teamSeq++;
     const width = Math.max(2, String(teams.length + 1).length);
@@ -37,14 +48,9 @@ export function getTeamById(id) {
 }
 
 export function removeTeam(id) {
-    // Before removing the team, find its members and move them back to the pool
-    const team = getTeamById(id);
-    if (team && team.members) {
-        // This is handled by the sync logic now, no need to move them manually
-    }
-    teams = teams.filter(t => t.id !== id);
+    const idx = teams.findIndex(t => t.id === id);
+    if (idx !== -1) teams.splice(idx, 1);
 }
-
 
 export function renameTeam(id, name) {
     const t = getTeamById(id);
@@ -58,7 +64,6 @@ export function addMemberToTeam(teamId, poolId) {
 
     if (team.members.indexOf(poolId) !== -1) return false;
 
-    // Remove from any other team first
     teams.forEach(t => {
         if (t.id !== teamId) {
             t.members = t.members.filter(m => m !== poolId);
