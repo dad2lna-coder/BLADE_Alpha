@@ -155,7 +155,7 @@
 <script src="js/intro.js?v=20260905g"></script>
 <script src="js/coverage-cuts.js?v=20260904m"></script>
 <script type="module">
-import { initTeamBuilder } from './modules/team-builder/index.js';
+import { initTeamBuilder } from './team-builder/index.js';
 document.addEventListener('DOMContentLoaded', () => {
   if (window.Scheduler) initTeamBuilder(window.Scheduler);
   else console.error('Scheduler missing');
