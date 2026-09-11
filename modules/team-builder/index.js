@@ -58,7 +58,6 @@ function renderTeamBuilder() {
 
     // Safety check: Exit if the elements do not exist in the DOM
     if (!teamRoot || !poolRoot) {
-        console.warn("Team Builder DOM targets missing. Postponing render.");
         return;
     }
 
@@ -177,22 +176,29 @@ function removeStaffFromTeam(memberName, teamId) {
 // ==========================================
 // 4. THE MONKEY PATCH SYNC PLUG
 // ==========================================
+function hasTeamBuilderDom() {
+    return !!(document.getElementById("team-builder-root") && document.getElementById("unassigned-pool-root"));
+}
+
 function installLegacyMonkeyPatch(schedulerInstance) {
-    // Save original render call
+    if (!schedulerInstance || typeof schedulerInstance.renderAll !== "function") return;
+    if (schedulerInstance.renderAll._teamBuilderWrapped) return;
+    if (!hasTeamBuilderDom()) return;
+
     const originalRenderAll = schedulerInstance.renderAll;
 
-    // Override the function safely
     schedulerInstance.renderAll = function(...args) {
-        // 1. Run the legacy scheduler operations first
         originalRenderAll.apply(this, args);
-
-        // 2. Intercept and run the Team Builder modules state synchronization
-        console.log("✈️ Modular Bridge intercepted scheduler.renderAll(). Syncing team views.");
+        if (!hasTeamBuilderDom()) return;
         syncStateWithLegacy(schedulerInstance);
         renderTeamBuilder();
     };
-
-    console.log("⚙️ Legacy Scheduler engine patched successfully.");
+    schedulerInstance.renderAll._teamBuilderWrapped = true;
+    schedulerInstance.renderAll._teamBuilderUnwrap = function () {
+        if (typeof originalRenderAll === "function") {
+            schedulerInstance.renderAll = originalRenderAll;
+        }
+    };
 }
 
 // ==========================================
@@ -203,20 +209,20 @@ function installLegacyMonkeyPatch(schedulerInstance) {
  * Boots the modular script and coordinates with the legacy scheduler instance.
  * @param {object} schedulerInstance - Instantiated legacy driver object
  */
+let teamBuilderInitialized = false;
+
 export function initTeamBuilder(schedulerInstance) {
-    console.log("Initializing Team Builder module loader...");
-    
-    // Install event listeners first (done once)
+    if (teamBuilderInitialized) return;
+    teamBuilderInitialized = true;
+
+    if (!hasTeamBuilderDom()) {
+        return;
+    }
+
     setupEventListeners();
-
-    // Patch the legacy schedule engine's rendering thread
     installLegacyMonkeyPatch(schedulerInstance);
-
-    // Run first-time synchronizations
     syncStateWithLegacy(schedulerInstance);
     renderTeamBuilder();
-
-    console.log("▲ TEAM BUILDER MODULE PIPELINE READY.");
 }
 
 // Bind directly to global scope so Main index Page's bootstrap script can find it

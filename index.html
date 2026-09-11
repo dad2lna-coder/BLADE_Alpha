@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
 <title>BLADE Alpha Build</title>
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
-<link rel="stylesheet" href="css/styles.css?v=20260902i" />
+<link rel="stylesheet" href="css/styles.css?v=20260911a" />
 <link rel="stylesheet" href="css/line-print.css?v=20260902i" />
 <link rel="stylesheet" href="css/intro.css?v=20260904b" />
 <link rel="stylesheet" href="css/console.css?v=20260904c" />
@@ -147,6 +147,7 @@
 <script src="js/capacity.js?v=20260905b"></script>
 <script src="js/modset-board.js?v=20260905b"></script>
 <script src="js/export-board.js?v=20260905c"></script>
+<script src="js/team-core.js?v=20260905_aligned"></script>
 <script src="js/instructions.js?v=20260903a"></script>
 <script src="js/main.js?v=20260904f"></script>
 <script src="js/console-chrome.js?v=20260904f"></script>
@@ -155,11 +156,36 @@
 <script src="js/intro.js?v=20260905g"></script>
 <script src="js/coverage-cuts.js?v=20260904m"></script>
 <script type="module">
-import { initTeamBuilder } from './team-builder/index.js';
-document.addEventListener('DOMContentLoaded', () => {
-  if (window.Scheduler) initTeamBuilder(window.Scheduler);
-  else console.error('Scheduler missing');
-});
+import { initTeamBuilder } from './modules/team-builder/index.js';
+
+function hasTeamBuilderDom() {
+  return !!(document.getElementById('team-builder-root') && document.getElementById('unassigned-pool-root'));
+}
+
+function bootTeamBuilder() {
+  if (window.__bladeTeamBuilderBooted) return;
+  var S = window.Scheduler;
+  if (!S) {
+    setTimeout(bootTeamBuilder, 50);
+    return;
+  }
+  if (!hasTeamBuilderDom()) {
+    window.__bladeTeamBuilderBooted = true;
+    return;
+  }
+  window.__bladeTeamBuilderBooted = true;
+  try {
+    initTeamBuilder(S);
+  } catch (err) {
+    console.warn('Team Builder module failed to initialize; legacy scheduler left intact.', err);
+  }
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootTeamBuilder, { once: true });
+} else {
+  bootTeamBuilder();
+}
 </script>
 </body>
 </html>
