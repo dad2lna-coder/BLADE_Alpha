@@ -10,10 +10,8 @@ import {
   clearSelection,
   assignSelectedToTeam,
   removeMemberFromTeam,
-  getSelectedIds,
-  setBuildOpen,
-  syncSchedulerBridge,
 } from './stores/teamBuilderStore.js';
+import { getSelectedIds } from './stores/teamBuilderStore.js';
 
 
 // 2. Import UI Rendering Functions
@@ -29,53 +27,44 @@ import { refreshTeamOddityBanner } from './components/OddityBanner.js';
 // 3. Import Actions and Utilities
 import { initSortables, destroySortables, syncTeamsFromDom } from './actions/dnd.js';
 import { applyFollowMe, initFloatPanels, closeTeamUi, toggleTeamPin } from './actions/floatPanel.js';
-import { collectTeamPool, assignedIds, getFilteredPool } from './utils/pool.js';
+import { collectTeamPool } from './utils/pool.js';
 import { autoFormTeams } from './utils/autoForm.js';
-
-function bridgeAndRenderLines() {
-    const S = window.Scheduler;
-    if (S) syncSchedulerBridge(S);
-    if (S && typeof S.renderLines === "function") S.renderLines();
-}
-
-function updateTeamCountHint() {
-    const el = document.getElementById("team-count-hint");
-    if (!el) return;
-    const n = (teams || []).length;
-    if (!n) {
-        el.textContent = "No teams yet — click + New team";
-        return;
-    }
-    const assigned = assignedIds().size;
-    const filteredPool = getFilteredPool().length;
-    el.textContent = n + " team(s) · " + assigned + " assigned · " + filteredPool + " in pool (filtered)";
-}
+import { getLineById, writeAssignmentsToLegacyState } from './utils/sync.js';
 
 /**
  * Master Render Function
  * Coordinates redrawing all components when state changes.
  */
 function renderAll() {
+    const S = window.Scheduler;
     destroySortables();
     collectTeamPool(); // Refresh the pool from the main app's state
 
+    // Refresh UI components
     refreshTeamOddityBanner();
     renderTeamFilters();
     renderTeamPills();
     renderUnassignedPool();
     applyFollowMe();
     renderTeamBoards();
-    renderPinnedSummaries();
     renderTeamStats();
-    updateTeamCountHint();
+    
+    // Write assignments back to the main application state
+    if (S && S.state && S.state.lines) {
+        writeAssignmentsToLegacyState(S.state.lines);
+    }
 
-    initSortables(onDragEnd);
+    // Re-initialize drag-and-drop
+    initSortables(onDragEnd); 
 }
 
 function onDragEnd() {
     syncTeamsFromDom();
-    bridgeAndRenderLines();
     renderAll();
+    // Re-render the main application's lines tab if it's visible
+    if (window.Scheduler && typeof window.Scheduler.renderLines === 'function') {
+        window.Scheduler.renderLines();
+    }
 }
 
 /**
@@ -98,7 +87,7 @@ function bindTeamUI() {
             renderAll();
         } else if (t.classList.contains('team-name-input')) {
             renameTeam(t.getAttribute('data-team-id'), t.value);
-            bridgeAndRenderLines();
+            renderAll(); // A render is needed to update other parts of the UI
         } else if (t.getAttribute('data-select-line') != null) {
             const id = +t.getAttribute('data-select-line');
             if (t.checked) {
@@ -106,7 +95,7 @@ function bindTeamUI() {
             } else {
                 delete selected[id];
             }
-            renderTeamFilters();
+            renderTeamFilters(); // Just update the filter bar with the count
         }
     });
 
@@ -114,31 +103,32 @@ function bindTeamUI() {
         const t = e.target;
         if (!t) return;
         const closest = (selector) => t.closest ? t.closest(selector) : null;
+        const target = closest('[data-remove-team]') || closest('[data-remove-member]') || closest('[data-pin-team]') || closest('#btn-build-close, #team-detail-close');
+
 
         if (t.id === 'btn-team-auto-form') {
             autoFormTeams();
-            bridgeAndRenderLines();
             renderAll();
         } else if (t.id === 'btn-team-build') {
-            setBuildOpen(true);
             applyFollowMe(true);
             renderPinnedSummaries();
             initSortables(onDragEnd);
-        } else if (closest('[data-pin-team]')) {
-            toggleTeamPin(closest('[data-pin-team]').getAttribute('data-pin-team'));
+        } else if (target && target.matches('[data-pin-team]')) {
+            toggleTeamPin(target.getAttribute('data-pin-team'));
             renderAll();
         } else if (t.id === 'btn-team-new' || t.id === 'btn-team-new-dock') {
             createTeam();
-            bridgeAndRenderLines();
             renderAll();
         } else if (t.id === 'btn-team-clear-filters') {
-            filters.role = 'ALL';
-            filters.start = '';
-            filters.rdo = '';
+            filters.role = "ALL";
+            filters.start = "";
+            filters.rdo = "";
+            document.getElementById('team-filter-role').value = "ALL";
+            document.getElementById('team-filter-start').value = "";
+            document.getElementById('team-filter-rdo').value = "";
             renderAll();
         } else if (t.id === 'btn-team-assign') {
             assignSelectedToTeam(document.getElementById('team-assign-target').value);
-            bridgeAndRenderLines();
             renderAll();
         } else if (t.id === 'btn-team-select-all') {
             selectAllVisible();
@@ -146,15 +136,15 @@ function bindTeamUI() {
         } else if (t.id === 'btn-team-clear-sel') {
             clearSelection();
             renderAll();
-        } else if (closest('[data-remove-team]')) {
-            removeTeam(closest('[data-remove-team]').getAttribute('data-remove-team'));
-            bridgeAndRenderLines();
+        } else if (target && target.matches('[data-remove-team]')) {
+            if (confirm('Are you sure you want to remove this entire team?')) {
+                removeTeam(target.getAttribute('data-remove-team'));
+                renderAll();
+            }
+        } else if (target && target.matches('[data-remove-member]')) {
+            removeMemberFromTeam(target.getAttribute('data-from-team'), target.getAttribute('data-remove-member'));
             renderAll();
-        } else if (closest('[data-remove-member]')) {
-            removeMemberFromTeam(closest('[data-remove-member]').getAttribute('data-from-team'), closest('[data-remove-member]').getAttribute('data-remove-member'));
-            bridgeAndRenderLines();
-            renderAll();
-        } else if (closest('#btn-build-close, #team-detail-close')) {
+        } else if (target && target.matches('#btn-build-close, #team-detail-close')) {
             e.preventDefault();
             e.stopPropagation();
             closeTeamUi();
@@ -168,8 +158,9 @@ function bindTeamUI() {
  * The ONLY function called by the external application.
  */
 export function initTeamBuilder(scheduler) {
+    // Make the scheduler instance available to modules that need it
+    // This is the "bridge" to the legacy app's state
     window.Scheduler = window.Scheduler || scheduler;
-    syncSchedulerBridge(window.Scheduler);
 
     injectAutoFormControls();
     bindTeamUI();
@@ -177,14 +168,27 @@ export function initTeamBuilder(scheduler) {
     renderAll();
     initFloatPanels();
 
+    // Monkey-patch the main app's render function to keep the team builder in sync
     const prevRenderAll = scheduler.renderAll;
     scheduler.renderAll = function(...args) {
         if (typeof prevRenderAll === 'function') {
             prevRenderAll.apply(this, args);
         }
-        if (document.querySelector('#tab-teams.active')) {
+        if (document.querySelector("#tab-teams.active")) {
             collectTeamPool();
             renderAll();
+        }
+    };
+    
+    // Also patch the line renderer to ensure data is fresh
+    const prevRenderLines = scheduler.renderLines;
+    scheduler.renderLines = function(...args) {
+        if (document.querySelector("#tab-teams.active")) {
+            collectTeamPool();
+            renderAll();
+        }
+        if (typeof prevRenderLines === 'function') {
+            prevRenderLines.apply(this, args);
         }
     };
 }
