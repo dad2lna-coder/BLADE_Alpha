@@ -103,7 +103,7 @@ function renderTeamBuilder() {
         const teamName = team.name || "Unnamed Team";
 
         teamsHTML += `
-            <div class="team-card" style="border: 1px solid var(--term-green); margin-bottom: 15px; padding: 10px; background: rgba(0,20,0,0.2);">
+            <div class="team-card" style="border: 1px solid var(--term-green); margin-bottom: 15px; padding: 10px; background: rgba(0,20,0,0.2); border-radius: 6px;">
                 <div style="font-weight: bold; border-bottom: 1px dashed var(--term-green); padding-bottom: 5px; margin-bottom: 8px; color: var(--term-green);">
                     ▶ ${teamName.toUpperCase()} [${membersList.length} / 4]
                 </div>
@@ -111,7 +111,7 @@ function renderTeamBuilder() {
                     ${membersList.length === 0 
                         ? `<span style="color: var(--term-dim); font-style: italic;">[ NO STAFF ASSIGNED ]</span>` 
                         : membersList.map(member => `
-                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(51, 255, 51, 0.1); padding: 3px 6px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(51, 255, 51, 0.1); padding: 3px 6px; border-radius: 4px;">
                                 <span style="color: var(--term-green);">⚡ ${member}</span>
                                 <button class="action-btn remove-btn" data-team-id="${teamId}" data-member-name="${member}" 
                                         style="background: transparent; border: 1px solid red; color: red; font-family: inherit; font-size: 0.8rem; cursor: pointer; padding: 2px 6px; border-radius: 4px;">
@@ -129,7 +129,7 @@ function renderTeamBuilder() {
     // --- RENDER UNASSIGNED POOL ---
     if (state.unassignedStaff.length === 0) {
         poolRoot.innerHTML = `
-            <div class="status-box" style="border: 1px dashed var(--term-amber); color: var(--term-amber); padding: 15px; text-align: center; background: rgba(240, 165, 0, 0.05); font-family: var(--mono); font-size: 0.85rem;">
+            <div class="status-box" style="border: 1px dashed var(--term-amber); color: var(--term-amber); padding: 15px; text-align: center; background: rgba(240, 165, 0, 0.05); font-family: var(--mono); font-size: 0.85rem; border-radius: 6px;">
                 ALL OPERATIONS STAFF ASSIGNED. NO IDLE WORKERS IN POOL.
             </div>
         `;
