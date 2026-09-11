@@ -1,4 +1,4 @@
-﻿// 1. Import State & Store Mutations
+// 1. Import State & Store Mutations
 import {
   teams,
   pool,
@@ -9,6 +9,7 @@ import {
   renameTeam,
   clearSelection,
   assignSelectedToTeam,
+  removeMemberFromTeam,
 } from './stores/teamBuilderStore.js';
 import { getSelectedIds } from './stores/teamBuilderStore.js';
 
@@ -106,9 +107,9 @@ function bindTeamUI() {
             createTeam();
             renderAll();
         } else if (t.id === 'btn-team-clear-filters') {
-            filters.role = "ALL";
-            filters.start = "";
-            filters.rdo = "";
+            filters.role = 'ALL';
+            filters.start = '';
+            filters.rdo = '';
             renderAll();
         } else if (t.id === 'btn-team-assign') {
             assignSelectedToTeam(document.getElementById('team-assign-target').value);
@@ -155,7 +156,7 @@ export function initTeamBuilder(scheduler) {
         if (typeof prevRenderAll === 'function') {
             prevRenderAll.apply(this, args);
         }
-        if (document.querySelector("#tab-teams.active")) {
+        if (document.querySelector('#tab-teams.active')) {
             collectTeamPool();
             renderAll();
         }
