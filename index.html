@@ -102,11 +102,11 @@
     <div class="toolbar" id="team-filters"></div>
   </div>
 
-  <!-- INSERT MODULAR RETRO TEAM BUILDER ROOT HERE -->
+  <!-- MODULAR SUPERVISOR DEPLOYMENT SUMMARY -->
   <div class="card" style="border: 2px double var(--term-green); background: rgba(0, 15, 0, 0.3);">
-    <div class="section-title" style="color: var(--term-green); display: flex; align-items: center; gap: 8px;">⚡ TERMINAL TEAM ALLOCATOR ⚡</div>
-    <div id="team-builder-root" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 10px;">
-       <!-- Dynamic Modular Teams Render Here -->
+    <div class="section-title" style="color: var(--term-green); display: flex; align-items: center; gap: 8px;">⚡ TERMINAL TEAM ALLOCATOR // STATUS DASHBOARD ⚡</div>
+    <div id="team-builder-root" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; margin-top: 10px;">
+       <!-- Dynamic Live Allocation Summary Renders Here -->
     </div>
   </div>
 
@@ -119,10 +119,8 @@
       </label>
     </div>
 
-    <!-- INSERT MODULAR UNASSIGNED POOL CONTAINER HERE -->
-    <div id="unassigned-pool-root" style="margin-top: 10px; max-height: 250px; overflow-y: auto;">
-       <!-- Dynamic Modular Pool Renders Here -->
-    </div>
+    <!-- Live Allocation Status Bar -->
+    <div id="unassigned-pool-root" style="margin-top: 6px; margin-bottom: 12px;"></div>
 
     <div id="team-pool" class="team-pool-columns"></div>
   </div>
@@ -180,11 +178,7 @@ function hasTeamBuilderDom() {
 
 function bootTeamBuilder() {
   if (window.__bladeTeamBuilderBooted) return;
-  var S = window.Scheduler;
-  if (!S) {
-    setTimeout(bootTeamBuilder, 50);
-    return;
-  }
+  var S = window.Scheduler || {};
   if (!hasTeamBuilderDom()) {
     window.__bladeTeamBuilderBooted = true;
     return;
