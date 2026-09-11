@@ -1,4 +1,18 @@
-/* Team builder module styles */
+/* Team builder — wrap pool, keep board grid */
+#team-pool,
+#team-pool.team-pool-columns,
+#team-pool.team-role-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.55rem;
+  align-content: flex-start;
+  align-items: flex-start;
+}
+
+#team-pool .team-line {
+  flex: 0 0 auto;
+}
+
 .team-boards-horizontal {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
