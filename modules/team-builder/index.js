@@ -1,8 +1,4 @@
-/**
- * ▲ BLADE AIRPORT OPS v2.0 // TEAM BUILDER MODULE
- * PATH: /modules/team-builder/index.js
- * 
- * This file is executed as an ES Module. It maintains its own private scope
+cuted as an ES Module. It maintains its own private scope
  * and explicitly registers a lifecycle bridge on the window object to 
  * coordinate state updates with the legacy terminal scheduler.
  */
@@ -17,7 +13,7 @@ const state = {
         { id: "team-bravo", name: "Bravo Baggage Ops", members: [] },
         { id: "team-charlie", name: "Charlie Terminal Ops", members: [] }
     ],
-    unassignedStaff: [] // Populated dynamically from legacy scheduler
+    unassignedStaff: [] // Populated dynamically from legacy scheduler lines
 };
 
 // ==========================================
@@ -30,11 +26,11 @@ const state = {
  * @returns {Array} List of active operational team objects
  */
 function getActiveTeams(scheduler) {
-    if (scheduler && Array.isArray(scheduler.teams)) {
-        return scheduler.teams;
-    }
-    if (window.state && Array.isArray(window.state.teams)) {
+    if (window.state && Array.isArray(window.state.teams) && window.state.teams.length > 0) {
         return window.state.teams;
+    }
+    if (scheduler && Array.isArray(scheduler.teams) && scheduler.teams.length > 0) {
+        return scheduler.teams;
     }
     // Fallback to local default array if legacy scheduler contains no teams
     return state.teams;
@@ -48,34 +44,49 @@ function getActiveTeams(scheduler) {
 function syncStateWithLegacy(scheduler) {
     if (!scheduler) return;
 
-    // Dynamically align local team references with the core application's active teams
+    // Dynamically align local team references with the core active teams
     const activeTeams = getActiveTeams(scheduler);
-    if (activeTeams !== state.teams) {
-        state.teams = activeTeams;
+    
+    let allLines = [];
+    if (window.state && Array.isArray(window.state.lines)) {
+        allLines = window.state.lines;
+    } else if (scheduler && Array.isArray(scheduler.lines)) {
+        allLines = scheduler.lines;
+    } else if (scheduler && Array.isArray(scheduler.staff)) {
+        allLines = scheduler.staff.map(s => typeof s === 'string' ? { lineCode: s, team: "\\__none_\\_" } : s);
     }
 
-    if (!scheduler.staff) {
-        state.unassignedStaff = [];
-        return;
-    }
-
-    // 1. Gather all currently assigned staff members across all active teams
-    const assignedStaffNames = new Set();
-    state.teams.forEach(team => {
-        if (Array.isArray(team.members)) {
-            team.members.forEach(member => assignedStaffNames.add(member));
-        }
+    // Map members for each active team from the core state lines
+    activeTeams.forEach(team => {
+        const teamId = team.id;
+        const members = [];
+        
+        // Match by line.team
+        allLines.forEach(line => {
+            if (line.team === teamId) {
+                const code = line.lineCode || line.id || line.name;
+                if (code && !members.includes(code)) {
+                    members.push(code);
+                }
+            }
+        });
+        
+        // Also sync back to team.members if the core team object expects it
+        team.members = members;
     });
 
-    // 2. Filter unassigned pool to contain only staff not currently on teams
-    state.unassignedStaff = scheduler.staff.filter(
-        staffMember => !assignedStaffNames.has(staffMember)
-    );
+    // Populate unassignedStaff by filtering lines that are unassigned
+    state.unassignedStaff = allLines
+        .filter(line => {
+            const teamVal = line.team;
+            return !teamVal || teamVal === "\\__none_\\_" || teamVal === "\\\\__none_\\\\\\_" || teamVal === "__none__";
+        })
+        .map(line => line.lineCode || line.id || line.name || line);
 
     console.log("Team Builder synced with legacy state:", {
-        assigned: Array.from(assignedStaffNames),
-        unassigned: state.unassignedStaff,
-        teamsCount: state.teams.length
+        totalLines: allLines.length,
+        unassigned: state.unassignedStaff.length,
+        teamsCount: activeTeams.length
     });
 }
 
@@ -195,40 +206,49 @@ function setupEventListeners() {
 }
 
 function assignStaffToTeam(memberName, teamId) {
-    const activeTeams = getActiveTeams(window.mySchedulerInstance);
-    const team = activeTeams.find(t => (t.id === teamId || t.name.toLowerCase().replace(/\s+/g, '-') === teamId));
-    if (!team) return;
-
-    if (!Array.isArray(team.members)) {
-        team.members = [];
+    const scheduler = window.mySchedulerInstance;
+    
+    // Find the line in core state and set its assigned team ID
+    let targetLine = null;
+    if (window.state && Array.isArray(window.state.lines)) {
+        targetLine = window.state.lines.find(line => (line.lineCode || line.id || line.name) === memberName);
+    }
+    
+    if (targetLine) {
+        targetLine.team = teamId;
+        console.log(`Updated core line ${memberName} team to ${teamId}`);
     }
 
-    if (team.members.length >= 4) {
-        alert("CRITICAL WARNING: Team capacity limit reached (MAX 4 per team).");
-        return;
-    }
-
-    if (!team.members.includes(memberName)) {
-        team.members.push(memberName);
-        // Resynchronize and update UI
-        syncStateWithLegacy(window.mySchedulerInstance);
+    // Trigger full scheduler re-render which syncs and updates both panels
+    if (scheduler && typeof scheduler.renderAll === 'function') {
+        scheduler.renderAll();
+    } else {
+        syncStateWithLegacy(scheduler);
         renderTeamBuilder();
-        console.log(`Assigned ${memberName} to ${team.name || teamId}`);
     }
 }
 
 function removeStaffFromTeam(memberName, teamId) {
-    const activeTeams = getActiveTeams(window.mySchedulerInstance);
-    const team = activeTeams.find(t => (t.id === teamId || t.name.toLowerCase().replace(/\s+/g, '-') === teamId));
-    if (!team) return;
-
-    if (Array.isArray(team.members)) {
-        team.members = team.members.filter(member => member !== memberName);
+    const scheduler = window.mySchedulerInstance;
+    
+    // Reset core line's team parameter to unassigned
+    let targetLine = null;
+    if (window.state && Array.isArray(window.state.lines)) {
+        targetLine = window.state.lines.find(line => (line.lineCode || line.id || line.name) === memberName);
     }
-    // Resynchronize and update UI
-    syncStateWithLegacy(window.mySchedulerInstance);
-    renderTeamBuilder();
-    console.log(`Released ${memberName} from ${team.name || teamId}`);
+    
+    if (targetLine) {
+        targetLine.team = "\\__none_\\_";
+        console.log(`Updated core line ${memberName} team to unassigned`);
+    }
+
+    // Trigger full scheduler re-render
+    if (scheduler && typeof scheduler.renderAll === 'function') {
+        scheduler.renderAll();
+    } else {
+        syncStateWithLegacy(scheduler);
+        renderTeamBuilder();
+    }
 }
 
 // ==========================================
@@ -236,7 +256,15 @@ function removeStaffFromTeam(memberName, teamId) {
 // ==========================================
 function autoFormTeams() {
     const scheduler = window.mySchedulerInstance;
-    if (!scheduler || !scheduler.staff || scheduler.staff.length === 0) {
+    
+    let allLines = [];
+    if (window.state && Array.isArray(window.state.lines)) {
+        allLines = window.state.lines;
+    } else if (scheduler && Array.isArray(scheduler.lines)) {
+        allLines = scheduler.lines;
+    }
+    
+    if (allLines.length === 0) {
         alert("WARNING: No operations staff lines found.\n\nPlease configure your FTE variables in the [F1] SETUP tab and click the global '[GEN] GENERATE' button at the top header first to compile your staff registry.");
         return;
     }
@@ -253,49 +281,64 @@ function autoFormTeams() {
     const archLtso = parseInt(document.getElementById("arch-ltso")?.value) || 0;
     const archTso = parseInt(document.getElementById("arch-tso")?.value) || 0;
 
-    // Clear existing assignments for all dynamic teams
-    activeTeams.forEach(team => {
-        team.members = [];
+    // Filter out unassigned lines
+    const unassignedLines = allLines.filter(line => {
+        const teamVal = line.team;
+        return !teamVal || teamVal === "\\__none_\\_" || teamVal === "\\\\__none_\\\\\\_" || teamVal === "__none__";
     });
 
-    // Create a pool of unassigned staff to distribute
-    const pool = [...scheduler.staff];
+    const stsoPool = unassignedLines.filter(line => (line.role || "").toUpperCase() === "STSO");
+    const ltsoPool = unassignedLines.filter(line => (line.role || "").toUpperCase() === "LTSO");
+    const tsoPool = unassignedLines.filter(line => (line.role || "").toUpperCase() === "TSO" || !(line.role));
 
-    // Filter staff by roles based on typical name-string roles
-    const stsoStaff = pool.filter(name => name.toUpperCase().includes("STSO"));
-    const ltsoStaff = pool.filter(name => name.toUpperCase().includes("LTSO"));
-    const tsoStaff = pool.filter(name => !name.toUpperCase().includes("STSO") && !name.toUpperCase().includes("LTSO"));
-
-    // Distribute among the active teams according to architectural inputs
+    // Clear existing assignments for the active teams first in the core lines
     activeTeams.forEach(team => {
-        if (!Array.isArray(team.members)) {
-            team.members = [];
-        }
+        allLines.forEach(line => {
+            if (line.team === team.id) {
+                line.team = "\\__none_\\_";
+            }
+        });
+    });
+
+    // Distribute among the active teams in core lines
+    activeTeams.forEach(team => {
+        const teamId = team.id;
+        let assignedCount = 0;
 
         // Assign STSOs
         for (let i = 0; i < archStso; i++) {
-            if (stsoStaff.length > 0 && team.members.length < 4) {
-                team.members.push(stsoStaff.shift());
+            if (stsoPool.length > 0 && assignedCount < 4) {
+                const line = stsoPool.shift();
+                line.team = teamId;
+                assignedCount++;
             }
         }
         // Assign LTSOs
         for (let i = 0; i < archLtso; i++) {
-            if (ltsoStaff.length > 0 && team.members.length < 4) {
-                team.members.push(ltsoStaff.shift());
+            if (ltsoPool.length > 0 && assignedCount < 4) {
+                const line = ltsoPool.shift();
+                line.team = teamId;
+                assignedCount++;
             }
         }
         // Assign TSOs
         for (let i = 0; i < archTso; i++) {
-            if (tsoStaff.length > 0 && team.members.length < 4) {
-                team.members.push(tsoStaff.shift());
+            if (tsoPool.length > 0 && assignedCount < 4) {
+                const line = tsoPool.shift();
+                line.team = teamId;
+                assignedCount++;
             }
         }
     });
 
-    // Update pool synchronization and re-render
-    syncStateWithLegacy(scheduler);
-    renderTeamBuilder();
-    console.log("Operational teams auto-formed dynamically using current team listings.");
+    // Re-render
+    if (scheduler && typeof scheduler.renderAll === 'function') {
+        scheduler.renderAll();
+    } else {
+        syncStateWithLegacy(scheduler);
+        renderTeamBuilder();
+    }
+    console.log("Operational teams auto-formed dynamically in core state.");
 }
 
 // ==========================================
