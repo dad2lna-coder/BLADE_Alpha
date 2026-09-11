@@ -46,7 +46,7 @@ function renderAll() {
     applyFollowMe();
     renderTeamBoards();
     renderTeamStats();
-    
+
     // Write assignments back to legacy state
     writeAssignmentsToLegacyState();
 
@@ -180,7 +180,7 @@ export function initTeamBuilder(scheduler) {
     window.Scheduler = window.Scheduler || scheduler;
     injectAutoFormControls();
     bindTeamUI();
-    
+
     // Perform the first render ONLY when the tab is switched to
     const teamsTab = document.querySelector('.tab-btn[data-tab="teams"]');
     if (teamsTab) {
