@@ -1,0 +1,35 @@
+<div class="card">
+  <div class="section-title">Team forming</div>
+  <div class="toolbar">
+    <button type="button" class="btn btn-amber" id="btn-team-new">+ New team</button>
+    <button type="button" class="btn btn-amber" id="btn-team-build">Build</button>
+    <span class="muted" id="team-count-hint">No teams yet</span>
+  </div>
+  <div class="toolbar team-arch-bar" id="team-architecture">
+    <label>STSO <input type="number" id="arch-stso" min="0" max="20" value="1" style="width:3.5rem"></label>
+    <label>LTSO <input type="number" id="arch-ltso" min="0" max="20" value="1" style="width:3.5rem"></label>
+    <label>TSO <input type="number" id="arch-tso" min="0" max="50" value="6" style="width:3.5rem"></label>
+    <button type="button" class="btn btn-amber" id="btn-team-auto-form">Auto-form teams</button>
+    <span class="muted" id="arch-hint"></span>
+  </div>
+  <div class="toolbar" id="team-filters"></div>
+</div>
+
+<div class="card">
+  <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
+    <span>Unassigned pool</span>
+    <label class="follow-me-label" style="font-size:0.8rem; font-weight:normal; margin:0;">
+      <input type="checkbox" id="pool-group-by-role" checked> Group by Role
+    </label>
+  </div>
+  <div id="team-pool" class="team-pool-columns"></div>
+</div>
+
+<details class="card" id="am-teams-card" open>
+  <summary class="section-title">AM Teams</summary>
+  <div id="team-boards-am" class="team-boards-horizontal"></div>
+</details>
+<details class="card" id="pm-teams-card" open>
+  <summary class="section-title">PM Teams</summary>
+  <div id="team-boards-pm" class="team-boards-horizontal"></div>
+</details>

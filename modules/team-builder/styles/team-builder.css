@@ -1,4 +1,10 @@
 /* Team builder — wrap pool, keep board grid */
+#tab-teams.active {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
 #team-pool,
 #team-pool.team-pool-columns,
 #team-pool.team-role-list {

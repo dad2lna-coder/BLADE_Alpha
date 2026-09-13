@@ -27,7 +27,7 @@ fs.mkdirSync(dest, { recursive: true });
 ["index.html", "INSTRUCTIONS.md"].forEach((f) => {
   copy(path.join(root, f), path.join(dest, f));
 });
-["css", "js", "lib"].forEach((d) => {
+["css", "js", "lib", "modules"].forEach((d) => {
   copy(path.join(root, d), path.join(dest, d));
 });
 
