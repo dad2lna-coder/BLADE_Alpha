@@ -43,40 +43,7 @@
 <button class="tab-btn" data-tab="capacity">[F6] CAPACITY</button>
 </nav>
 <main>
-<section class="panel active" id="tab-setup">
-<div class="card"><div class="section-title">What this is</div><p class="muted" style="margin:0"><strong>BLADE</strong> staffing balancer. <strong>FT / PT</strong> are operational TSO. <strong>LTSO/STSO M/F</strong> are management.</p></div>
-<input type="hidden" id="cfg-open" value="03:30" /><input type="hidden" id="cfg-close" value="23:00" />
-<div class="card" id="card-period"><div class="section-title">Schedule period</div><div class="period-row" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center"><label>Schedule start <input type="date" id="cfg-start" /></label><label>Weeks <input type="number" id="cfg-weeks" min="1" max="8" value="1" style="width:4.5rem" /></label></div></div>
-<details class="card setup-fold" id="card-fte"><summary class="section-title">FTE</summary>
-<div class="fte-block">
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">FT TSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ft-m" min="0" value="10" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ft-f" min="0" value="10" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">PT TSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-pt-m" min="0" value="4" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-pt-f" min="0" value="4" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">LTSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ltso-m" min="0" value="1" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ltso-f" min="0" value="1" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">STSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-stso-m" min="0" value="2" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-stso-f" min="0" value="2" style="width:4.5rem" /></label></div>
-<div class="toolbar" style="margin-top:0.75rem"><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button><span class="muted">FTE + function coverage only. No lines.</span></div>
-</div>
-</details>
-<details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
-<div class="fc-pool-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center">
-<label>DFO STSO <input type="number" id="fc-pool-stso" min="0" value="0" style="width:4rem" /></label>
-<label>DFO LTSO <input type="number" id="fc-pool-ltso" min="0" value="0" style="width:4rem" /></label>
-<label>DFO TSO <input type="number" id="fc-pool-tso" min="0" value="0" style="width:4rem" /></label>
-<label>BAG Pool <input type="number" id="fc-pool-bag" min="0" value="0" style="width:4rem" /></label>
-<label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
-<label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
-<button type="button" class="btn" id="fc-add-band">+ Add band</button>
-<button type="button" class="btn btn-amber" id="fc-generate">Generate DFO Assignments</button>
-</div>
-<div class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
-<p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
-</details>
-<div class="card"><div class="section-title">Shifts</div><div class="toolbar"><button type="button" class="btn" id="btn-add-shift">+ Add shift</button></div><div class="lines-scroll" style="max-height:none"><table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Phase</th><th>Paid h</th><th>TSO force</th><th>LTSO force</th><th>STSO force</th><th>Hard RDOs (Sun–Sat)</th><th>Day times</th></tr></thead><tbody id="shifts-tbody"></tbody></table></div></div>
-<div id="issues"></div>
-</section>
+<section class="panel active" id="tab-setup"></section>
 <section class="panel" id="tab-coverage"><div class="card"><div class="section-title">30-minute headcount by day of week (Sun–Sat)</div><p class="muted" id="coverage-summary">Generate to compute staffing by 30-minute slot and day.</p><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="checkbox" id="cov-role-stso" /> STSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-ltso" /> LTSO</label><label class="follow-me-label"><input type="checkbox" id="cov-role-tso" checked /> TSO</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="all" checked /> All</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="bag" /> Baggage</label><label class="follow-me-label"><input type="radio" name="cov-func-view" value="pax" /> PAX</label></div><div class="lines-scroll"><table class="data-table cov-matrix" id="coverage-matrix"><thead id="coverage-matrix-head"></thead><tbody id="coverage-matrix-body"></tbody></table></div></div><div class="card"><div class="section-title">Typical day profile (bars)</div><div class="cov-bars" id="coverage-bars"></div></div><div class="card"><div class="section-title">Shift mix</div><table class="data-table"><thead><tr><th>Shift</th><th>Window</th><th>FT M/F</th><th>PT M/F</th><th>LTSO M/F</th><th>STSO M/F</th><th>TSO tot</th><th>All</th></tr></thead><tbody id="shift-summary-body"></tbody></table></div></section>
 <section class="panel" id="tab-lines"><div class="card"><div class="section-title">Bid lines</div><div class="toolbar" id="lines-toolbar"><label>Filter role <select id="lines-filter-role"><option value="ALL" selected>All</option><option value="STSO">STSO</option><option value="LTSO">LTSO</option><option value="TSO">TSO (FT/PT)</option></select></label><label>Filter shift <select id="lines-filter-shift"><option value="">All shifts</option></select></label><label>Filter sex <select id="lines-filter-sex"><option value="">All</option><option value="M">M</option><option value="F">F</option></select></label><label>Filter team <select id="lines-filter-team"><option value="">All</option><option value="\__none_\_">Unassigned</option></select></label><button type="button" class="btn btn-amber" id="btn-export-lines-excel">Export Excel (.xlsx)</button></div><div class="lines-scroll lines-scroll-wide"><table class="data-table lines-editable"><thead id="lines-thead"></thead><tbody id="lines-tbody"></tbody></table></div></div></section>
 
@@ -117,7 +84,6 @@
 <script src="js/main.js?v=20260904f"></script>
 <script src="js/console-chrome.js?v=20260904f"></script>
 <script src="js/airfield-boot.js?v=20260905g"></script>
-<script src="js/setup-ui.js?v=20260905h"></script>
 <script src="js/intro.js?v=20260905g"></script>
 <script src="js/coverage-cuts.js?v=20260904m"></script>
 
