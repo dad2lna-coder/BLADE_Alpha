@@ -13,5 +13,12 @@
     "css": ["modules/setup-panel/styles/setup-panel.css"],
     "panel": "modules/setup-panel/panel.html",
     "mount": "#tab-setup"
+  },
+  "lines-table": {
+    "entry": "modules/lines-table/index.js",
+    "init": "initLinesTable",
+    "panel": "modules/lines-table/panel.html",
+    "docks": null,
+    "mount": "#lines-table-root"
   }
 }
