@@ -5,6 +5,7 @@ import { paintFunctionCoverage } from "./paint.js";
 export function renderAll(S) {
   syncHoursFromAirfield(S);
   paintFunctionCoverage(S);
+  if (S.renderShiftsTable) S.renderShiftsTable();
 }
 
 export function bindSetupActions(S) {

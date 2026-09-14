@@ -112,27 +112,7 @@ window.Scheduler = window.Scheduler || {};
         if (S.exportLinesExcel) S.exportLinesExcel();
       });
     }
-    if (S.$("btn-add-shift")) {
-      S.$("btn-add-shift").addEventListener("click", function () {
-        S.readShiftsFromDom();
-        var id = "S" + S.shiftSeq++;
-        S.state.shifts.push({
-          id: id,
-          name: "Shift",
-          start: "08:00",
-          end: "16:30",
-          paid: 8,
-          force: 0,
-          ltsoForce: 0,
-          stsoForce: 0,
-          rdoHard: []
-        });
-        S.renderShiftsTable();
-      });
-    }
-
     safeInit("airport", S.initAirportConfig);
-    safeInit("shifts", S.renderShiftsTable);
     // safeInit("teams", S.initTeams); // Commented out - initialization is handled cleanly by our module on Teams tab switch
     safeInit("shiftDayTimes", S.initShiftDayTimes);
     safeInit("functionCoverage", S.initFunctionCoverage);
