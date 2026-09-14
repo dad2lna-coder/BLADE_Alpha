@@ -24,10 +24,10 @@
   function esc(text) {
     if (text == null) return "";
     return String(text)
-      .replace(/&/g, "&")
-      .replace(/</g, "<")
-      .replace(/>/g, ">")
-      .replace(/"/g, "'\"'")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
 
@@ -52,7 +52,7 @@
       </thead>
       <tbody>
         {#each rows as row}
-          <tr data-line-row={row.line ?? row.line}>
+          <tr data-line-row={row.line ?? row.id}>
             {#each COLUMNS as col}
               <td class={DAY_NAMES.includes(col.key) ? "day-cell" : ""}>
                 {cellValue(row, col.key)}

@@ -2,6 +2,8 @@
  * Reads row models from window.Scheduler.getLineRowModels() and renders
  * a read-only export-shaped table for the first 50 rows.
  */
+import LinesTable from './LinesTable.svelte';
+
 export function initLinesTable(scheduler) {
   const S = scheduler || window.Scheduler;
   if (!S) return;
@@ -30,18 +32,7 @@ export function initLinesTable(scheduler) {
     }
 
     // Mount new Svelte component using Svelte 4 API
-    // new Component({ target, props }) is the standard Svelte 4 mounting pattern
     try {
-      const LinesTable = new (function () {
-        this.$destroy = function () {
-          if (root && root._linesTableApp === this) {
-            root.innerHTML = "";
-            root._linesTableMounted = false;
-            root._linesTableApp = null;
-          }
-        };
-      })();
-
       root._linesTableApp = new LinesTable({
         target: root,
         props: { rows }
