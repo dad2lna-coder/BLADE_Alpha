@@ -46,7 +46,7 @@ The application initializes in three distinct phases: host document parsing, cla
    - `js/main.js` → executes `S.init()`, binds tab switching, triggers initial `S.renderAll()`
    - `js/console-chrome.js` → wraps `S.renderAll` to refresh masthead counters
    - `js/airfield-boot.js` → airfield configuration bootstrap
-   - `js/setup-ui.js` → `S.rebuildSetupTab()`, `S.snapshotFte()`
+   - `js/setup-ui.js` → `S.rebuildSetupTab()`, `S.snapshotFte()` — **deprecated: replaced by `modules/setup-panel/`**
    - `js/intro.js` → CRT intro terminal emulator, emits `blade-intro-done`
    - `js/coverage-cuts.js` → line coverage cut calculations
 5. **Dynamic Module Bootloader (`<script type="module">` deferred execution)**
