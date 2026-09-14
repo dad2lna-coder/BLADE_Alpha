@@ -15,10 +15,8 @@
     "mount": "#tab-setup"
   },
   "lines-table": {
-    "entry": "modules/lines-table/index.js",
+    "entry": "modules/lines-table/dist/lines-table.js",
     "init": "initLinesTable",
-    "panel": "modules/lines-table/panel.html",
-    "docks": null,
-    "mount": "#lines-table-root"
+    "docks": null
   }
 }

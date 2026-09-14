@@ -12,8 +12,8 @@ export default defineConfig({
   build: {
     target: "es2020",
     module: true,
-    outDir: "dist",
-    emptyOutDir: false,
+    outDir: "modules/lines-table/dist",
+    emptyOutDir: true,
     lib: {
       entry: resolve(__dirname, "modules/lines-table/index.js"),
       name: "LinesTable",

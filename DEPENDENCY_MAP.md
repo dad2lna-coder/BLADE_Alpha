@@ -55,9 +55,10 @@ The application initializes in three distinct phases: host document parsing, cla
    - Polls until `window.Scheduler` is confirmed initialized.
    - For each configured manifest entry:
      - Injects referenced CSS stylesheets (e.g. `team-builder.css`) via `<link data-module-css="...">`.
-     - Injects HTML fragments (e.g. `panel.html` into `#tab-teams`, `docks.html` into `<body>`).
+     - Injects HTML fragments (e.g. `panel.html` into `#tab-teams`, `docks.html` into `<body>`) **only when both `panel` and `mount` are present**.
      - Imports module entry point via absolute resolution: `import(new URL(cfg.entry, window.location.href).href)`.
      - Executes exported initializer (`initTeamBuilder(Scheduler)` or `init(Scheduler)`).
+   - `lines-table` has no HTML/CSS injection — its Svelte component is pre-bundled into `modules/lines-table/dist/lines-table.js` and mounts directly into `#lines-table-root` via `initLinesTable`.
 
 ---
 
@@ -132,7 +133,7 @@ flowchart TD
 |------|-----------|----------|-------|
 | `index.html` | Vendor libs, `css/*.css`, `js/*.js`, `modules/manifest.json` | Core page scaffold, tab shells, module loader | `#tab-teams` is host-only placeholder |
 | `scripts/copy-frontend.js` | Node `fs`, `path` | Builds `dist-frontend/` for Tauri desktop package | Copies `index.html`, `css/`, `js/`, `lib/`, `modules/` |
-| `modules/manifest.json` | — | Declarative schema for pluggable UI modules | Configures `team-builder` assets and mount target |
+| `modules/manifest.json` | — | Declarative schema for pluggable UI modules | Configures `team-builder` and `lines-table` assets and mount targets |
 
 ### Classic Runtime (`window.Scheduler`)
 
@@ -149,6 +150,13 @@ flowchart TD
 | `js/schedule.js` | `S.state`, DOM inputs | `S.generate()`, `S.buildScheduleForLine()` | Schedule engine |
 | `js/capacity.js` | `S.teams`, `S.switchTab` | `S.teamSexCounts()`, `S.teamWorksDay()` | Daily checkpoint capacity calculations |
 | `js/main.js` | All classic `js/*.js` | `S.init()`, tab click bindings | Final synchronous bootstrap step |
+
+### Module: `lines-table` (Svelte island in Lines tab)
+
+| File | Depends On | Provides | Notes |
+|------|-----------|----------|-------|
+| `modules/lines-table/index.js` | `LinesTable.svelte` (bundled by Vite) | `initLinesTable()` | No dynamic import — entry is the pre-bundled dist file; bootloader imports `modules/lines-table/dist/lines-table.js` |
+| `modules/lines-table/LinesTable.svelte` | — | Read-only export-shaped table (first 50 rows) | Bundled into `modules/lines-table/dist/lines-table.js` by `vite.lines-table.config.mjs` |
 
 ### Module: `team-builder`
 

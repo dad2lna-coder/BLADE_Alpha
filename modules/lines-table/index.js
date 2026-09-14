@@ -32,49 +32,10 @@ export function initLinesTable(scheduler) {
     }
 
     // Mount new Svelte component using Svelte 4 API
-    try {
-      root._linesTableApp = new LinesTable({
-        target: root,
-        props: { rows }
-      });
-    } catch (err) {
-      console.error("lines-table: mount failed", err);
-      // Fallback: inject static HTML
-      root.innerHTML = `
-        <table class="data-table lines-table-svelte">
-          <thead>
-            <tr>
-              <th>Team</th><th>Line</th><th>Shift</th><th>Start</th><th>End</th>
-              <th>Position</th><th>Emp</th><th>Sex</th><th>Function</th><th>RDOs</th><th>Paid</th>
-              ${["Sun","Mon","Tue","Wed","Thu","Fri","Sat"].map(d => `<th>${d}</th>`).join("")}
-              <th>Hours</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${rows.map(row => {
-              const team = row.team || "";
-              const line = row.lineCode || "";
-              const shift = row.shiftName || "";
-              const start = row.start || "";
-              const end = row.end || "";
-              const position = row.position || "";
-              const emp = row.emp || "";
-              const sex = row.sex || "";
-              const func = row.function || "";
-              const paid = row.paid || 0;
-              const days = row.days || new Array(7).fill("RDO");
-              const hours = row.hours || 0;
-              const cells = [
-                team, line, shift, start, end, position, emp, sex, func,
-                row.rdos || "—", paid,
-                ...days.map(d => `<td>${d}</td>`)
-              ].join("");
-              return `<tr data-line-row="${row.line || row.id}"><td>${cells}</td></tr>`;
-            }).join("")}
-          </tbody>
-        </table>
-      `;
-    }
+    root._linesTableApp = new LinesTable({
+      target: root,
+      props: { rows }
+    });
   };
 
   refresh();
