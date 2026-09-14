@@ -1,0 +1,34 @@
+{
+  "app": "blade-airfield",
+  "version": 1,
+  "config": {
+    "startTime": "03:30",
+    "endTime": "23:00",
+    "volumePerHour": { "STD": 150, "PRE": 240, "MIX": 195 },
+    "terminals": [
+      {
+        "id": 1,
+        "name": "Terminal 1",
+        "startTime": "03:30",
+        "endTime": "23:00",
+        "baseTSOCost": { "STD": 6, "PRE": 5, "MIX": 6 },
+        "checkpoints": [
+          {
+            "id": 1,
+            "name": "Checkpoint 1",
+            "startTime": "03:30",
+            "endTime": "23:00",
+            "modSets": [
+              { "id": 1, "name": "MS-1", "startTime": "03:30", "lanes": 2, "program": "STD" },
+              { "id": 2, "name": "MS-2", "startTime": "03:30", "lanes": 2, "program": "STD" },
+              { "id": 3, "name": "MS-3", "startTime": "03:30", "lanes": 2, "program": "STD" },
+              { "id": 4, "name": "MS-4", "startTime": "03:30", "lanes": 2, "program": "PRE" },
+              { "id": 5, "name": "MS-5", "startTime": "03:30", "lanes": 2, "program": "PRE" },
+              { "id": 6, "name": "MS-6", "startTime": "03:30", "lanes": 2, "program": "PRE" }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
