@@ -1,0 +1,30 @@
+name: Notify bright-garden Pages repo
+
+on:
+  push:
+    branches: [bright-garden]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger preview repo rebuild
+        env:
+          GH_TOKEN: ${{ secrets.PREVIEW_DEPLOY_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          set +e
+          gh api repos/dad2lna-coder/BLADE_Alpha-bright-garden/dispatches \
+            -f event_type=bright-garden-push
+          status=$?
+          if [ "$status" -ne 0 ]; then
+            echo "Could not ping the preview repo with this token."
+            echo "That is expected with the default GITHUB_TOKEN."
+            echo "Add repo secret PREVIEW_DEPLOY_TOKEN (a PAT with repo scope on BLADE_Alpha-bright-garden) for instant updates."
+            echo "Until then the preview repo rebuilds from bright-garden every 15 minutes."
+            exit 0
+          fi
+          echo "Preview repo rebuild triggered."
