@@ -86,4 +86,21 @@ window.Scheduler = window.Scheduler || {};
       return S.lineToRowModel(line, schedule, options);
     }).filter(Boolean);
   };
+
+  /**
+   * Build row models for all lines using S.state.
+   * Thin Scheduler-bound helper; pure mapper stays unchanged.
+   */
+  S.getLineRowModels = function (options) {
+    var lines = (S.state && Array.isArray(S.state.lines)) ? S.state.lines : [];
+    var schedule = (S.state && S.state.schedule) || [];
+    var merged = Object.assign({}, options || {});
+    if (!merged.teamResolver && typeof S.teamMetaForLine === "function") {
+      merged.teamResolver = S.teamMetaForLine;
+    }
+    if (!merged.shiftResolver && typeof S.getShift === "function") {
+      merged.shiftResolver = S.getShift;
+    }
+    return S.getRowModels(lines, schedule, merged);
+  };
 })(window.Scheduler);

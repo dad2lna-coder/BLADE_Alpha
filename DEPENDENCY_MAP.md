@@ -33,6 +33,7 @@ The application initializes in three distinct phases: host document parsing, cla
    - `js/shifts.js` → `S.getShift()`, `S.readShiftsFromDom()`, `S.renderShiftsTable()`
    - `js/allocation.js` → `S.buildLines()`, `S.assignCertifications()`
    - `js/functions.js` → `S.ensureFunctionCoverage()`, `S.generateFunctionAssignments()`
+   - `js/lines-row-model.js` → `S.lineToRowModel`, `S.getRowModels`, `S.getLineRowModels`
    - `js/render.js` → `S.renderAll()`, `S.renderLines()`, `S.switchTab()`, `S.findLineById()`, `S.setLineTeam()`, `S.teamMetaForLine()`
    - `js/line-colors.js` → wraps `S.renderLines` & `S.renderAll` for RDO badge background colors
    - `js/reports.js` → renders staffing breakdown and gender parity analytics
@@ -68,7 +69,7 @@ flowchart TD
         H_CSS["Stylesheets\n(styles, line-print, intro, console)"]
         H_DOM["Static DOM Shell\n(#tab-setup, #tab-lines, empty #tab-teams)"]
         H_LIB["Vendor Libraries\n(dayjs, Sortable, luxon, ExcelJS)"]
-        H_CLASSIC["23 Classic Scripts\n(js/*.js attached to S)"]
+        H_CLASSIC["24 Classic Scripts\n(js/*.js attached to S)"]
         H_BOOT["Module Bootloader\n(script type=module)"]
     end
 
@@ -143,6 +144,7 @@ flowchart TD
 | `js/shifts.js` | `S.state`, `S.$` | `S.getShift()`, `S.renderShiftsTable()` | Shift lookup and table rendering |
 | `js/allocation.js` | `S.state` | `S.buildLines()`, `S.assignCertifications()` | Line generation engine |
 | `js/functions.js` | `S.state` | `S.ensureFunctionCoverage()` | PAX/BAG/DFO duty assignment |
+| `js/lines-row-model.js` | callers (resolvers) | `S.lineToRowModel`, `S.getRowModels`, `S.getLineRowModels` | Pure mapper; optional `S.getLineRowModels` reads `S.state` |
 | `js/render.js` | `S.state`, `S.teams` | `S.renderAll()`, `S.renderLines()`, `S.switchTab()` | Global render coordination |
 | `js/schedule.js` | `S.state`, DOM inputs | `S.generate()`, `S.buildScheduleForLine()` | Schedule engine |
 | `js/capacity.js` | `S.teams`, `S.switchTab` | `S.teamSexCounts()`, `S.teamWorksDay()` | Daily checkpoint capacity calculations |
