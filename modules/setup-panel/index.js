@@ -31,7 +31,7 @@ export function initSetupPanel(scheduler) {
   // Classic initFunctionCoverage may have run before panel.html existed.
   // Re-run once the setup panel DOM is mounted. bindOnce covers add-band.
   if (typeof S.initFunctionCoverage === "function") {
-    if (!S._funcCoverageBound) S._funcCoverageBound = false;
+    S._funcCoverageBound = false;
     S.initFunctionCoverage();
   }
 
