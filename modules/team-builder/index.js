@@ -41,12 +41,20 @@ function bridgeScheduler(S) {
   if (typeof store.syncSchedulerBridge === "function") store.syncSchedulerBridge(S);
 }
 
+function syncLinesOnce() {
+  const S = window.Scheduler;
+  if (!S) return;
+  if (S.__USE_SVELTE_LINES) {
+    window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "team-builder" } }));
+    return;
+  }
+  if (typeof S.renderLines === "function") S.renderLines();
+}
+
 function afterMutate() {
   bridgeScheduler(window.Scheduler);
   renderAll();
-  if (window.Scheduler && typeof window.Scheduler.renderLines === "function") {
-    window.Scheduler.renderLines();
-  }
+  syncLinesOnce();
 }
 
 export function renderAll() {
@@ -59,9 +67,12 @@ export function renderAll() {
   syncHint();
   applyFollowMe();
   renderPinnedSummaries();
+  // DnD: persist members from DOM + bridge; do not call afterMutate (avoids full Auto-form-cost re-render).
   initSortables(function () {
     syncTeamsFromDom();
-    afterMutate();
+    bridgeScheduler(window.Scheduler);
+    syncHint();
+    syncLinesOnce();
   });
 }
 
