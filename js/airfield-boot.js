@@ -8,14 +8,6 @@ window.Scheduler = window.Scheduler || {};
   var imported = false;
   var dirty = false;
 
-  function loadSetupUi() {
-    if (document.querySelector('script[src*="js/setup-ui.js"]')) return;
-    var s = document.createElement("script");
-    s.src = "js/setup-ui.js?v=20260905g";
-    document.body.appendChild(s);
-  }
-  loadSetupUi();
-
   function defaultConfig() {
     return {
       startTime: "03:30",

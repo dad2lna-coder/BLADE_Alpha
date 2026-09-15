@@ -1,4 +1,4 @@
-﻿import { getTeamById, teams } from '../stores/teamBuilderStore.js';
+import { getTeamById, teams } from '../stores/teamBuilderStore.js';
 
 let sortables = [];
 
@@ -12,16 +12,17 @@ export function destroySortables() {
 }
 
 export function syncTeamsFromDom() {
-    teams.forEach(t => { t.members = []; });
-    document.querySelectorAll(".team-board-list[data-team-id]").forEach(board => {
+    // Only rewrite members for lists that currently have LineCards.
+    // Compact boards keep store membership (empty DOM must not wipe Auto-form).
+    document.querySelectorAll(".team-board-list[data-members-painted=\"1\"]").forEach(board => {
         const team = getTeamById(board.getAttribute("data-team-id"));
         if (!team) return;
+        const next = [];
         board.querySelectorAll(".team-line[data-id]").forEach(node => {
             const pid = +node.getAttribute("data-id");
-            if (!isNaN(pid) && team.members.indexOf(pid) === -1) {
-                team.members.push(pid);
-            }
+            if (!isNaN(pid) && next.indexOf(pid) === -1) next.push(pid);
         });
+        team.members = next;
     });
 }
 
@@ -60,7 +61,8 @@ export function initSortables(onEndCallback) {
     document.querySelectorAll(".team-role-list").forEach(el => {
         sortables.push(Sortable.create(el, makeOpts({ sort: false })));
     });
-    document.querySelectorAll(".team-board-list").forEach(el => {
+    // Compact lists have no LineCards and no data-members-painted.
+    document.querySelectorAll(".team-board-list[data-members-painted=\"1\"]").forEach(el => {
         sortables.push(Sortable.create(el, makeOpts({})));
     });
 }

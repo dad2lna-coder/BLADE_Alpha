@@ -93,10 +93,20 @@ export function assignSelectedToTeam(targetTeamId) {
     if (!targetTeamId) return;
     const ids = getSelectedIds();
     if (!ids.length) return;
+    const team = getTeamById(targetTeamId);
+    if (!team) return;
 
-    let n = 0;
-    ids.forEach(id => {
-        if (addMemberToTeam(targetTeamId, id)) n++;
+    const want = new Set(ids.map(Number));
+    teams.forEach(t => {
+        if (t.id === targetTeamId) return;
+        t.members = (t.members || []).filter(m => !want.has(+m));
+    });
+    const have = new Set((team.members || []).map(Number));
+    want.forEach(id => {
+        if (!have.has(id)) {
+            team.members.push(id);
+            have.add(id);
+        }
     });
     clearSelection();
 }

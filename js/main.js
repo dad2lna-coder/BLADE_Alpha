@@ -112,32 +112,29 @@ window.Scheduler = window.Scheduler || {};
         if (S.exportLinesExcel) S.exportLinesExcel();
       });
     }
-    if (S.$("btn-add-shift")) {
-      S.$("btn-add-shift").addEventListener("click", function () {
-        S.readShiftsFromDom();
-        var id = "S" + S.shiftSeq++;
-        S.state.shifts.push({
-          id: id,
-          name: "Shift",
-          start: "08:00",
-          end: "16:30",
-          paid: 8,
-          force: 0,
-          ltsoForce: 0,
-          stsoForce: 0,
-          rdoHard: []
-        });
-        S.renderShiftsTable();
-      });
-    }
-
     safeInit("airport", S.initAirportConfig);
-    safeInit("shifts", S.renderShiftsTable);
     // safeInit("teams", S.initTeams); // Commented out - initialization is handled cleanly by our module on Teams tab switch
     safeInit("shiftDayTimes", S.initShiftDayTimes);
     safeInit("functionCoverage", S.initFunctionCoverage);
     safeInit("reports", S.initReports);
-    safeInit("linesUI", S.bindLinesUI);
+    safeInit("linesUI", function () {
+  // Svelte Lines table is default-on. Override to classic via:
+  //   localStorage.setItem('blade:lines:svelte', '0')
+  //   ?lines=classic
+  // Re-enable with '1' or 'svelte'.
+  var flag = localStorage.getItem('blade:lines:svelte');
+  if (flag === '0' || flag === 'classic') S.__USE_SVELTE_LINES = false;
+  else if (flag === '1' || flag === 'svelte') S.__USE_SVELTE_LINES = true;
+  else if (location.search.indexOf('lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
+  else if (location.search.indexOf('lines=classic') !== -1) S.__USE_SVELTE_LINES = false;
+  else S.__USE_SVELTE_LINES = true; // default-on
+  if (S.__USE_SVELTE_LINES) {
+    console.log('BLADE: Svelte Lines table enabled (default-on)');
+  } else {
+    console.log('BLADE: Classic Lines table active (flag override)');
+  }
+  S.bindLinesUI();
+});
     safeInit("capacity", S.initCapacity);
 
     function onNewTeam(e) {

@@ -1,14 +1,16 @@
 /**
  * Team Builder — thin orchestrator.
  * Wires existing stores/components/actions. No new architecture.
+ * Unassigned pool and team boards are collapsed-by-default; cards paint on expand.
  */
 import * as store from "./stores/teamBuilderStore.js";
 import { teams } from "./stores/teamBuilderStore.js";
 import { autoFormTeams as runAutoForm } from "./utils/autoForm.js";
 import { collectTeamPool, unassignedPool, assignedIds } from "./utils/pool.js";
 import { renderTeamBoards } from "./components/TeamBoards.js";
+import { paintTeamMembers, collapseTeamMembers, expandedTeamIds } from "./components/TeamBoard.js";
 import { renderTeamPills } from "./components/TeamPills.js";
-import { renderUnassignedPool, selectAllVisible } from "./components/UnassignedPool.js";
+import { renderUnassignedPool, selectAllVisible, clearUnassignedPoolDom, isPoolExpanded } from "./components/UnassignedPool.js";
 import { renderTeamStats } from "./components/TeamStats.js";
 import { renderTeamFilters } from "./components/TeamFilters.js";
 import { injectAutoFormControls } from "./components/AutoFormControls.js";
@@ -41,15 +43,35 @@ function bridgeScheduler(S) {
   if (typeof store.syncSchedulerBridge === "function") store.syncSchedulerBridge(S);
 }
 
+function syncLinesOnce() {
+  const S = window.Scheduler;
+  if (!S) return;
+  if (S.__USE_SVELTE_LINES) {
+    window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "team-builder" } }));
+    return;
+  }
+  if (typeof S.renderLines === "function") S.renderLines();
+}
+
 function afterMutate() {
   bridgeScheduler(window.Scheduler);
   renderAll();
-  if (window.Scheduler && typeof window.Scheduler.renderLines === "function") {
-    window.Scheduler.renderLines();
-  }
+  syncLinesOnce();
+}
+
+function bindDndEnd() {
+  initSortables(function () {
+    syncTeamsFromDom();
+    bridgeScheduler(window.Scheduler);
+    syncHint();
+    syncLinesOnce();
+  });
 }
 
 export function renderAll() {
+  if (typeof performance !== "undefined" && performance.mark) {
+    performance.mark("renderAll");
+  }
   collectTeamPool();
   renderTeamPills();
   renderUnassignedPool();
@@ -59,10 +81,31 @@ export function renderAll() {
   syncHint();
   applyFollowMe();
   renderPinnedSummaries();
-  initSortables(function () {
-    syncTeamsFromDom();
-    afterMutate();
-  });
+  bindDndEnd();
+}
+
+function onPoolToggle() {
+  if (isPoolExpanded()) {
+    renderUnassignedPool();
+    bindDndEnd();
+  } else {
+    clearUnassignedPoolDom();
+    bindDndEnd();
+  }
+}
+
+function onBoardToggle(e) {
+  const details = e.target;
+  if (!details || details.tagName !== "DETAILS" || !details.classList.contains("team-board")) return;
+  const id = details.getAttribute("data-team-id");
+  if (!id) return;
+  if (details.open) {
+    expandedTeamIds.add(String(id));
+    paintTeamMembers(id);
+  } else {
+    collapseTeamMembers(id);
+  }
+  bindDndEnd();
 }
 
 function onAutoForm() {
@@ -162,6 +205,13 @@ function bindTeamUI() {
     store.createTeam();
     renderAll();
   });
+
+  bindOnce(document.getElementById("team-pool-section"), "toggle", onPoolToggle);
+
+  if (!document._tbToggleBound) {
+    document._tbToggleBound = true;
+    document.addEventListener("toggle", onBoardToggle, true);
+  }
 
   if (!document._tbClickBound) {
     document._tbClickBound = true;
