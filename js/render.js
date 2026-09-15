@@ -9,7 +9,6 @@ window.Scheduler = window.Scheduler || {};
     return S.DAYS[d.day()] + " " + (d.month() + 1) + "/" + d.date();
   };
 
-  /** Build 30-minute slot list (minutes from midnight) covering open→close */
   S.coverageSlots = function () {
     var openMin = S.timeToMin(S.state.open);
     var closeMin = S.timeToMin(S.state.close);
@@ -94,11 +93,9 @@ window.Scheduler = window.Scheduler || {};
     return { slots: slots, matrix: matrix, dowToOffset: dowToOffset };
   };
 
-  /* Coverage DOM owned by modules/coverage (attachRender). */
   S.renderCoverageBars = S.renderCoverageBars || function () {};
   S.renderShiftSummary = S.renderShiftSummary || function () {};
 
-  /** Lines view preferences (filter / group / sort) */
   S.linesView = S.linesView || {
     groupBy: "team",
     sortBy: "role",
@@ -145,14 +142,12 @@ window.Scheduler = window.Scheduler || {};
         set[dow] = true;
       }
     }
-    line.rdoDays = Object.keys(set)
-      .map(Number)
-      .sort(function (a, b) { return a - b; });
+    line.rdoDays = Object.keys(set).map(Number).sort(function (a, b) { return a - b; });
   };
 
   S.rdoTextForLine = function (line) {
     var days = (line.rdoDays || []).map(function (i) { return (S.DAYS && S.DAYS[i]) || i; });
-    var txt = days.length ? days.join(",") : "\u2014";
+    var txt = days.length ? days.join(",") : "-";
     if (line.rdoHard) txt += " (hard)";
     return txt;
   };
@@ -220,7 +215,6 @@ window.Scheduler = window.Scheduler || {};
     var groupBy = S.linesView.groupBy || "none";
     var sortBy = S.linesView.sortBy || "role";
     var dir = S.linesView.sortDir === "desc" ? -1 : 1;
-
     function groupKey(line) {
       if (groupBy === "team") {
         var tm = S.teamMetaForLine(line.id);
@@ -234,12 +228,8 @@ window.Scheduler = window.Scheduler || {};
       }
       return "";
     }
-
     function cmpVal(line) {
-      if (sortBy === "team") {
-        var tm = S.teamMetaForLine(line.id);
-        return tm.order;
-      }
+      if (sortBy === "team") return S.teamMetaForLine(line.id).order;
       if (sortBy === "role") return S.lineRoleRank(line);
       if (sortBy === "shift") {
         var sh = S.getShift(line.shiftId);
@@ -249,20 +239,15 @@ window.Scheduler = window.Scheduler || {};
       if (sortBy === "sex") return line.sex === "M" ? 0 : 1;
       return line.id;
     }
-
     return list.slice().sort(function (a, b) {
-      var ga = groupKey(a);
-      var gb = groupKey(b);
+      var ga = groupKey(a), gb = groupKey(b);
       if (ga < gb) return -1;
       if (ga > gb) return 1;
-      var va = cmpVal(a);
-      var vb = cmpVal(b);
+      var va = cmpVal(a), vb = cmpVal(b);
       if (typeof va === "string") {
         if (va < vb) return -1 * dir;
         if (va > vb) return 1 * dir;
-      } else {
-        if (va !== vb) return (va - vb) * dir;
-      }
+      } else if (va !== vb) return (va - vb) * dir;
       return (a.id - b.id) * dir;
     });
   };
@@ -272,7 +257,6 @@ window.Scheduler = window.Scheduler || {};
     var thead = S.$("lines-thead");
     var tbody = S.$("lines-tbody");
     if (!thead || !tbody) return;
-
     var gEl = S.$("lines-group-by");
     var sEl = S.$("lines-sort-by");
     var dEl = S.$("lines-sort-dir");
@@ -285,96 +269,68 @@ window.Scheduler = window.Scheduler || {};
     if (dEl) dEl.value = S.linesView.sortDir || "asc";
     if (frEl) frEl.value = S.linesView.filterRole || "ALL";
     if (fsexEl) fsexEl.value = S.linesView.filterSex || "";
-
     if (fsEl) {
-      var shiftHtml = '<option value="">All shifts</option>';
+      var shiftHtml = "<option value=\"\">All shifts<\/option>";
       (S.state.shifts || []).forEach(function (sh) {
-        shiftHtml +=
-          '<option value="' + sh.id + '"' +
+        shiftHtml += "<option value=\"" + sh.id + "\"" +
           (String(S.linesView.filterShift) === String(sh.id) ? " selected" : "") +
-          ">" +
-          String(sh.name || sh.id).replace(/</g, "\u0026lt;") +
-          "</option>";
+          ">" + String(sh.name || sh.id).replace(/</g, "&amp;lt;") + "<\/option>";
       });
       fsEl.innerHTML = shiftHtml;
     }
     if (ftEl) {
-      var teamHtml =
-        '<option value="">All</option>' +
-        '<option value="__none__"' +
+      var teamHtml = "<option value=\"\">All<\/option>" +
+        "<option value=\"__none__\"" +
         (S.linesView.filterTeam === "__none__" ? " selected" : "") +
-        ">Unassigned</option>";
+        ">Unassigned<\/option>";
       if (S.teams && S.teams.teams) {
         S.teams.teams.forEach(function (t) {
-          teamHtml +=
-            '<option value="' + t.id + '"' +
+          teamHtml += "<option value=\"" + t.id + "\"" +
             (S.linesView.filterTeam === t.id ? " selected" : "") +
-            ">" +
-            String(t.name || t.id).replace(/</g, "\u0026lt;") +
-            "</option>";
+            ">" + String(t.name || t.id).replace(/</g, "&amp;lt;") + "<\/option>";
         });
       }
       ftEl.innerHTML = teamHtml;
     }
-
     var days = (S.state.weekCount || 1) * 7;
-    var hr = "<tr><th>Team</th><th>Line</th><th>Shift</th><th>Emp</th><th>Sex</th><th>Function</th><th>RDOs</th>";
+    var hr = "<tr><th>Team<\/th><th>Line<\/th><th>Shift<\/th><th>Emp<\/th><th>Sex<\/th><th>Function<\/th><th>RDOs<\/th>";
     for (var d = 0; d < days; d++) {
-      hr += "<th>" + S.dayLabel(d).replace(" ", "<br>") + "</th>";
+      hr += "<th>" + S.dayLabel(d).replace(" ", "<br>") + "<\/th>";
     }
-    hr += "<th>Hours</th></tr>";
+    hr += "<th>Hours<\/th><\/tr>";
     thead.innerHTML = hr;
-
     if (!S.state.lines.length) {
-      tbody.innerHTML = '<tr><td colspan="20" class="muted">Generate or import to build lines</td></tr>';
+      tbody.innerHTML = "<tr><td colspan=\"20\" class=\"muted\">Generate or import to build lines<\/td><\/tr>";
       return;
     }
-
     var sortedLines = S.sortLinesForView(S.filterLinesForView(S.state.lines));
-
     function teamSelectHtml(selectedId) {
-      var opts = '<option value=""' + (!selectedId ? " selected" : "") + ">\u2014</option>";
+      var opts = "<option value=\"\"" + (!selectedId ? " selected" : "") + ">-<\/option>";
       if (S.teams && S.teams.teams) {
         S.teams.teams.forEach(function (t) {
-          opts +=
-            '<option value="' + t.id + '"' +
+          opts += "<option value=\"" + t.id + "\"" +
             (t.id === selectedId ? " selected" : "") +
-            ">" +
-            String(t.name || t.id).replace(/</g, "\u0026lt;") +
-            "</option>";
+            ">" + String(t.name || t.id).replace(/</g, "&amp;lt;") + "<\/option>";
         });
       }
       return opts;
     }
     function shiftSelectHtml(selectedId) {
-      return (S.state.shifts || [])
-        .map(function (sh) {
-          return (
-            '<option value="' + sh.id + '"' +
-            (sh.id === selectedId ? " selected" : "") +
-            ">" +
-            String(sh.name || sh.id).replace(/</g, "\u0026lt;") +
-            " (" + sh.start + "\u2013" + sh.end + ")</option>"
-          );
-        })
-        .join("");
+      return (S.state.shifts || []).map(function (sh) {
+        return "<option value=\"" + sh.id + "\"" +
+          (sh.id === selectedId ? " selected" : "") +
+          ">" + String(sh.name || sh.id).replace(/</g, "&amp;lt;") +
+          " (" + sh.start + "-" + sh.end + ")<\/option>";
+      }).join("");
     }
     function empSelectHtml(selected) {
-      return ["FT", "PT", "LTSO", "STSO"]
-        .map(function (e) {
-          return (
-            '<option value="' + e + '"' +
-            (e === selected ? " selected" : "") +
-            ">" + e + "</option>"
-          );
-        })
-        .join("");
+      return ["FT", "PT", "LTSO", "STSO"].map(function (e) {
+        return "<option value=\"" + e + "\"" + (e === selected ? " selected" : "") + ">" + e + "<\/option>";
+      }).join("");
     }
-
     var html = "";
     var lastGroup = null;
     var groupBy = S.linesView.groupBy || "none";
-
     sortedLines.forEach(function (line) {
       if (groupBy !== "none") {
         var gLabel = "";
@@ -389,17 +345,13 @@ window.Scheduler = window.Scheduler || {};
           gLabel = "Role: " + (r === 0 ? "STSO" : r === 1 ? "LTSO" : r === 2 ? "FT (TSO)" : r === 3 ? "PT (TSO)" : "Other");
         } else if (groupBy === "start") {
           var sh2 = S.getShift(line.shiftId);
-          gLabel = "Start: " + (sh2 ? sh2.start : "\u2014");
+          gLabel = "Start: " + (sh2 ? sh2.start : "-");
         }
         if (gLabel !== lastGroup) {
           lastGroup = gLabel;
-          html +=
-            '<tr class="lines-group-row"><td colspan="20"><strong>' +
-            gLabel +
-            "</strong></td></tr>";
+          html += "<tr class=\"lines-group-row\"><td colspan=\"20\"><strong>" + gLabel + "<\/strong><\/td><\/tr>";
         }
       }
-
       var hours = 0;
       var cells = "";
       for (var di = 0; di < days; di++) {
@@ -408,74 +360,41 @@ window.Scheduler = window.Scheduler || {};
           hours += line.paid || 0;
           var duty = S.getRotationDuty ? S.getRotationDuty(line.id, di) : null;
           var dutyCls = duty ? " cell-function-duty" : "";
-          var dutyTip = duty ? " \u00b7 " + duty + " duty" : "";
-          cells +=
-            '<td class="cell-work cell-toggle' +
-            dutyCls +
-            '" data-line-id="' +
-            line.id +
-            '" data-day="' +
-            di +
-            '" title="Click to toggle RDO' +
-            dutyTip +
-            '">' +
-            (line.shiftLabel || "WORK") +
-            "</td>";
+          var dutyTip = duty ? " - " + duty + " duty" : "";
+          cells += "<td class=\"cell-work cell-toggle" + dutyCls + "\" data-line-id=\"" + line.id + "\" data-day=\"" + di + "\" title=\"Click to toggle RDO" + dutyTip + "\">" + (line.shiftLabel || "WORK") + "<\/td>";
         } else {
-          cells +=
-            '<td class="cell-rdo cell-toggle" data-line-id="' +
-            line.id +
-            '" data-day="' +
-            di +
-            '" title="Click to toggle WORK">RDO</td>';
+          cells += "<td class=\"cell-rdo cell-toggle\" data-line-id=\"" + line.id + "\" data-day=\"" + di + "\" title=\"Click to toggle WORK\">RDO<\/td>";
         }
       }
-
       var rdoTxt = S.rdoTextForLine(line);
       var empVal = line.isStso ? "STSO" : line.isLtso ? "LTSO" : line.empClass || "FT";
       var teamMeta = S.teamMetaForLine(line.id);
-
-      html +=
-        '<tr data-line-row="' + line.id + '">' +
-        '<td><select class="line-edit" data-field="team" data-line-id="' + line.id + '">' +
-        teamSelectHtml(teamMeta.id) +
-        "</select></td>" +
-        '<td><input type="text" class="line-edit line-code-input" data-field="lineCode" data-line-id="' +
-        line.id +
-        '" value="' +
-        String(line.lineCode || "").replace(/"/g, "\u0026quot;") +
-        '"></td>' +
-        '<td><select class="line-edit" data-field="shift" data-line-id="' + line.id + '">' +
-        shiftSelectHtml(line.shiftId) +
-        "</select></td>" +
-        '<td><select class="line-edit" data-field="emp" data-line-id="' + line.id + '">' +
-        empSelectHtml(empVal) +
-        "</select></td>" +
-        '<td><select class="line-edit" data-field="sex" data-line-id="' + line.id + '">' +
-        '<option value="M"' + (line.sex === "M" ? " selected" : "") + ">M</option>" +
-        '<option value="F"' + (line.sex === "F" ? " selected" : "") + ">F</option>" +
-        "</select></td>" +
-        '<td><select class="line-edit" data-field="function" data-line-id="' + line.id + '">' +
-        '<option value=""' + (!line.function ? " selected" : "") + ">\u2014</option>" +
-        '<option value="DFO"' + (line.function === "DFO" ? " selected" : "") + ">DFO</option>" +
-        '<option value="PAX"' + (line.function === "PAX" ? " selected" : "") + ">PAX</option>" +
-        '<option value="BAG"' + (line.function === "BAG" ? " selected" : "") + ">BAG</option>" +
-        "</select></td>" +
-        '<td class="muted line-rdo-cell" data-line-id="' + line.id + '">' + rdoTxt + "</td>" +
+      html += "<tr data-line-row=\"" + line.id + "\">" +
+        "<td><select class=\"line-edit\" data-field=\"team\" data-line-id=\"" + line.id + "\">" + teamSelectHtml(teamMeta.id) + "<\/select><\/td>" +
+        "<td><input type=\"text\" class=\"line-edit line-code-input\" data-field=\"lineCode\" data-line-id=\"" + line.id + "\" value=\"" + String(line.lineCode || "").replace(/"/g, "&amp;quot;") + "\"><\/td>" +
+        "<td><select class=\"line-edit\" data-field=\"shift\" data-line-id=\"" + line.id + "\">" + shiftSelectHtml(line.shiftId) + "<\/select><\/td>" +
+        "<td><select class=\"line-edit\" data-field=\"emp\" data-line-id=\"" + line.id + "\">" + empSelectHtml(empVal) + "<\/select><\/td>" +
+        "<td><select class=\"line-edit\" data-field=\"sex\" data-line-id=\"" + line.id + "\">" +
+        "<option value=\"M\"" + (line.sex === "M" ? " selected" : "") + ">M<\/option>" +
+        "<option value=\"F\"" + (line.sex === "F" ? " selected" : "") + ">F<\/option><\/select><\/td>" +
+        "<td><select class=\"line-edit\" data-field=\"function\" data-line-id=\"" + line.id + "\">" +
+        "<option value=\"\"" + (!line.function ? " selected" : "") + ">-<\/option>" +
+        "<option value=\"DFO\"" + (line.function === "DFO" ? " selected" : "") + ">DFO<\/option>" +
+        "<option value=\"PAX\"" + (line.function === "PAX" ? " selected" : "") + ">PAX<\/option>" +
+        "<option value=\"BAG\"" + (line.function === "BAG" ? " selected" : "") + ">BAG<\/option><\/select><\/td>" +
+        "<td class=\"muted line-rdo-cell\" data-line-id=\"" + line.id + "\">" + rdoTxt + "<\/td>" +
         cells +
-        '<td class="line-hours" data-line-id="' + line.id + '">' + hours + "</td>" +
-        "</tr>";
+        "<td class=\"line-hours\" data-line-id=\"" + line.id + "\">" + hours + "<\/td><\/tr>";
     });
-
     tbody.innerHTML = html;
   };
 
   S.refreshLineRowDerived = function (lineId) {
     var line = S.findLineById(lineId);
     if (!line) return;
-    var rdoCell = document.querySelector('.line-rdo-cell[data-line-id="' + lineId + '"]');
+    var rdoCell = document.querySelector(".line-rdo-cell[data-line-id=\"" + lineId + "\"]");
     if (rdoCell) rdoCell.textContent = S.rdoTextForLine(line);
-    var hoursCell = document.querySelector('.line-hours[data-line-id="' + lineId + '"]');
+    var hoursCell = document.querySelector(".line-hours[data-line-id=\"" + lineId + "\"]");
     if (hoursCell) {
       var days = (S.state.weekCount || 1) * 7;
       var h = 0;
@@ -489,56 +408,24 @@ window.Scheduler = window.Scheduler || {};
   S.bindLinesUI = function () {
     if (S._linesUIBound) return;
     S._linesUIBound = true;
-
     document.addEventListener("change", function (e) {
       var t = e.target;
       if (!t) return;
-      if (t.id === "lines-group-by") {
-        S.linesView.groupBy = t.value;
-        S.renderLines();
-        return;
-      }
-      if (t.id === "lines-sort-by") {
-        S.linesView.sortBy = t.value;
-        S.renderLines();
-        return;
-      }
-      if (t.id === "lines-sort-dir") {
-        S.linesView.sortDir = t.value;
-        S.renderLines();
-        return;
-      }
-      if (t.id === "lines-filter-role") {
-        S.linesView.filterRole = t.value;
-        S.renderLines();
-        return;
-      }
-      if (t.id === "lines-filter-shift") {
-        S.linesView.filterShift = t.value;
-        S.renderLines();
-        return;
-      }
-      if (t.id === "lines-filter-sex") {
-        S.linesView.filterSex = t.value;
-        S.renderLines();
-        return;
-      }
-      if (t.id === "lines-filter-team") {
-        S.linesView.filterTeam = t.value;
-        S.renderLines();
-        return;
-      }
+      if (t.id === "lines-group-by") { S.linesView.groupBy = t.value; S.renderLines(); return; }
+      if (t.id === "lines-sort-by") { S.linesView.sortBy = t.value; S.renderLines(); return; }
+      if (t.id === "lines-sort-dir") { S.linesView.sortDir = t.value; S.renderLines(); return; }
+      if (t.id === "lines-filter-role") { S.linesView.filterRole = t.value; S.renderLines(); return; }
+      if (t.id === "lines-filter-shift") { S.linesView.filterShift = t.value; S.renderLines(); return; }
+      if (t.id === "lines-filter-sex") { S.linesView.filterSex = t.value; S.renderLines(); return; }
+      if (t.id === "lines-filter-team") { S.linesView.filterTeam = t.value; S.renderLines(); return; }
       if (!t.classList.contains("line-edit")) return;
       var lineId = t.getAttribute("data-line-id");
       var field = t.getAttribute("data-field");
       var line = S.findLineById(lineId);
       if (!line) return;
-
-      if (field === "lineCode") {
-        line.lineCode = t.value.trim() || line.lineCode;
-      } else if (field === "sex") {
-        line.sex = t.value === "F" ? "F" : "M";
-      } else if (field === "function") {
+      if (field === "lineCode") line.lineCode = t.value.trim() || line.lineCode;
+      else if (field === "sex") line.sex = t.value === "F" ? "F" : "M";
+      else if (field === "function") {
         var fv = t.value;
         line.function = fv === "DFO" || fv === "PAX" || fv === "BAG" ? fv : "";
       } else if (field === "emp") {
@@ -560,7 +447,6 @@ window.Scheduler = window.Scheduler || {};
       }
       if (S.updateStatus) S.updateStatus("Updated " + (line.lineCode || lineId));
     });
-
     document.addEventListener("click", function (e) {
       var t = e.target;
       if (!t) return;
@@ -572,9 +458,7 @@ window.Scheduler = window.Scheduler || {};
         S.renderLines();
         return;
       }
-      var cell = t.classList && t.classList.contains("cell-toggle")
-        ? t
-        : (t.closest ? t.closest(".cell-toggle") : null);
+      var cell = t.classList && t.classList.contains("cell-toggle") ? t : (t.closest ? t.closest(".cell-toggle") : null);
       if (!cell) return;
       var lineId = cell.getAttribute("data-line-id");
       var day = +cell.getAttribute("data-day");
@@ -597,12 +481,7 @@ window.Scheduler = window.Scheduler || {};
       }
       S.refreshLineRowDerived(line.id);
       if (S.renderCoverageBars) S.renderCoverageBars();
-      if (S.updateStatus) {
-        S.updateStatus(
-          (line.lineCode || lineId) + " day " + (day + 1) + " \u2192 " + next +
-          " \u00b7 RDO " + S.rdoTextForLine(line)
-        );
-      }
+      if (S.updateStatus) S.updateStatus((line.lineCode || lineId) + " day " + (day + 1) + " -> " + next + " RDO " + S.rdoTextForLine(line));
     });
   };
 
@@ -610,12 +489,10 @@ window.Scheduler = window.Scheduler || {};
     var el = S.$("issues");
     if (!el) return;
     if (!S.state.issues.length) {
-      el.innerHTML = '<div class="alert alert-ok">Ready \u2014 v2 TSO + LTSO/STSO management. Import/export enabled.</div>';
+      el.innerHTML = "<div class=\"alert alert-ok\">Ready - v2 TSO + LTSO/STSO management. Import/export enabled.<\/div>";
       return;
     }
-    el.innerHTML = S.state.issues
-      .map(function (m) { return '<div class="alert alert-warn">' + m + "</div>"; })
-      .join("");
+    el.innerHTML = S.state.issues.map(function (m) { return "<div class=\"alert alert-warn\">" + m + "<\/div>"; }).join("");
   };
 
   S.renderAll = function () {
@@ -635,23 +512,23 @@ window.Scheduler = window.Scheduler || {};
       var isBagDay = [], isDfoDay = [], isRdoDay = [];
       var dayModels = [];
       for (var d = 0; d < days; d++) {
-        var v = schedule[d] || 'RDO';
+        var v = schedule[d] || "RDO";
         var duty = frLine[d] || line.function || null;
-        var isBag = duty === 'BAG' || duty === 'BAGS';
-        var isDfo = duty === 'DFO';
-        var isRdo = v !== 'WORK';
+        var isBag = duty === "BAG" || duty === "BAGS";
+        var isDfo = duty === "DFO";
+        var isRdo = v !== "WORK";
         isBagDay[d] = isBag;
         isDfoDay[d] = isDfo;
         isRdoDay[d] = isRdo;
         dayModels.push({
           dayIndex: d,
           value: v,
-          duty: isBag ? 'BAG' : isDfo ? 'DFO' : (duty === 'PAX' ? 'PAX' : null),
-          label: v === 'WORK' ? (line.shiftLabel || 'WORK') : 'RDO'
+          duty: isBag ? "BAG" : isDfo ? "DFO" : (duty === "PAX" ? "PAX" : null),
+          label: v === "WORK" ? (line.shiftLabel || "WORK") : "RDO"
         });
       }
       var hours = 0;
-      for (var d = 0; d < days; d++) if (schedule[d] === 'WORK') hours += line.paid || 0;
+      for (var d = 0; d < days; d++) if (schedule[d] === "WORK") hours += line.paid || 0;
       var teamMeta = S.teamMetaForLine(line.id);
       return {
         id: line.id,
@@ -659,7 +536,7 @@ window.Scheduler = window.Scheduler || {};
         shiftId: line.shiftId,
         shiftName: line.shiftName,
         shiftLabel: line.shiftLabel,
-        empClass: line.isStso ? 'STSO' : line.isLtso ? 'LTSO' : line.empClass,
+        empClass: line.isStso ? "STSO" : line.isLtso ? "LTSO" : line.empClass,
         sex: line.sex,
         function: line.function,
         rdoText: S.rdoTextForLine(line),
@@ -688,7 +565,7 @@ window.Scheduler = window.Scheduler || {};
     if (name === "coverage" && S.renderCoverageBars) S.renderCoverageBars();
     if (name === "reports" && S.renderReports) S.renderReports();
     if (S.__USE_SVELTE_LINES) {
-      window.dispatchEvent(new CustomEvent('lines:request-render', { detail: { source: 'tab-switch' } }));
+      window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "tab-switch" } }));
     }
   };
 })(window.Scheduler);
