@@ -17,7 +17,6 @@ window.Scheduler = window.Scheduler || {};
     "poolStsoBagM", "poolStsoBagF", "poolLtsoBagM", "poolLtsoBagF", "poolTsoBagM", "poolTsoBagF",
     "poolStsoDfoM", "poolStsoDfoF", "poolLtsoDfoM", "poolLtsoDfoF", "poolTsoDfoM", "poolTsoDfoF"
   ];
-
   function bagPoolTotal(fc) {
     return num0(fc.poolStsoBagM) + num0(fc.poolStsoBagF) + num0(fc.poolLtsoBagM) + num0(fc.poolLtsoBagF) +
       num0(fc.poolTsoBagM) + num0(fc.poolTsoBagF);
@@ -26,7 +25,6 @@ window.Scheduler = window.Scheduler || {};
     return num0(fc.poolStsoDfoM) + num0(fc.poolStsoDfoF) + num0(fc.poolLtsoDfoM) + num0(fc.poolLtsoDfoF) +
       num0(fc.poolTsoDfoM) + num0(fc.poolTsoDfoF);
   }
-
   function syncDerivedMode(fc) {
     var bag = bagPoolTotal(fc) > 0, dfo = dfoPoolTotal(fc) > 0;
     fc.poolBag = bagPoolTotal(fc);
@@ -44,25 +42,9 @@ window.Scheduler = window.Scheduler || {};
       TSO: { M: num0(st.ftM) + num0(st.ptM), F: num0(st.ftF) + num0(st.ptF) }
     };
   };
-
-  function syncDerivedMode(fc) {
-    var bag = bagPoolTotal(fc) > 0;
-    var dfo = dfoPoolTotal(fc) > 0;
-    fc.poolBag = bagPoolTotal(fc);
-    fc.poolStsoDfo = num0(fc.poolStsoDfoM) + num0(fc.poolStsoDfoF);
-    fc.poolLtsoDfo = num0(fc.poolLtsoDfoM) + num0(fc.poolLtsoDfoF);
-    fc.poolTsoDfo = num0(fc.poolTsoDfoM) + num0(fc.poolTsoDfoF);
-    if (bag && dfo) fc.mode = "both";
-    else if (bag) fc.mode = "bag";
-    else if (dfo) fc.mode = "dfo";
-    else fc.mode = "none";
-    return fc.mode;
-  }
-
   S.ensureFunctionCoverage = function () {
     if (!S.state.functionCoverage) S.state.functionCoverage = {};
     var fc = S.state.functionCoverage;
-    POOL_KEYS.forEach(function (k) {
     ["poolStsoDfoM","poolStsoDfoF","poolLtsoDfoM","poolLtsoDfoF","poolTsoDfoM","poolTsoDfoF",
      "poolStsoBagM","poolStsoBagF","poolLtsoBagM","poolLtsoBagF","poolTsoBagM","poolTsoBagF"].forEach(function (k) {
       if (fc[k] == null) fc[k] = 0;
@@ -74,7 +56,6 @@ window.Scheduler = window.Scheduler || {};
     if (!fc.poolStsoDfoM && !fc.poolStsoDfoF && fc.poolStsoDfo) fc.poolStsoDfoM = fc.poolStsoDfo;
     if (!fc.poolLtsoDfoM && !fc.poolLtsoDfoF && fc.poolLtsoDfo) fc.poolLtsoDfoM = fc.poolLtsoDfo;
     if (!fc.poolTsoDfoM && !fc.poolTsoDfoF && fc.poolTsoDfo) fc.poolTsoDfoM = fc.poolTsoDfo;
-    if (!fc.poolTsoBagM && !fc.poolTsoBagF && !fc.poolStsoBagM && !fc.poolLtsoBagM && fc.poolBag) fc.poolTsoBagM = fc.poolBag;
     if (!fc.poolTsoBagM && !fc.poolTsoBagF && fc.poolBag) fc.poolTsoBagM = fc.poolBag;
     if (fc.amPmSplit == null) fc.amPmSplit = true;
     if (fc.phaseThresholdMin == null) fc.phaseThresholdMin = 15;
@@ -671,10 +652,4 @@ window.Scheduler = window.Scheduler || {};
       });
       document.addEventListener("change", function (e) {
         var t = e.target;
-        if (t && t.getAttribute && (t.getAttribute("data-extra-name") || t.getAttribute("data-extra-m") || t.getAttribute("data-extra-f") || t.getAttribute("data-extra-band"))) {
-          S.readExtraPositionsFromDom();
-        }
-      });
-    }
-  };
-})(window.Scheduler);
+        if (t && t.getAttribute && (t.getAttribute("data-extra-name") || t.getAttribute("data-extra-m") || t.getAttribute("data-extra-f") || 
