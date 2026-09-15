@@ -1,0 +1,59 @@
+<div class="card">
+  <div class="section-title">30-minute headcount by day of week (Sun–Sat)</div>
+  <p class="muted" id="coverage-summary">Generate to compute staffing by 30-minute slot and day.</p>
+  <div class="toolbar" style="flex-wrap:wrap;gap:0.75rem">
+    <label class="follow-me-label"><input type="checkbox" id="cov-role-stso" /> STSO</label>
+    <label class="follow-me-label"><input type="checkbox" id="cov-role-ltso" /> LTSO</label>
+    <label class="follow-me-label"><input type="checkbox" id="cov-role-tso" checked /> TSO</label>
+    <label class="follow-me-label"><input type="radio" name="cov-func-view" value="all" checked /> All</label>
+    <label class="follow-me-label"><input type="radio" name="cov-func-view" value="bag" /> Baggage</label>
+    <label class="follow-me-label"><input type="radio" name="cov-func-view" value="pax" /> PAX</label>
+  </div>
+  <div class="lines-scroll">
+    <table class="data-table cov-matrix" id="coverage-matrix">
+      <thead id="coverage-matrix-head"></thead>
+      <tbody id="coverage-matrix-body"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card" id="coverage-cuts-card">
+  <div class="section-title">Coverage cuts</div>
+  <p class="muted">Whole shift + selected days only. Generate gives that % of matching lines those weekdays off. Start/end and paid hours stay the same — no mid-day split shifts.</p>
+  <div class="toolbar" style="flex-wrap:wrap;gap:0.5rem;align-items:end" id="coverage-cut-form">
+    <label>Shift <select id="cut-shift"></select></label>
+    <label>% drop <input type="number" id="cut-pct" min="5" max="90" step="5" value="20" style="width:4rem" /></label>
+    <label class="follow-me-label"><input type="checkbox" id="cut-role-stso" checked /> STSO</label>
+    <label class="follow-me-label"><input type="checkbox" id="cut-role-ltso" checked /> LTSO</label>
+    <label class="follow-me-label"><input type="checkbox" id="cut-role-tso" checked /> TSO</label>
+    <label class="follow-me-label"><input type="checkbox" id="cut-sex-m" checked /> M</label>
+    <label class="follow-me-label"><input type="checkbox" id="cut-sex-f" checked /> F</label>
+    <span id="cut-days"></span>
+    <button type="button" class="btn btn-amber" id="btn-cut-add">Add cut</button>
+  </div>
+  <div id="coverage-cuts-list" class="muted" style="margin-top:0.6rem"></div>
+</div>
+
+<div class="card">
+  <div class="section-title">Typical day profile (bars)</div>
+  <div class="cov-bars" id="coverage-bars"></div>
+</div>
+
+<div class="card">
+  <div class="section-title">Shift mix</div>
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>Shift</th>
+        <th>Window</th>
+        <th>FT M/F</th>
+        <th>PT M/F</th>
+        <th>LTSO M/F</th>
+        <th>STSO M/F</th>
+        <th>TSO tot</th>
+        <th>All</th>
+      </tr>
+    </thead>
+    <tbody id="shift-summary-body"></tbody>
+  </table>
+</div>
