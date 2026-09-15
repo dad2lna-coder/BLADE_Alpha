@@ -650,6 +650,12 @@ window.Scheduler = window.Scheduler || {};
           if (pos2 && pos2.bands && bi >= 0 && bi < pos2.bands.length) { pos2.bands.splice(bi, 1); S.renderExtraPositions(); }
         }
       });
-      document.addEventListener("change", function (e) {
+        document.addEventListener("change", function (e) {
         var t = e.target;
-        if (t && t.getAttribute && (t.getAttribute("data-extra-name") || t.getAttribute("data-extra-m") || t.getAttribute("data-extra-f") || 
+        if (t && t.getAttribute && (t.getAttribute("data-extra-name") || t.getAttribute("data-extra-m") || t.getAttribute("data-extra-f") || t.getAttribute("data-extra-band"))) {
+          S.readExtraPositionsFromDom();
+        }
+      });
+    }
+  };
+})(window.Scheduler);
