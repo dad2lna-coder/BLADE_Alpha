@@ -11,11 +11,13 @@
 <div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ltso-m" min="0" value="1" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ltso-f" min="0" value="1" style="width:4.5rem" /></label></div>
 <div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">STSO</div>
 <div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-stso-m" min="0" value="2" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-stso-f" min="0" value="2" style="width:4.5rem" /></label></div>
-<div class="toolbar" style="margin-top:0.75rem"><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button><span class="muted">FTE + function coverage only. No lines.</span></div>
+<div class="toolbar" style="margin-top:0.75rem;gap:0.5rem;flex-wrap:wrap"><button type="button" class="btn" id="btn-add-position">+ Add position</button><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button><span class="muted">FTE + function coverage only. No lines.</span></div>
+<div id="extra-pos-list" class="extra-pos-list"></div>
 </div>
 </details>
 <details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
 <p class="muted" style="margin:0 0 0.65rem">BAG and DFO pools run together. Each is Male/Female × STSO/LTSO/TSO, carved from FTE. Generate assigns BAG every WORK day, then DFO (band-fill onto baggage when short, otherwise PAX). Leftover ops lines are PAX. Bands below are baggage need.</p>
+<div class="fc-pool-row" id="fc-pool-row">
 <div class="fc-pool-blocks" id="fc-pool-bag">
 <div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">BAG pool</div>
 <div class="fte-role" style="text-align:center;font-weight:600;margin:0.5rem 0 0.35rem">STSO</div>
@@ -33,6 +35,7 @@
 <div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="fc-pool-dfo-ltso-m" min="0" value="0" style="width:4.5rem" /></label><label>Female <input type="number" id="fc-pool-dfo-ltso-f" min="0" value="0" style="width:4.5rem" /></label></div>
 <div class="fte-role" style="text-align:center;font-weight:600;margin:0.5rem 0 0.35rem">TSO</div>
 <div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="fc-pool-dfo-tso-m" min="0" value="0" style="width:4.5rem" /></label><label>Female <input type="number" id="fc-pool-dfo-tso-f" min="0" value="0" style="width:4.5rem" /></label></div>
+</div>
 </div>
 <div class="fc-tools-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center;margin-top:0.75rem">
 <label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>

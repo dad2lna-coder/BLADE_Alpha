@@ -100,7 +100,9 @@ window.Scheduler = window.Scheduler || {};
       var stsoAlloc = S.allocateSupervisoryHeadcounts(stsoTotal, openMin, closeMin, "stsoForce", tsoLines);
       stsoLines = S.buildSupervisoryLines(stsoAlloc.counts || {}, "STSO");
     }
-    S.state.lines = [].concat(tsoLines, ltsoLines, stsoLines);
+    if (S.readExtraPositionsFromDom) S.readExtraPositionsFromDom();
+    var extraLines = S.buildExtraPositionLines ? S.buildExtraPositionLines() : [];
+    S.state.lines = [].concat(tsoLines, ltsoLines, stsoLines, extraLines);
 
     var days = S.state.weekCount * 7;
     S.state.schedule = {};
@@ -117,7 +119,7 @@ window.Scheduler = window.Scheduler || {};
     }
 
     var dayTotals = [];
-    var workingLines = S.state.lines.filter(function (l) { return !l.isLtso && !l.isStso; });
+    var workingLines = S.state.lines.filter(function (l) { return !l.isLtso && !l.isStso && !l.isExtra; });
     for (var d = 0; d < Math.min(7, days); d++) {
       dayTotals.push(workingLines.filter(function (l) {
         return S.state.schedule[l.id][d] === "WORK";

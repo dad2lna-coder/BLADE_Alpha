@@ -29,10 +29,15 @@ export function initSetupPanel(scheduler) {
   bindSetupActions(S);
 
   // Classic initFunctionCoverage may have run before panel.html existed.
-  // Re-run once the setup panel DOM is mounted. bindOnce covers add-band.
+  // Re-run once if add-band was not bound; otherwise just refresh the form.
   if (typeof S.initFunctionCoverage === "function") {
-    S._funcCoverageBound = false;
-    S.initFunctionCoverage();
+    var addBtn = document.getElementById("fc-add-band");
+    if (!S._funcCoverageBound || (addBtn && !addBtn._fcBound)) {
+      S._funcCoverageBound = false;
+      S.initFunctionCoverage();
+    } else if (S.fillFunctionCoverageForm) {
+      try { S.fillFunctionCoverageForm(); } catch (e) {}
+    }
   }
 
   renderAll(S);

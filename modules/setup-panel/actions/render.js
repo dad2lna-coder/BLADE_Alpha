@@ -52,10 +52,7 @@ export function bindSetupActions(S) {
     el._spBound = true;
     el.addEventListener(type, fn);
   }
-  bindOnce(document.getElementById("fc-add-band"), "click", function (e) {
-    e.preventDefault();
-    S.addFcBand();
-  });
+  /* fc-add-band is bound in S.initFunctionCoverage (once, after panel mount). */
   bindOnce(document.getElementById("btn-add-shift"), "click", function (e) {
     e.preventDefault();
     if (S.addShift) S.addShift();
