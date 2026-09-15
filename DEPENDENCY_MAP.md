@@ -33,6 +33,8 @@ Edits dispatch `lines:request-render`. Team Builder uses that event when `S.__US
 
 `initTeamBuilder` owns Teams tab DOM. Auto-form (`utils/autoForm.js`) assigns members with a `Set` of used ids and does **not** call `S.renderLines`. `onAutoForm` / bulk assign use one `afterMutate` (bridge → `renderAll` → one lines refresh). DnD `onEnd` is `syncTeamsFromDom` + bridge + hint + one lines refresh — not `afterMutate`.
 
+Unassigned pool (`#team-pool-section` / `UnassignedPool.js`) is collapsed-by-default; cards paint on expand. `renderAll` / after Auto-form keep boards, pills, stats, and Follow Me without building pool LineCards while the section is closed. Collapse clears pool DOM to free memory. Pool Sortable inits only after the first expand paint.
+
 ### Module: `setup-panel`
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.

@@ -24,3 +24,18 @@
   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 1rem;
 }
+
+/* Collapsed-by-default unassigned pool: header always visible, body empty until expand */
+#team-pool-section > summary.team-pool-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+#team-pool-section > summary.team-pool-summary::-webkit-details-marker {
+  display: none;
+}
+#team-pool-section:not([open]) #team-pool {
+  display: none;
+}

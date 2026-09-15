@@ -15,15 +15,15 @@
   <div class="toolbar" id="team-filters"></div>
 </div>
 
-<div class="card">
-  <div class="section-title" style="display:flex; justify-content:space-between; align-items:center;">
-    <span>Unassigned pool</span>
-    <label class="follow-me-label" style="font-size:0.8rem; font-weight:normal; margin:0;">
+<details class="card" id="team-pool-section">
+  <summary class="section-title team-pool-summary">
+    <span id="team-pool-summary-label">Unassigned pool</span>
+    <label class="follow-me-label" style="font-size:0.8rem; font-weight:normal; margin:0;" onclick="event.stopPropagation()">
       <input type="checkbox" id="pool-group-by-role" checked> Group by Role
     </label>
-  </div>
+  </summary>
   <div id="team-pool" class="team-pool-columns"></div>
-</div>
+</details>
 
 <details class="card" id="am-teams-card" open>
   <summary class="section-title">AM Teams</summary>

@@ -1,6 +1,7 @@
 /**
  * Team Builder — thin orchestrator.
  * Wires existing stores/components/actions. No new architecture.
+ * Unassigned pool is collapsed-by-default; cards paint on expand.
  */
 import * as store from "./stores/teamBuilderStore.js";
 import { teams } from "./stores/teamBuilderStore.js";
@@ -8,7 +9,7 @@ import { autoFormTeams as runAutoForm } from "./utils/autoForm.js";
 import { collectTeamPool, unassignedPool, assignedIds } from "./utils/pool.js";
 import { renderTeamBoards } from "./components/TeamBoards.js";
 import { renderTeamPills } from "./components/TeamPills.js";
-import { renderUnassignedPool, selectAllVisible } from "./components/UnassignedPool.js";
+import { renderUnassignedPool, selectAllVisible, clearUnassignedPoolDom, isPoolExpanded } from "./components/UnassignedPool.js";
 import { renderTeamStats } from "./components/TeamStats.js";
 import { renderTeamFilters } from "./components/TeamFilters.js";
 import { injectAutoFormControls } from "./components/AutoFormControls.js";
@@ -57,7 +58,19 @@ function afterMutate() {
   syncLinesOnce();
 }
 
+function bindDndEnd() {
+  initSortables(function () {
+    syncTeamsFromDom();
+    bridgeScheduler(window.Scheduler);
+    syncHint();
+    syncLinesOnce();
+  });
+}
+
 export function renderAll() {
+  if (typeof performance !== "undefined" && performance.mark) {
+    performance.mark("renderAll");
+  }
   collectTeamPool();
   renderTeamPills();
   renderUnassignedPool();
@@ -68,12 +81,19 @@ export function renderAll() {
   applyFollowMe();
   renderPinnedSummaries();
   // DnD: persist members from DOM + bridge; do not call afterMutate (avoids full Auto-form-cost re-render).
-  initSortables(function () {
-    syncTeamsFromDom();
-    bridgeScheduler(window.Scheduler);
-    syncHint();
-    syncLinesOnce();
-  });
+  // Pool Sortable is skipped while collapsed (no .team-role-list on empty pool body).
+  bindDndEnd();
+}
+
+function onPoolToggle() {
+  if (isPoolExpanded()) {
+    renderUnassignedPool();
+    bindDndEnd();
+  } else {
+    // Preferred: drop pool cards on collapse to free memory. Boards stay painted.
+    clearUnassignedPoolDom();
+    bindDndEnd();
+  }
 }
 
 function onAutoForm() {
@@ -173,6 +193,8 @@ function bindTeamUI() {
     store.createTeam();
     renderAll();
   });
+
+  bindOnce(document.getElementById("team-pool-section"), "toggle", onPoolToggle);
 
   if (!document._tbClickBound) {
     document._tbClickBound = true;
