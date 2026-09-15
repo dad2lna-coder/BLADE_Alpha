@@ -38,3 +38,5 @@ Unassigned pool (`#team-pool-section` / `UnassignedPool.js`) is collapsed-by-def
 ### Module: `setup-panel`
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.
+
+Function coverage: `#fc-generate` calls `S.generateFunctionAssignments` (aliased as `S.generateFcAssignments`); `#fc-add-band` uses classic read/push/render/preview (`S.addFcBand`). `initSetupPanel` re-calls `initFunctionCoverage` after the panel is mounted so early `_funcCoverageBound` is not a silent no-op.
