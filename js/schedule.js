@@ -108,6 +108,14 @@ window.Scheduler = window.Scheduler || {};
       S.state.schedule[line.id] = S.buildScheduleForLine(line, days);
     });
 
+    if (S.readFunctionBandsFromDom) S.readFunctionBandsFromDom();
+    var fcMode = S.getFunctionMode ? S.getFunctionMode() : "none";
+    if (fcMode && fcMode !== "none" && S.generateFunctionAssignments) {
+      S.generateFunctionAssignments({ fromGenerate: true });
+    } else if (S.clearLineFunctions) {
+      S.clearLineFunctions();
+    }
+
     var dayTotals = [];
     var workingLines = S.state.lines.filter(function (l) { return !l.isLtso && !l.isStso; });
     for (var d = 0; d < Math.min(7, days); d++) {
@@ -121,12 +129,17 @@ window.Scheduler = window.Scheduler || {};
       S.state.issues.push("Day-of-week TSO headcount still varies " + dMin + "–" + dMax + " (RDO stagger). Prefer varied seeds are already applied.");
     }
     S.renderAll();
+    if (S.renderCoverageBars) S.renderCoverageBars();
+    if (S.__USE_SVELTE_LINES) {
+      document.dispatchEvent(new CustomEvent("lines:request-render"));
+    } else if (S.renderLines) S.renderLines();
     S.updateStatus(
       "Scheduled " + S.state.lines.length + " lines (FT " + S.state.ftM + "/" + S.state.ftF +
       " · PT " + S.state.ptM + "/" + S.state.ptF +
       " · LTSO " + S.state.ltsoM + "/" + S.state.ltsoF +
       " · STSO " + S.state.stsoM + "/" + S.state.stsoF +
       ") · " + mode + " · " + S.state.weekCount + " wk" +
+      (fcMode && fcMode !== "none" ? " · " + fcMode.toUpperCase() + " duties" : "") +
       (S.state.issues.length ? " · " + S.state.issues.length + " note(s)" : "")
     );
   };
