@@ -59,6 +59,7 @@ window.Scheduler = window.Scheduler || {};
     if (!fc.poolTsoBagM && !fc.poolTsoBagF && fc.poolBag) fc.poolTsoBagM = fc.poolBag;
     if (fc.amPmSplit == null) fc.amPmSplit = true;
     if (fc.phaseThresholdMin == null) fc.phaseThresholdMin = 15;
+    if (fc.bias == null) fc.bias = "none";
     if (!Array.isArray(fc.bands) || !fc.bands.length) fc.bands = defaultBands();
     delete fc.stsoIsDfo; delete fc.poolDfo; delete fc.poolPax;
     if (!S.state.functionRotation) S.state.functionRotation = {};
@@ -87,6 +88,7 @@ window.Scheduler = window.Scheduler || {};
   S.fillFunctionCoverageForm = function () {
     var fc = S.ensureFunctionCoverage();
     setVal("fc-phase-thr", fc.phaseThresholdMin); setChk("fc-ampm-split", fc.amPmSplit);
+    setVal("fc-bias", fc.bias || "none");
     S.syncFunctionModeUi();
     S.renderFunctionBandsTable(); S.updateFunctionCoveragePreview();
     if (S.renderExtraPositions) S.renderExtraPositions();
@@ -210,6 +212,12 @@ window.Scheduler = window.Scheduler || {};
     var thr = S.$("fc-phase-thr"), split = S.$("fc-ampm-split");
     if (thr) fc.phaseThresholdMin = num0(thr.value || 15);
     if (split) fc.amPmSplit = !!split.checked;
+    var biasEl = S.$("fc-bias");
+    if (biasEl) {
+      var v = biasEl.value;
+      if (v === "male" || v === "female" || v === "none") fc.bias = v;
+      else fc.bias = "none";
+    }
     for (var i = 0; i < fc.bands.length; i++) {
       var b = fc.bands[i] || {};
       ["start", "end", "stso", "ltso", "tso"].forEach(function (field) {
@@ -422,6 +430,14 @@ window.Scheduler = window.Scheduler || {};
           var totalShort = slotShort.reduce(function (a, b) { return a + b; }, 0);
           if (totalShort <= 0) return;
           while (totalShort > 0) {
+            // Count BAG function days for a line in current schedule window
+            function countFuncDays(line) {
+              var n = 0;
+              for (var dd = 0; dd < days; dd++) {
+                if (getDuty(line.id, dd) === "BAG") n++;
+              }
+              return n + (bagFillCount[String(line.id)] || 0);
+            }
             var cands = (S.state.lines || []).filter(function (l) {
               if (!ensureEligible(l).dfo) return false;
               if (S.lineRoleKey(l) !== role) return false;
@@ -434,8 +450,13 @@ window.Scheduler = window.Scheduler || {};
               if (!coversShort) return false;
               return true;
             }).sort(function (a, b) {
-              var ca = bagFillCount[String(a.id)] || 0, cb = bagFillCount[String(b.id)] || 0;
-              if (ca !== cb) return ca - cb;
+              // (1) fewest BAG assignment days in current window: existing rotation + this pass
+              var da = countFuncDays(a), db = countFuncDays(b);
+              if (da !== db) return da - db;
+              // (2) optional gender bias tie-break (only on ties)
+              if (fc.bias === "male") { if (a.sex !== b.sex) return a.sex === "M" ? -1 : 1; }
+              else if (fc.bias === "female") { if (a.sex !== b.sex) return a.sex === "F" ? -1 : 1; }
+              // (3) existing start-time / id tie-breaks
               return S.lineStartMin(a) - S.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
             });
             if (!cands.length) break;

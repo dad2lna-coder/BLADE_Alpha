@@ -40,6 +40,13 @@
 <div class="fc-tools-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center;margin-top:0.75rem">
 <label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
 <label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
+<label>Shortfall bias
+  <select id="fc-bias">
+    <option value="none">None</option>
+    <option value="male">Male</option>
+    <option value="female">Female</option>
+  </select>
+</label>
 <button type="button" class="btn" id="fc-add-band">+ Add band</button>
 </div>
 <div id="fc-bands-wrap" class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
