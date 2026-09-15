@@ -20,13 +20,36 @@ function addFcBandClassic(S) {
   if (S.updateFunctionCoveragePreview) S.updateFunctionCoveragePreview();
 }
 
+function patchBagViewRoles(S) {
+  if (!S || S._bagViewRolePatch) return;
+  var orig = S.computeHourlyByDow;
+  if (typeof orig !== "function") return;
+  S._bagViewRolePatch = true;
+  S.computeHourlyByDow = function () {
+    var cv = S.coverageView || (S.coverageView = { stso: false, ltso: false, tso: true, funcView: "all" });
+    var prevS = cv.stso, prevL = cv.ltso, prevT = cv.tso;
+    if (cv.funcView === "bag") {
+      cv.stso = true;
+      cv.ltso = true;
+      cv.tso = true;
+    }
+    try {
+      return orig.call(S);
+    } finally {
+      cv.stso = prevS;
+      cv.ltso = prevL;
+      cv.tso = prevT;
+    }
+  };
+}
+
 export function bindSetupActions(S) {
   if (!S) return;
-  // Aliases for older names — real generate is generateFunctionAssignments.
   if (typeof S.generateFunctionAssignments === "function") {
     S.generateFcAssignments = S.generateFunctionAssignments;
   }
   S.addFcBand = S.addFcBand || function () { addFcBandClassic(S); };
+  patchBagViewRoles(S);
 
   function bindOnce(el, type, fn) {
     if (!el || el._spBound) return;
