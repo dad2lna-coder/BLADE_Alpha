@@ -21,5 +21,14 @@
   "lines-table": {
     "entry": "modules/lines-table/dist/lines-table.js",
     "init": "initLinesTable"
+  },
+  "coverage": {
+    "entry": "modules/coverage/index.js",
+    "init": "initCoverage",
+    "css": [
+      "modules/coverage/styles/coverage.css"
+    ],
+    "panel": "modules/coverage/panel.html",
+    "mount": "#tab-coverage"
   }
 }
