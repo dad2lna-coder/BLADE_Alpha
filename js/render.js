@@ -302,7 +302,7 @@ window.Scheduler = window.Scheduler || {};
         '<option value="">All</option>' +
         '<option value="__none__"' +
         (S.linesView.filterTeam === "__none__" ? " selected" : "") +
-        ">Unassigned</option>';
+        ">Unassigned</option>";
       if (S.teams && S.teams.teams) {
         S.teams.teams.forEach(function (t) {
           teamHtml +=
@@ -332,7 +332,7 @@ window.Scheduler = window.Scheduler || {};
     var sortedLines = S.sortLinesForView(S.filterLinesForView(S.state.lines));
 
     function teamSelectHtml(selectedId) {
-      var opts = '<option value=""' + (!selectedId ? " selected" : "") + ">—</option>';
+      var opts = '<option value=""' + (!selectedId ? " selected" : "") + ">—</option>";
       if (S.teams && S.teams.teams) {
         S.teams.teams.forEach(function (t) {
           opts +=
@@ -451,14 +451,14 @@ window.Scheduler = window.Scheduler || {};
         empSelectHtml(empVal) +
         "</select></td>" +
         '<td><select class="line-edit" data-field="sex" data-line-id="' + line.id + '">' +
-        '<option value="M"' + (line.sex === "M" ? " selected" : "") + ">M</option>' +
-        '<option value="F"' + (line.sex === "F" ? " selected" : "") + ">F</option>' +
+        '<option value="M"' + (line.sex === "M" ? " selected" : "") + ">M</option>" +
+        '<option value="F"' + (line.sex === "F" ? " selected" : "") + ">F</option>" +
         "</select></td>" +
         '<td><select class="line-edit" data-field="function" data-line-id="' + line.id + '">' +
-        '<option value=""' + (!line.function ? " selected" : "") + ">—</option>' +
-        '<option value="DFO"' + (line.function === "DFO" ? " selected" : "") + ">DFO</option>' +
-        '<option value="PAX"' + (line.function === "PAX" ? " selected" : "") + ">PAX</option>' +
-        '<option value="BAG"' + (line.function === "BAG" ? " selected" : "") + ">BAG</option>' +
+        '<option value=""' + (!line.function ? " selected" : "") + ">—</option>" +
+        '<option value="DFO"' + (line.function === "DFO" ? " selected" : "") + ">DFO</option>" +
+        '<option value="PAX"' + (line.function === "PAX" ? " selected" : "") + ">PAX</option>" +
+        '<option value="BAG"' + (line.function === "BAG" ? " selected" : "") + ">BAG</option>" +
         "</select></td>" +
         '<td class="muted line-rdo-cell" data-line-id="' + line.id + '">' + rdoTxt + "</td>" +
         cells +
