@@ -13,7 +13,6 @@ window.Scheduler = window.Scheduler || {};
   S.coverageSlots = function () {
     var openMin = S.timeToMin(S.state.open);
     var closeMin = S.timeToMin(S.state.close);
-    // Align to 30-min grid
     var start = Math.floor(openMin / 30) * 30;
     var end = Math.ceil(closeMin / 30) * 30;
     var slots = [];
@@ -31,7 +30,7 @@ window.Scheduler = window.Scheduler || {};
     stso: false,
     ltso: false,
     tso: true,
-    funcView: "all" // all | bag | pax
+    funcView: "all"
   };
 
   S.computeHourlyByDow = function () {
@@ -63,9 +62,7 @@ window.Scheduler = window.Scheduler || {};
       var fv = cv.funcView || "all";
       if (fv === "all") return true;
       var duty = S.getRotationDuty ? S.getRotationDuty(line.id, dayOff) : null;
-      // Baggage area includes BAG and DFO duty
       if (fv === "bag") return duty === "BAG" || duty === "DFO";
-      // PAX = not on baggage-area duty
       if (fv === "pax") return duty !== "BAG" && duty !== "DFO";
       return true;
     }
@@ -96,154 +93,9 @@ window.Scheduler = window.Scheduler || {};
     return { slots: slots, matrix: matrix, dowToOffset: dowToOffset };
   };
 
-  S.renderCoverageBars = function () {
-    var head = S.$("coverage-matrix-head");
-    var body = S.$("coverage-matrix-body");
-    var bars = S.$("coverage-bars");
-    var summary = S.$("coverage-summary");
-    if (!head || !body) return;
-    if (!S.state.lines.length) {
-      head.innerHTML = "";
-      body.innerHTML = '<tr><td class="muted">Generate or import a schedule to see 30-minute headcount by day.</td></tr>';
-      if (bars) bars.innerHTML = "";
-      if (summary) summary.textContent = "Generate or import to compute staffing by 30-minute slot and day.";
-      return;
-    }
-    var computed = S.computeHourlyByDow();
-    var slots = computed.slots;
-    var matrix = computed.matrix;
-    var allVals = [];
-    matrix.forEach(function (row) {
-      row.forEach(function (c) { allVals.push(c.t); });
-    });
-    var lo = Math.min.apply(null, allVals);
-    var hi = Math.max.apply(null, allVals);
-    var avg = allVals.reduce(function (a, b) { return a + b; }, 0) / Math.max(1, allVals.length);
-
-    var hr = "<tr><th>Time</th>";
-    for (var d = 0; d < 7; d++) {
-      hr += "<th>" + S.DAYS[d] + '<br><span class="muted" style="font-weight:400">M/F/T</span></th>';
-    }
-    hr += "<th>Avg T</th></tr>";
-    head.innerHTML = hr;
-
-    body.innerHTML = slots.map(function (slot, si) {
-      var row = matrix[si];
-      var rowAvg = row.reduce(function (a, c) { return a + c.t; }, 0) / 7;
-      var cells = "<td>" + S.slotLabel(slot) + "</td>";
-      for (var d = 0; d < 7; d++) {
-        var c = row[d];
-        var cls = "hc-ok";
-        if (c.t === 0) cls = "hc-0";
-        else if (c.t < avg * 0.75) cls = "hc-low";
-        else if (c.t > avg * 1.25) cls = "hc-high";
-        cells +=
-          '<td class="' + cls + '" title="Male ' + c.m + " · Female " + c.f + " · Total " + c.t + '">' +
-          '<span class="sex-m">' + c.m + "</span>/" +
-          '<span class="sex-f">' + c.f + "</span>/" +
-          c.t + "</td>";
-      }
-      cells += '<td class="muted">' + rowAvg.toFixed(1) + "</td>";
-      return "<tr>" + cells + "</tr>";
-    }).join("");
-
-    var tot = "<tr><td><strong>Day total*</strong></td>";
-    for (var d = 0; d < 7; d++) {
-      var base = S.state.startDate ? S.state.startDate : S.parseStartDate(null);
-      var off = null;
-      for (var i = 0; i < Math.min(7, (S.state.weekCount || 1) * 7); i++) {
-        if (base.add(i, "day").day() === d) { off = i; break; }
-      }
-      var m = 0, f = 0;
-      if (off != null) {
-        S.state.lines.forEach(function (line) {
-          if (line.isLtso || line.isStso) return;
-          if ((S.state.schedule[line.id] || [])[off] === "WORK") {
-            if (line.sex === "M") m++;
-            else f++;
-          }
-        });
-      }
-      tot +=
-        "<td><strong><span class=\"sex-m\">" + m + "</span>/<span class=\"sex-f\">" + f + "</span>/" + (m + f) + "</strong></td>";
-    }
-    tot += "<td></td></tr>";
-    body.innerHTML += tot;
-
-    if (summary) {
-      summary.innerHTML =
-        '<span class="sex-legend">' +
-        '<i class="sw-m"></i><span class="sex-m">Male</span> ' +
-        '<i class="sw-f"></i><span class="sex-f">Female</span> ' +
-        "· cells are TSO <strong>M/F/Total</strong></span> · " +
-        "30-min TSO total " + lo + "–" + hi + " (avg " + avg.toFixed(1) + "). " +
-        "*Day total = TSO on WORK that weekday.";
-    }
-
-    if (bars) {
-      var slotSex = slots.map(function (slot, si) {
-        var m = 0, f = 0;
-        matrix[si].forEach(function (c) { m += c.m; f += c.f; });
-        return { m: m / 7, f: f / 7, t: (m + f) / 7 };
-      });
-      var maxT = Math.max(1, Math.max.apply(null, slotSex.map(function (x) { return x.t; })));
-      bars.innerHTML = slots.map(function (slot, si) {
-        var x = slotSex[si];
-        var pctM = maxT > 0 ? (100 * x.m) / maxT : 0;
-        var pctF = maxT > 0 ? (100 * x.f) / maxT : 0;
-        return (
-          '<div class="cov-row"><span>' + S.slotLabel(slot) + "</span>" +
-          '<div class="cov-track">' +
-          '<div class="cov-fill-m" style="width:' + pctM.toFixed(2) + '%"></div>' +
-          '<div class="cov-fill-f" style="width:' + pctF.toFixed(2) + '%"></div>' +
-          "</div>" +
-          '<span><span class="sex-m">' + x.m.toFixed(1) + "</span>/" +
-          '<span class="sex-f">' + x.f.toFixed(1) + "</span>/" +
-          x.t.toFixed(1) + "</span></div>"
-        );
-      }).join("");
-    }
-  };
-
-  S.renderShiftSummary = function () {
-    var tbody = S.$("shift-summary-body");
-    if (!tbody) return;
-    var counts = {};
-    S.state.lines.forEach(function (l) {
-      var k = l.shiftId + "|" + l.empClass + "|" + (l.sex || "?");
-      counts[k] = (counts[k] || 0) + 1;
-    });
-    var rows = [];
-    S.state.shifts.forEach(function (s) {
-      var ftm = counts[s.id + "|FT|M"] || 0;
-      var ftf = counts[s.id + "|FT|F"] || 0;
-      var ptm = counts[s.id + "|PT|M"] || 0;
-      var ptf = counts[s.id + "|PT|F"] || 0;
-      var ltm = counts[s.id + "|LTSO|M"] || 0;
-      var ltf = counts[s.id + "|LTSO|F"] || 0;
-      var stm = counts[s.id + "|STSO|M"] || 0;
-      var stf = counts[s.id + "|STSO|F"] || 0;
-      var tsoTot = ftm + ftf + ptm + ptf;
-      var supTot = ltm + ltf + stm + stf;
-      var all = tsoTot + supTot;
-      if (all === 0) return;
-      var forceNote =
-        (s.force > 0 ? " TSO×" + s.force : "") +
-        (s.ltsoForce > 0 ? " LTSO×" + s.ltsoForce : "") +
-        (s.stsoForce > 0 ? " STSO×" + s.stsoForce : "");
-      rows.push(
-        "<tr><td><span class=\"badge " + S.shiftBadge(s.id) + "\">" + s.name + "</span></td><td>" +
-        s.start + "–" + s.end + "</td>" +
-        '<td><span class="sex-m">' + ftm + '</span>/<span class="sex-f">' + ftf + "</span></td>" +
-        '<td><span class="sex-m">' + ptm + '</span>/<span class="sex-f">' + ptf + "</span></td>" +
-        '<td><span class="sex-m">' + ltm + '</span>/<span class="sex-f">' + ltf + "</span></td>" +
-        '<td><span class="sex-m">' + stm + '</span>/<span class="sex-f">' + stf + "</span></td>" +
-        "<td>" + tsoTot + "</td>" +
-        "<td>" + all + (forceNote ? ' <span class="muted">(' + forceNote.trim() + ")</span>" : "") + "</td></tr>"
-      );
-    });
-    tbody.innerHTML = rows.join("") || '<tr><td colspan="8" class="muted">No lines yet</td></tr>';
-  };
+  /* Coverage DOM owned by modules/coverage (attachRender). */
+  S.renderCoverageBars = S.renderCoverageBars || function () {};
+  S.renderShiftSummary = S.renderShiftSummary || function () {};
 
   /** Lines view preferences (filter / group / sort) */
   S.linesView = S.linesView || {
@@ -256,7 +108,6 @@ window.Scheduler = window.Scheduler || {};
     filterTeam: ""
   };
 
-  /** Resolve team for a line id */
   S.teamMetaForLine = function (lineId) {
     if (!S.teams || !S.teams.teams) return { order: 9999, name: "", id: "" };
     lineId = +lineId;
@@ -273,7 +124,6 @@ window.Scheduler = window.Scheduler || {};
     return S.teamMetaForLine(lineId).name;
   };
 
-  /** Role rank: STSO → LTSO → TSO(FT) → PT */
   S.lineRoleRank = function (line) {
     if (line.isStso || line.empClass === "STSO") return 0;
     if (line.isLtso || line.empClass === "LTSO") return 1;
@@ -282,7 +132,6 @@ window.Scheduler = window.Scheduler || {};
     return 4;
   };
 
-  /** Recalculate rdoDays from schedule (first week DOW pattern) — RDO column is derived */
   S.syncRdoDaysFromSchedule = function (line) {
     if (!line) return;
     var sched = S.state.schedule[line.id] || [];
@@ -418,13 +267,11 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderLines = function () {
-    // Classic bypass: when Svelte virtualized table is active, skip DOM work.
     if (S.__USE_SVELTE_LINES) return;
     var thead = S.$("lines-thead");
     var tbody = S.$("lines-tbody");
     if (!thead || !tbody) return;
 
-    // Sync toolbar selects
     var gEl = S.$("lines-group-by");
     var sEl = S.$("lines-sort-by");
     var dEl = S.$("lines-sort-dir");
@@ -438,7 +285,6 @@ window.Scheduler = window.Scheduler || {};
     if (frEl) frEl.value = S.linesView.filterRole || "ALL";
     if (fsexEl) fsexEl.value = S.linesView.filterSex || "";
 
-    // Populate shift filter options
     if (fsEl) {
       var shiftHtml = '<option value="">All shifts</option>';
       (S.state.shifts || []).forEach(function (sh) {
@@ -446,25 +292,24 @@ window.Scheduler = window.Scheduler || {};
           '<option value="' + sh.id + '"' +
           (String(S.linesView.filterShift) === String(sh.id) ? " selected" : "") +
           ">" +
-          String(sh.name || sh.id).replace(/</g, "&lt;") +
+          String(sh.name || sh.id).replace(/</g, "<") +
           "</option>";
       });
       fsEl.innerHTML = shiftHtml;
     }
-    // Populate team filter options
     if (ftEl) {
       var teamHtml =
         '<option value="">All</option>' +
         '<option value="__none__"' +
         (S.linesView.filterTeam === "__none__" ? " selected" : "") +
-        ">Unassigned</option>";
+        ">Unassigned</option>';
       if (S.teams && S.teams.teams) {
         S.teams.teams.forEach(function (t) {
           teamHtml +=
             '<option value="' + t.id + '"' +
             (S.linesView.filterTeam === t.id ? " selected" : "") +
             ">" +
-            String(t.name || t.id).replace(/</g, "&lt;") +
+            String(t.name || t.id).replace(/</g, "<") +
             "</option>";
         });
       }
@@ -487,14 +332,14 @@ window.Scheduler = window.Scheduler || {};
     var sortedLines = S.sortLinesForView(S.filterLinesForView(S.state.lines));
 
     function teamSelectHtml(selectedId) {
-      var opts = '<option value=""' + (!selectedId ? " selected" : "") + ">—</option>";
+      var opts = '<option value=""' + (!selectedId ? " selected" : "") + ">—</option>';
       if (S.teams && S.teams.teams) {
         S.teams.teams.forEach(function (t) {
           opts +=
             '<option value="' + t.id + '"' +
             (t.id === selectedId ? " selected" : "") +
             ">" +
-            String(t.name || t.id).replace(/</g, "&lt;") +
+            String(t.name || t.id).replace(/</g, "<") +
             "</option>";
         });
       }
@@ -507,7 +352,7 @@ window.Scheduler = window.Scheduler || {};
             '<option value="' + sh.id + '"' +
             (sh.id === selectedId ? " selected" : "") +
             ">" +
-            String(sh.name || sh.id).replace(/</g, "&lt;") +
+            String(sh.name || sh.id).replace(/</g, "<") +
             " (" + sh.start + "–" + sh.end + ")</option>"
           );
         })
@@ -530,7 +375,6 @@ window.Scheduler = window.Scheduler || {};
     var groupBy = S.linesView.groupBy || "none";
 
     sortedLines.forEach(function (line) {
-      // Group header rows
       if (groupBy !== "none") {
         var gLabel = "";
         if (groupBy === "team") {
@@ -598,7 +442,7 @@ window.Scheduler = window.Scheduler || {};
         '<td><input type="text" class="line-edit line-code-input" data-field="lineCode" data-line-id="' +
         line.id +
         '" value="' +
-        String(line.lineCode || "").replace(/"/g, "&quot;") +
+        String(line.lineCode || "").replace(/"/g, """) +
         '"></td>' +
         '<td><select class="line-edit" data-field="shift" data-line-id="' + line.id + '">' +
         shiftSelectHtml(line.shiftId) +
@@ -607,14 +451,14 @@ window.Scheduler = window.Scheduler || {};
         empSelectHtml(empVal) +
         "</select></td>" +
         '<td><select class="line-edit" data-field="sex" data-line-id="' + line.id + '">' +
-        '<option value="M"' + (line.sex === "M" ? " selected" : "") + ">M</option>" +
-        '<option value="F"' + (line.sex === "F" ? " selected" : "") + ">F</option>" +
+        '<option value="M"' + (line.sex === "M" ? " selected" : "") + ">M</option>' +
+        '<option value="F"' + (line.sex === "F" ? " selected" : "") + ">F</option>' +
         "</select></td>" +
         '<td><select class="line-edit" data-field="function" data-line-id="' + line.id + '">' +
-        '<option value=""' + (!line.function ? " selected" : "") + ">—</option>" +
-        '<option value="DFO"' + (line.function === "DFO" ? " selected" : "") + ">DFO</option>" +
-        '<option value="PAX"' + (line.function === "PAX" ? " selected" : "") + ">PAX</option>" +
-        '<option value="BAG"' + (line.function === "BAG" ? " selected" : "") + ">BAG</option>" +
+        '<option value=""' + (!line.function ? " selected" : "") + ">—</option>' +
+        '<option value="DFO"' + (line.function === "DFO" ? " selected" : "") + ">DFO</option>' +
+        '<option value="PAX"' + (line.function === "PAX" ? " selected" : "") + ">PAX</option>' +
+        '<option value="BAG"' + (line.function === "BAG" ? " selected" : "") + ">BAG</option>' +
         "</select></td>" +
         '<td class="muted line-rdo-cell" data-line-id="' + line.id + '">' + rdoTxt + "</td>" +
         cells +
@@ -628,7 +472,6 @@ window.Scheduler = window.Scheduler || {};
   S.refreshLineRowDerived = function (lineId) {
     var line = S.findLineById(lineId);
     if (!line) return;
-    // Update RDO text + hours without full re-render if possible
     var rdoCell = document.querySelector('.line-rdo-cell[data-line-id="' + lineId + '"]');
     if (rdoCell) rdoCell.textContent = S.rdoTextForLine(line);
     var hoursCell = document.querySelector('.line-hours[data-line-id="' + lineId + '"]');
@@ -684,20 +527,6 @@ window.Scheduler = window.Scheduler || {};
         S.renderLines();
         return;
       }
-      if (t.id === "cov-role-stso" || t.id === "cov-role-ltso" || t.id === "cov-role-tso") {
-        if (!S.coverageView) S.coverageView = { stso: false, ltso: false, tso: true, funcView: "all" };
-        S.coverageView.stso = !!(S.$("cov-role-stso") && S.$("cov-role-stso").checked);
-        S.coverageView.ltso = !!(S.$("cov-role-ltso") && S.$("cov-role-ltso").checked);
-        S.coverageView.tso = !!(S.$("cov-role-tso") && S.$("cov-role-tso").checked);
-        S.renderCoverageBars();
-        return;
-      }
-      if (t.name === "cov-func-view") {
-        if (!S.coverageView) S.coverageView = { stso: false, ltso: false, tso: true, funcView: "all" };
-        S.coverageView.funcView = t.value || "all";
-        S.renderCoverageBars();
-        return;
-      }
       if (!t.classList.contains("line-edit")) return;
       var lineId = t.getAttribute("data-line-id");
       var field = t.getAttribute("data-field");
@@ -742,7 +571,6 @@ window.Scheduler = window.Scheduler || {};
         S.renderLines();
         return;
       }
-      // Day cell toggle — use closest so nested text still works
       var cell = t.classList && t.classList.contains("cell-toggle")
         ? t
         : (t.closest ? t.closest(".cell-toggle") : null);
@@ -751,7 +579,7 @@ window.Scheduler = window.Scheduler || {};
       var day = +cell.getAttribute("data-day");
       var line = S.findLineById(lineId);
       if (!line || isNaN(day)) return;
-      var key = line.id; // use actual line id key
+      var key = line.id;
       if (!S.state.schedule[key]) S.state.schedule[key] = [];
       var cur = S.state.schedule[key][day] || "RDO";
       var next = cur === "WORK" ? "RDO" : "WORK";
@@ -854,12 +682,10 @@ window.Scheduler = window.Scheduler || {};
     document.querySelectorAll(".panel").forEach(function (p) {
       p.classList.toggle("active", p.id === "tab-" + name);
     });
-    // Refresh teams UI when opening the tab (picks up newly generated lines)
     if (name === "teams" && S.renderTeams) S.renderTeams();
     if (name === "lines" && S.renderLines) S.renderLines();
     if (name === "coverage" && S.renderCoverageBars) S.renderCoverageBars();
     if (name === "reports" && S.renderReports) S.renderReports();
-    // Dispatch render request for Svelte Lines table (if active)
     if (S.__USE_SVELTE_LINES) {
       window.dispatchEvent(new CustomEvent('lines:request-render', { detail: { source: 'tab-switch' } }));
     }
