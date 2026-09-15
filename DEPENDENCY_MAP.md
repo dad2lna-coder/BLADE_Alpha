@@ -35,6 +35,8 @@ Edits dispatch `lines:request-render`. Team Builder uses that event when `S.__US
 
 Unassigned pool (`#team-pool-section` / `UnassignedPool.js`) is collapsed-by-default; cards paint on expand. `renderAll` / after Auto-form keep boards, pills, stats, and Follow Me without building pool LineCards while the section is closed. Collapse clears pool DOM to free memory. Pool Sortable inits only after the first expand paint.
 
+Team boards are compact-by-default (`TeamBoard.js`): header/counts only; LineCards and Sortable paint when that team is expanded and are destroyed/cleared on collapse. `syncTeamsFromDom` only reads painted lists so compact boards do not wipe Auto-form membership.
+
 ### Module: `setup-panel`
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.

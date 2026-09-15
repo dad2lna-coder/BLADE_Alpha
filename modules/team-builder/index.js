@@ -1,13 +1,14 @@
 /**
  * Team Builder — thin orchestrator.
  * Wires existing stores/components/actions. No new architecture.
- * Unassigned pool is collapsed-by-default; cards paint on expand.
+ * Unassigned pool and team boards are collapsed-by-default; cards paint on expand.
  */
 import * as store from "./stores/teamBuilderStore.js";
 import { teams } from "./stores/teamBuilderStore.js";
 import { autoFormTeams as runAutoForm } from "./utils/autoForm.js";
 import { collectTeamPool, unassignedPool, assignedIds } from "./utils/pool.js";
 import { renderTeamBoards } from "./components/TeamBoards.js";
+import { paintTeamMembers, collapseTeamMembers, expandedTeamIds } from "./components/TeamBoard.js";
 import { renderTeamPills } from "./components/TeamPills.js";
 import { renderUnassignedPool, selectAllVisible, clearUnassignedPoolDom, isPoolExpanded } from "./components/UnassignedPool.js";
 import { renderTeamStats } from "./components/TeamStats.js";
@@ -80,8 +81,6 @@ export function renderAll() {
   syncHint();
   applyFollowMe();
   renderPinnedSummaries();
-  // DnD: persist members from DOM + bridge; do not call afterMutate (avoids full Auto-form-cost re-render).
-  // Pool Sortable is skipped while collapsed (no .team-role-list on empty pool body).
   bindDndEnd();
 }
 
@@ -90,10 +89,23 @@ function onPoolToggle() {
     renderUnassignedPool();
     bindDndEnd();
   } else {
-    // Preferred: drop pool cards on collapse to free memory. Boards stay painted.
     clearUnassignedPoolDom();
     bindDndEnd();
   }
+}
+
+function onBoardToggle(e) {
+  const details = e.target;
+  if (!details || details.tagName !== "DETAILS" || !details.classList.contains("team-board")) return;
+  const id = details.getAttribute("data-team-id");
+  if (!id) return;
+  if (details.open) {
+    expandedTeamIds.add(String(id));
+    paintTeamMembers(id);
+  } else {
+    collapseTeamMembers(id);
+  }
+  bindDndEnd();
 }
 
 function onAutoForm() {
@@ -195,6 +207,11 @@ function bindTeamUI() {
   });
 
   bindOnce(document.getElementById("team-pool-section"), "toggle", onPoolToggle);
+
+  if (!document._tbToggleBound) {
+    document._tbToggleBound = true;
+    document.addEventListener("toggle", onBoardToggle, true);
+  }
 
   if (!document._tbClickBound) {
     document._tbClickBound = true;

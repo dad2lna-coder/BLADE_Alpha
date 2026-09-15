@@ -39,3 +39,24 @@
 #team-pool-section:not([open]) #team-pool {
   display: none;
 }
+
+/* Compact-by-default team boards: header/counts only until expand */
+.team-board > summary.team-board-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.65rem;
+  cursor: pointer;
+  list-style: none;
+}
+.team-board > summary.team-board-head::-webkit-details-marker {
+  display: none;
+}
+.team-board-compact {
+  padding: 0.35rem 0.15rem 0.15rem;
+}
+.team-board-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
