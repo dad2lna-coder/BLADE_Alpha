@@ -110,6 +110,19 @@ window.Scheduler = window.Scheduler || {};
 
     if (S.readFunctionBandsFromDom) S.readFunctionBandsFromDom();
     var fcMode = S.getFunctionMode ? S.getFunctionMode() : "none";
+    if (fcMode === "dfo" || fcMode === "bag") {
+      var fcPools = S.state.functionCoverage || {};
+      var poolSum = fcMode === "bag"
+        ? (fcPools.poolStsoBagM || 0) + (fcPools.poolStsoBagF || 0) +
+          (fcPools.poolLtsoBagM || 0) + (fcPools.poolLtsoBagF || 0) +
+          (fcPools.poolTsoBagM || 0) + (fcPools.poolTsoBagF || 0)
+        : (fcPools.poolStsoDfoM || 0) + (fcPools.poolStsoDfoF || 0) +
+          (fcPools.poolLtsoDfoM || 0) + (fcPools.poolLtsoDfoF || 0) +
+          (fcPools.poolTsoDfoM || 0) + (fcPools.poolTsoDfoF || 0);
+      if (poolSum === 0) {
+        S.state.issues.push("Function mode on but pools are 0 — set Male/Female STSO/LTSO/TSO pools or no DFO/BAG duties will be assigned.");
+      }
+    }
     if (fcMode && fcMode !== "none" && S.generateFunctionAssignments) {
       S.generateFunctionAssignments({ fromGenerate: true });
     } else if (S.clearLineFunctions) {
@@ -131,7 +144,7 @@ window.Scheduler = window.Scheduler || {};
     S.renderAll();
     if (S.renderCoverageBars) S.renderCoverageBars();
     if (S.__USE_SVELTE_LINES) {
-      document.dispatchEvent(new CustomEvent("lines:request-render"));
+      window.dispatchEvent(new CustomEvent("lines:request-render"));
     } else if (S.renderLines) S.renderLines();
     S.updateStatus(
       "Scheduled " + S.state.lines.length + " lines (FT " + S.state.ftM + "/" + S.state.ftF +
