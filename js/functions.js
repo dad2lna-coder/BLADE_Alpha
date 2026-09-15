@@ -298,6 +298,33 @@ window.Scheduler = window.Scheduler || {};
       lines.sort(function (a, b) { return S.lineStartMin(a) - S.lineStartMin(b) || String(a.id).localeCompare(String(b.id)); });
       var amSide = lines.filter(function (l) { return S.isAmSide(S.lineStartMin(l), anchors, thr); });
       var pmSide = lines.filter(function (l) { return !S.isAmSide(S.lineStartMin(l), anchors, thr); });
+      // Prefer DFO whose shifts cover opening/close bands
+      var bands = fc.bands || [];
+      var openBand = bands[0];
+      var closeBand = bands[bands.length - 1];
+      function coversBandStart(line, band) {
+        if (!band) return false;
+        var bandStart = S.timeToMin(band.start);
+        var sh = S.getShift(line.shiftId);
+        if (!sh) return false;
+        var shStart = S.timeToMin(sh.start);
+        var shEnd = S.timeToMin(sh.end);
+        if (shEnd <= shStart) shEnd += 1440;
+        if (bandStart >= shStart && bandStart < shEnd) return true;
+        return false;
+      }
+      amSide.sort(function (a, b) {
+        var aOpen = coversBandStart(a, openBand) ? 0 : 1;
+        var bOpen = coversBandStart(b, openBand) ? 0 : 1;
+        if (aOpen !== bOpen) return aOpen - bOpen;
+        return S.lineStartMin(a) - S.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
+      });
+      pmSide.sort(function (a, b) {
+        var aClose = coversBandStart(a, closeBand) ? 0 : 1;
+        var bClose = coversBandStart(b, closeBand) ? 0 : 1;
+        if (aClose !== bClose) return aClose - bClose;
+        return S.lineStartMin(a) - S.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
+      });
       var needAm = fc.amPmSplit ? Math.ceil(n / 2) : n;
       var needPm = fc.amPmSplit ? Math.floor(n / 2) : 0;
       if (amSide.length < needAm) { needPm += needAm - amSide.length; needAm = amSide.length; }
