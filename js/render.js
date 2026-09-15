@@ -93,3 +93,4 @@ window.Scheduler = window.Scheduler || {};
     });
     return { slots: slots, matrix: matrix, dowToOffset: dowToOffset };
   };
+})(window.Scheduler);
