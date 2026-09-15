@@ -31,7 +31,7 @@ export function paintFunctionCoverage(S) {
         document.body.appendChild(a); a.click(); document.body.removeChild(a);
         URL.revokeObjectURL(url);
       }
-      if (S.updateStatus) S.updateStatus("Saved staffing + function coverage (mode " + (fc.mode || "none") + ").");
+      if (S.updateStatus) S.updateStatus("Saved staffing + function coverage (BAG+DFO pools).");
     };
   }
   let save = document.getElementById("btn-save-staffing");

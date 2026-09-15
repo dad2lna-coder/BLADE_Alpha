@@ -21,26 +21,8 @@ function addFcBandClassic(S) {
 }
 
 function patchBagViewRoles(S) {
-  if (!S || S._bagViewRolePatch) return;
-  var orig = S.computeHourlyByDow;
-  if (typeof orig !== "function") return;
-  S._bagViewRolePatch = true;
-  S.computeHourlyByDow = function () {
-    var cv = S.coverageView || (S.coverageView = { stso: false, ltso: false, tso: true, funcView: "all" });
-    var prevS = cv.stso, prevL = cv.ltso, prevT = cv.tso;
-    if (cv.funcView === "bag") {
-      cv.stso = true;
-      cv.ltso = true;
-      cv.tso = true;
-    }
-    try {
-      return orig.call(S);
-    } finally {
-      cv.stso = prevS;
-      cv.ltso = prevL;
-      cv.tso = prevT;
-    }
-  };
+  /* Role filters stay user-controlled on every coverage lens, including Baggage. */
+  return S;
 }
 
 function patchImportCoverage(S) {
