@@ -61,7 +61,7 @@ window.Scheduler = window.Scheduler || {};
       var fv = cv.funcView || "all";
       if (fv === "all") return true;
       var duty = S.getRotationDuty ? S.getRotationDuty(line.id, dayOff) : null;
-      if (fv === "dfo") return duty === "DFO";
+      if (fv === "dfo") { var lineIsDfo = line.function === "DFO" || (line.functionEligible && line.functionEligible.dfo); return lineIsDfo && duty !== "BAG";}
       if (fv === "bag") return duty === "BAG";
       if (fv === "pax") return duty === "PAX";
       return true;
