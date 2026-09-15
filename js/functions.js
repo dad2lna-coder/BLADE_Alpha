@@ -377,13 +377,28 @@ window.Scheduler = window.Scheduler || {};
       if (end <= start) end += 1440;
       var slots = [];
       for (var m = start; m < end; m += 30) slots.push(m % 1440);
-      if (!slots.length) slots.push(start % 1440);
       return slots;
     }
-    function coversBand(line, d, band) {
+    function bagSlotCounts(d, band, role) {
       var slots = bandSlots(band);
-      for (var i = 0; i < slots.length; i++) if (S.lineCoversSlot(line, d, slots[i])) return true;
-      return false;
+      var counts = [];
+      for (var i = 0; i < slots.length; i++) counts.push(0);
+      (S.state.lines || []).forEach(function (l) {
+        if (S.lineRoleKey(l) !== role) return;
+        if (!worksDay(l, d) || getDuty(l.id, d) !== "BAG") return;
+        for (var i = 0; i < slots.length; i++) {
+          if (S.lineCoversSlot(l, d, slots[i])) counts[i]++;
+        }
+      });
+      return counts;
+    }
+    function worstBagCoverage(d, band, role) {
+      var slots = bandSlots(band);
+      if (!slots.length) return 0;
+      var counts = bagSlotCounts(d, band, role);
+      var have = counts[0];
+      for (var i = 1; i < counts.length; i++) if (counts[i] < have) have = counts[i];
+      return have;
     }
     (S.state.lines || []).forEach(function (l) {
       if (!ensureEligible(l).bag) return;
@@ -394,37 +409,41 @@ window.Scheduler = window.Scheduler || {};
       if (ensureEligible(l).bag) return;
       if (ensureEligible(l).dfo) l.function = "DFO";
     });
-    function countBagRole(d, band, role) {
-      var n = 0;
-      (S.state.lines || []).forEach(function (l) {
-        if (S.lineRoleKey(l) !== role) return;
-        if (!worksDay(l, d) || !coversBand(l, d, band)) return;
-        if (getDuty(l.id, d) === "BAG") n++;
-      });
-      return n;
-    }
     function fillBandShortfalls(d) {
       (fc.bands || []).forEach(function (band) {
         [["STSO", band.stso || 0], ["LTSO", band.ltso || 0], ["TSO", band.tso || 0]].forEach(function (pair) {
           var role = pair[0], need = pair[1];
           if (need <= 0) return;
-          var short = need - countBagRole(d, band, role);
+          var slots = bandSlots(band);
+          var counts = bagSlotCounts(d, band, role);
+          var have = slots.length ? counts[0] : 0;
+          for (var i = 1; i < counts.length; i++) if (counts[i] < have) have = counts[i];
+          var short = need - have;
           if (short <= 0) return;
-          var cands = (S.state.lines || []).filter(function (l) {
-            if (!ensureEligible(l).dfo) return false;
-            if (S.lineRoleKey(l) !== role) return false;
-            if (!worksDay(l, d) || !coversBand(l, d, band)) return false;
-            if (getDuty(l.id, d) === "BAG") return false;
-            return true;
-          }).sort(function (a, b) {
-            var ca = bagFillCount[String(a.id)] || 0, cb = bagFillCount[String(b.id)] || 0;
-            if (ca !== cb) return ca - cb;
-            return S.lineStartMin(a) - S.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
-          });
-          for (var i = 0; i < cands.length && short > 0; i++) {
-            setDuty(cands[i].id, d, "BAG");
-            bagFillCount[String(cands[i].id)] = (bagFillCount[String(cands[i].id)] || 0) + 1;
-            short--;
+          while (short > 0) {
+            var cands = (S.state.lines || []).filter(function (l) {
+              if (!ensureEligible(l).dfo) return false;
+              if (S.lineRoleKey(l) !== role) return false;
+              if (!worksDay(l, d) || getDuty(l.id, d) === "BAG") return false;
+              for (var i = 0; i < slots.length; i++) {
+                if (S.lineCoversSlot(l, d, slots[i]) && counts[i] < need) return true;
+              }
+              return false;
+            }).sort(function (a, b) {
+              var ca = bagFillCount[String(a.id)] || 0, cb = bagFillCount[String(b.id)] || 0;
+              if (ca !== cb) return ca - cb;
+              return S.lineStartMin(a) - S.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
+            });
+            if (!cands.length) break;
+            var chosen = cands[0];
+            setDuty(chosen.id, d, "BAG");
+            bagFillCount[String(chosen.id)] = (bagFillCount[String(chosen.id)] || 0) + 1;
+            for (var i = 0; i < slots.length; i++) {
+              if (S.lineCoversSlot(chosen, d, slots[i])) counts[i]++;
+            }
+            have = slots.length ? counts[0] : 0;
+            for (var i = 1; i < counts.length; i++) if (counts[i] < have) have = counts[i];
+            short = need - have;
           }
         });
       });
@@ -451,7 +470,7 @@ window.Scheduler = window.Scheduler || {};
         [["STSO", band.stso || 0], ["LTSO", band.ltso || 0], ["TSO", band.tso || 0]].forEach(function (pair) {
           var role = pair[0], need = pair[1];
           if (need <= 0) return;
-          var have = countBagRole(d2, band, role);
+          var have = worstBagCoverage(d2, band, role);
           if (have < need) miss.push(role + " " + have + "/" + need);
         });
         if (miss.length) shortfalls.push((S.DAYS[d2 % 7] || d2) + " " + band.start + "-" + band.end + ": " + miss.join(", "));
