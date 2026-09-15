@@ -274,7 +274,7 @@ window.Scheduler = window.Scheduler || {};
       (S.state.shifts || []).forEach(function (sh) {
         shiftHtml += "<option value=\"" + sh.id + "\"" +
           (String(S.linesView.filterShift) === String(sh.id) ? " selected" : "") +
-          ">" + String(sh.name || sh.id).replace(/</g, "&lt;") + "<\/option>";
+          ">" + String(sh.name || sh.id).replace(/</g, "&amp;lt;") + "<\/option>";
       });
       fsEl.innerHTML = shiftHtml;
     }
@@ -287,7 +287,7 @@ window.Scheduler = window.Scheduler || {};
         S.teams.teams.forEach(function (t) {
           teamHtml += "<option value=\"" + t.id + "\"" +
             (S.linesView.filterTeam === t.id ? " selected" : "") +
-            ">" + String(t.name || t.id).replace(/</g, "&lt;") + "<\/option>";
+            ">" + String(t.name || t.id).replace(/</g, "&amp;lt;") + "<\/option>";
         });
       }
       ftEl.innerHTML = teamHtml;
@@ -310,7 +310,7 @@ window.Scheduler = window.Scheduler || {};
         S.teams.teams.forEach(function (t) {
           opts += "<option value=\"" + t.id + "\"" +
             (t.id === selectedId ? " selected" : "") +
-            ">" + String(t.name || t.id).replace(/</g, "&lt;") + "<\/option>";
+            ">" + String(t.name || t.id).replace(/</g, "&amp;lt;") + "<\/option>";
         });
       }
       return opts;
@@ -319,7 +319,7 @@ window.Scheduler = window.Scheduler || {};
       return (S.state.shifts || []).map(function (sh) {
         return "<option value=\"" + sh.id + "\"" +
           (sh.id === selectedId ? " selected" : "") +
-          ">" + String(sh.name || sh.id).replace(/</g, "&lt;") +
+          ">" + String(sh.name || sh.id).replace(/</g, "&amp;lt;") +
           " (" + sh.start + "-" + sh.end + ")<\/option>";
       }).join("");
     }
@@ -371,7 +371,7 @@ window.Scheduler = window.Scheduler || {};
       var teamMeta = S.teamMetaForLine(line.id);
       html += "<tr data-line-row=\"" + line.id + "\">" +
         "<td><select class=\"line-edit\" data-field=\"team\" data-line-id=\"" + line.id + "\">" + teamSelectHtml(teamMeta.id) + "<\/select><\/td>" +
-        "<td><input type=\"text\" class=\"line-edit line-code-input\" data-field=\"lineCode\" data-line-id=\"" + line.id + "\" value=\"" + String(line.lineCode || "").replace(/\"/g, """) + "\"><\/td>" +
+        "<td><input type=\"text\" class=\"line-edit line-code-input\" data-field=\"lineCode\" data-line-id=\"" + line.id + "\" value=\"" + String(line.lineCode || "").replace(/"/g, "&amp;quot;") + "\"><\/td>" +
         "<td><select class=\"line-edit\" data-field=\"shift\" data-line-id=\"" + line.id + "\">" + shiftSelectHtml(line.shiftId) + "<\/select><\/td>" +
         "<td><select class=\"line-edit\" data-field=\"emp\" data-line-id=\"" + line.id + "\">" + empSelectHtml(empVal) + "<\/select><\/td>" +
         "<td><select class=\"line-edit\" data-field=\"sex\" data-line-id=\"" + line.id + "\">" +
