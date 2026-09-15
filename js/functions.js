@@ -457,7 +457,6 @@ window.Scheduler = window.Scheduler || {};
     if (!opts.fromGenerate && S.updateStatus) S.updateStatus(msg);
     if (!opts.fromGenerate) S.closeFunctionCoverageModal();
   };
-  S.generateFcAssignments = S.generateFunctionAssignments;
   S.clearLineFunctions = function () {
     (S.state.lines || []).forEach(function (l) { l.function = ""; l.functionEligible = { dfo: false, bag: false, pax: false }; });
     S.state.functionRotation = {};
@@ -475,7 +474,6 @@ window.Scheduler = window.Scheduler || {};
       S.readFunctionBandsFromDom(); S.syncFunctionModeUi(); S.renderFunctionBandsTable(); S.updateFunctionCoveragePreview();
       if (S.updateStatus) S.updateStatus("Function coverage settings saved.");
     });
-    var genBtn = S.$("fc-generate"); if (genBtn) genBtn.addEventListener("click", function () { S.generateFunctionAssignments(); });
     var addBtn = S.$("fc-add-band");
     if (addBtn) addBtn.addEventListener("click", function () {
       S.readFunctionBandsFromDom();
