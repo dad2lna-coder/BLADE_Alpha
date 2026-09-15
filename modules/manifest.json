@@ -20,12 +20,6 @@
   },
   "lines-table": {
     "entry": "modules/lines-table/dist/lines-table.js",
-    "init": "initLinesTable",
-    "panel": "modules/lines-table/panel.html",
-    "mount": "#lines-table-root",
-    "docks": null,
-    "css": [
-      "modules/lines-table/dist/lines-table.css"
-    ]
+    "init": "initLinesTable"
   }
 }
