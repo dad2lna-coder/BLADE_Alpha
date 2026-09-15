@@ -52,6 +52,7 @@ window.Scheduler = window.Scheduler || {};
     shifts: S.defaultShifts(),
     lines: [],
     schedule: {},
+    extraPositions: [],
     issues: [],
     mode: "—"
   };

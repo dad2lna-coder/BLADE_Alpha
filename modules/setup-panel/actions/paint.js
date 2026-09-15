@@ -18,7 +18,8 @@ export function paintFunctionCoverage(S) {
         config: {
           ftM: S.state.ftM, ftF: S.state.ftF, ptM: S.state.ptM, ptF: S.state.ptF,
           ltsoM: S.state.ltsoM, ltsoF: S.state.ltsoF, stsoM: S.state.stsoM, stsoF: S.state.stsoF,
-          functionCoverage: fc
+          functionCoverage: fc,
+          extraPositions: S.state.extraPositions || []
         }
       };
       var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });

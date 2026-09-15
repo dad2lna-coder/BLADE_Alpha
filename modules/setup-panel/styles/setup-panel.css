@@ -27,6 +27,38 @@
   flex-wrap: wrap;
 }
 
+#fc-pool-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: start;
+}
+#fc-pool-bag,
+#fc-pool-dfo {
+  min-width: 0;
+}
+.extra-pos-card {
+  margin-top: 0.85rem;
+  padding-top: 0.65rem;
+  border-top: 1px solid rgba(255,255,255,0.12);
+}
+.extra-pos-head {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  align-items: end;
+}
+.extra-pos-bands {
+  max-height: 20vh;
+  margin-top: 0.5rem;
+}
+@media (max-width: 720px) {
+  #fc-pool-row {
+    grid-template-columns: 1fr;
+  }
+}
+
 #card-func .fc-tools-row {
   display: flex;
   flex-wrap: wrap;
