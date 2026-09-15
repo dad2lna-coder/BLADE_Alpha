@@ -33,6 +33,8 @@ Blade_Alpha is a lightweight, single-page HTML/JavaScript application that gener
 ### **Live Demo**
 Visit the deployed version at: https://dad2lna-coder.github.io/BLADE_Alpha/
 
+That URL tracks **bright-garden** (GitHub Pages via Actions). It does **not** track **main**. For now, **main** is the Windows/Tauri app line.
+
 ---
 
 ## ✨ Features
