@@ -183,7 +183,6 @@
     document.body.appendChild(s);
   }
   boot("js/airfield-boot.js?v=20260905g");
-  boot("js/coverage-cuts.js?v=20260904h");
   boot("js/team-flags.js?v=20260904j");
   boot("js/team-close.js?v=20260904k");
 })();
