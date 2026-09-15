@@ -13,6 +13,28 @@
   /* Remove default details marker */
 }
 
+/* Function coverage pools match FTE role + Male/Female cards */
+#card-func .fte-role {
+  text-align: center;
+  font-weight: 700;
+  margin: 0.85rem 0 0.35rem;
+}
+
+#card-func .fte-sex-row {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+#card-func .fc-tools-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  align-items: center;
+  margin-top: 0.75rem;
+}
+
 /* Basic card layout inherits from team-builder.css */
 #team-pool,
 #team-pool.team-pool-columns,

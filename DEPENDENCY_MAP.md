@@ -45,6 +45,6 @@ Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-pan
 
 Function coverage mode is exclusive: `#fc-mode-dfo` / `#fc-mode-bag` / neither. Stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`.
 
-**One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Standalone `#fc-generate` (“Re-assign functions”) is the same assigner for power users — not a second engine.
+**One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Function duties only via main Schedule Generate — no separate coverage generate control.
 
-DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on every WORK day (no PAX). Bands apply to DFO minimums and are hidden in BAG mode.
+DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on every WORK day (no PAX). Bands apply to DFO minimums and are hidden in BAG mode. Six `#fc-pool-*-m/f` inputs feed DFO or BAG pools for the active mode.

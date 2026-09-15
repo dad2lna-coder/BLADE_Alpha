@@ -61,9 +61,6 @@ function patchImportCoverage(S) {
 
 export function bindSetupActions(S) {
   if (!S) return;
-  if (typeof S.generateFunctionAssignments === "function") {
-    S.generateFcAssignments = S.generateFunctionAssignments;
-  }
   S.addFcBand = S.addFcBand || function () { addFcBandClassic(S); };
   patchBagViewRoles(S);
   patchImportCoverage(S);
@@ -76,11 +73,6 @@ export function bindSetupActions(S) {
   bindOnce(document.getElementById("fc-add-band"), "click", function (e) {
     e.preventDefault();
     S.addFcBand();
-  });
-  bindOnce(document.getElementById("fc-generate"), "click", function (e) {
-    e.preventDefault();
-    const fn = S.generateFunctionAssignments || S.generateFcAssignments;
-    if (typeof fn === "function") fn.call(S);
   });
   bindOnce(document.getElementById("btn-add-shift"), "click", function (e) {
     e.preventDefault();

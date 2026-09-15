@@ -28,14 +28,10 @@ export function initSetupPanel(scheduler) {
 
   bindSetupActions(S);
 
-  // Classic initFunctionCoverage often ran before panel.html existed and
-  // set _funcCoverageBound without wiring #fc-generate. Re-run once now
-  // that the buttons are in the DOM. Module bindOnce already covers
-  // generate/add-band if this is a no-op.
+  // Classic initFunctionCoverage may have run before panel.html existed.
+  // Re-run once the setup panel DOM is mounted. bindOnce covers add-band.
   if (typeof S.initFunctionCoverage === "function") {
-    if (!document.getElementById("fc-generate") || !S._funcCoverageBound) {
-      S._funcCoverageBound = false;
-    }
+    if (!S._funcCoverageBound) S._funcCoverageBound = false;
     S.initFunctionCoverage();
   }
 

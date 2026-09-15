@@ -20,17 +20,18 @@
 <label class="follow-me-label"><input type="checkbox" id="fc-mode-bag" /> BAG coverage</label>
 <span class="muted">One or neither. Main Generate assigns duties when a mode is on.</span>
 </div>
-<div class="fc-pool-row" id="fc-pool-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center">
-<label>STSO M <input type="number" id="fc-pool-stso-m" min="0" value="0" style="width:3.5rem" /></label>
-<label>STSO F <input type="number" id="fc-pool-stso-f" min="0" value="0" style="width:3.5rem" /></label>
-<label>LTSO M <input type="number" id="fc-pool-ltso-m" min="0" value="0" style="width:3.5rem" /></label>
-<label>LTSO F <input type="number" id="fc-pool-ltso-f" min="0" value="0" style="width:3.5rem" /></label>
-<label>TSO M <input type="number" id="fc-pool-tso-m" min="0" value="0" style="width:3.5rem" /></label>
-<label>TSO F <input type="number" id="fc-pool-tso-f" min="0" value="0" style="width:3.5rem" /></label>
+<div class="fc-pool-blocks" id="fc-pool-row">
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">STSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="fc-pool-stso-m" min="0" value="0" style="width:4.5rem" /></label><label>Female <input type="number" id="fc-pool-stso-f" min="0" value="0" style="width:4.5rem" /></label></div>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">LTSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="fc-pool-ltso-m" min="0" value="0" style="width:4.5rem" /></label><label>Female <input type="number" id="fc-pool-ltso-f" min="0" value="0" style="width:4.5rem" /></label></div>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">TSO</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="fc-pool-tso-m" min="0" value="0" style="width:4.5rem" /></label><label>Female <input type="number" id="fc-pool-tso-f" min="0" value="0" style="width:4.5rem" /></label></div>
+</div>
+<div class="fc-tools-row" style="display:flex;flex-wrap:wrap;gap:0.65rem 1rem;align-items:center;margin-top:0.75rem">
 <label>Phase threshold (min) <input type="number" id="fc-phase-thr" min="0" max="120" value="15" style="width:4rem" /></label>
 <label class="follow-me-label"><input type="checkbox" id="fc-ampm-split" checked /> 50/50 AM–PM split</label>
 <button type="button" class="btn" id="fc-add-band">+ Add band</button>
-<button type="button" class="btn muted" id="fc-generate" title="Power user: assign on current lines only">Re-assign functions</button>
 </div>
 <div id="fc-bands-wrap" class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
 <p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
