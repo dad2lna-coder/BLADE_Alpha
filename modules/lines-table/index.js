@@ -1,9 +1,5 @@
 /** Lines Table module -- Svelte island inside the classic Lines tab.
- * Reads row models from window.Scheduler.getLineRowModels() and renders
- * a virtualized export-shaped table. Supports Svelte 4 + TanStack Virtual.
- *
- * Feature flag: window.Scheduler.__USE_SVELTE_LINES = true enables this path.
- * When false (default), classic renderLines() runs as before.
+ * Rows come from filtered/sorted getRowModels. Edits write Scheduler.state.
  */
 import LinesTable from './LinesTable.svelte';
 
@@ -17,82 +13,128 @@ export function initLinesTable(scheduler) {
     return;
   }
 
-  // Feature flag / classic bypass
-  if (S.__USE_SVELTE_LINES === false || !S.__USE_SVELTE_LINES) {
-    // Classic mode: ensure classic table is visible and Svelte is hidden
+  if (S.__USE_SVELTE_LINES === false) {
     root.innerHTML = '';
     root.style.display = 'none';
-    // Make sure classic can still render
     if (S.renderLines) S.renderLines();
     return;
   }
 
-  // Avoid double-mounting on re-init
   if (root._linesTableMounted) return;
   root._linesTableMounted = true;
 
-  // Refresh function to recompute rows and re-mount
+  function resolvers() {
+    return {
+      teamResolver: typeof S.teamMetaForLine === "function" ? S.teamMetaForLine : null,
+      shiftResolver: typeof S.getShift === "function" ? S.getShift : null,
+      rotationDutyResolver: typeof S.getRotationDuty === "function" ? S.getRotationDuty : null
+    };
+  }
+
+  function buildRows() {
+    const lines = (S.state && Array.isArray(S.state.lines)) ? S.state.lines : [];
+    const filtered = typeof S.sortLinesForView === "function" && typeof S.filterLinesForView === "function"
+      ? S.sortLinesForView(S.filterLinesForView(lines))
+      : lines;
+    const schedule = (S.state && S.state.schedule) || {};
+    const models = typeof S.getRowModels === "function"
+      ? S.getRowModels(filtered, schedule, resolvers())
+      : [];
+    return Array.isArray(models) ? models : [];
+  }
+
+  function teamOptions() {
+    if (S.teams && Array.isArray(S.teams.teams)) return S.teams.teams;
+    return [];
+  }
+
+  function shiftOptions() {
+    return (S.state && Array.isArray(S.state.shifts)) ? S.state.shifts : [];
+  }
+
+  function applyProps(comp) {
+    if (!comp || typeof comp.$set !== "function") return;
+    comp.$set({
+      rows: buildRows(),
+      shiftOptions: shiftOptions(),
+      teamOptions: teamOptions()
+    });
+  }
+
+  function writeInlineEdit(detail) {
+    if (!detail) return;
+    const line = S.findLineById ? S.findLineById(detail.lineId) : null;
+    if (!line) return;
+    const field = detail.field;
+    const value = detail.value;
+    if (field === "lineCode") {
+      line.lineCode = String(value || "").trim() || line.lineCode;
+    } else if (field === "sex") {
+      line.sex = value === "F" ? "F" : "M";
+    } else if (field === "function") {
+      line.function = value === "DFO" || value === "PAX" || value === "BAG" ? value : "";
+    } else if (field === "emp" || field === "position") {
+      if (S.applyLineEmp) S.applyLineEmp(line, value);
+    } else if (field === "shift") {
+      if (S.applyLineShift) S.applyLineShift(line, value);
+    } else if (field === "team") {
+      if (S.setLineTeam) S.setLineTeam(detail.lineId, value);
+    }
+    if (S.updateStatus) S.updateStatus("Updated " + (line.lineCode || detail.lineId));
+    refresh();
+    if ((field === "emp" || field === "position" || field === "shift") && S.renderCoverageBars) {
+      S.renderCoverageBars();
+    }
+    if (field === "team" && S.renderTeams) S.renderTeams();
+  }
+
+  function writeDayToggle(detail) {
+    if (!detail) return;
+    const line = S.findLineById ? S.findLineById(detail.lineId) : null;
+    const dayIndex = Number(detail.dayIndex);
+    if (!line || !Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex > 6) return;
+    const key = line.id;
+    if (!S.state.schedule) S.state.schedule = {};
+    if (!S.state.schedule[key]) S.state.schedule[key] = [];
+    const cur = S.state.schedule[key][dayIndex] || "RDO";
+    S.state.schedule[key][dayIndex] = cur === "WORK" ? "RDO" : "WORK";
+    if (S.syncRdoDaysFromSchedule) S.syncRdoDaysFromSchedule(line);
+    refresh();
+    if (S.renderCoverageBars) S.renderCoverageBars();
+  }
+
   const refresh = () => {
     try {
-      // Pull full filtered/sorted row models from classic S
-      const models = typeof S.getLineRowModels === "function"
-        ? S.getLineRowModels()
-        : [];
-
-      // Set rows on the Svelte component
       const svelteComponent = root._linesTableApp;
       if (svelteComponent) {
-        svelteComponent.rows = Array.isArray(models) ? models : [];
-        // Trigger reactive update
-        if (svelteComponent.$$ && svelteComponent.$$[Symbol.for('$bond')]) {
-          svelteComponent.$$[Symbol.for('$bond')]();
-        }
+        applyProps(svelteComponent);
       } else {
-        // New mount
         root._linesTableApp = new LinesTable({
           target: root,
           props: {
-            rows: Array.isArray(models) ? models : [],
-            shiftOptions: Array.isArray(S.state.shifts) ? S.state.shifts : []
+            rows: buildRows(),
+            shiftOptions: shiftOptions(),
+            teamOptions: teamOptions(),
+            onInlineEdit: writeInlineEdit,
+            onDayToggle: writeDayToggle
           }
         });
       }
     } catch (err) {
       console.error("lines-table: refresh failed", err);
-      // Fallback to classic table injection
-      if (S.renderLines) S.renderLines();
     }
   };
 
-  // Initial render
   refresh();
 
-  // Re-render on tab show
   document.addEventListener("click", (e) => {
     const btn = e.target.closest?.(".tab-btn");
-    if (btn && btn.dataset.tab === "lines") {
-      refresh();
-    }
+    if (btn && btn.dataset.tab === "lines") refresh();
   });
 
-  // Also hook into custom events dispatched from Svelte / classic
-  const eventHandlers = {
-    'lines:request-render': refresh,
-    'lines:filter-change': refresh,
-    'lines:sort-change': refresh,
-    'lines:coverage-refresh': refresh,
-  };
-
-  Object.entries(eventHandlers).forEach(([event, handler]) => {
-    root.addEventListener(event, handler);
+  ["lines:request-render", "lines:filter-change", "lines:sort-change", "lines:coverage-refresh"].forEach((event) => {
+    window.addEventListener(event, refresh);
   });
 
-  // Export refresh for manual steering
   root.refresh = refresh;
-  root.setRows = (newRows) => {
-    root._linesTableApp.rows = newRows;
-    if (root._linesTableApp.$$ && root._linesTableApp.$$[Symbol.for('$bond')]) {
-      root._linesTableApp.$$[Symbol.for('$bond')]();
-    }
-  };
 }

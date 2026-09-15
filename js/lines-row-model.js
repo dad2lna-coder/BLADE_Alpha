@@ -21,11 +21,6 @@ window.Scheduler = window.Scheduler || {};
     return text;
   }
 
-  /**
-   * Convert one line and its schedule into an export-shaped row model.
-   * The mapper has no DOM or application-state dependencies. Optional
-   * resolvers provide the same lookups used by the existing export.
-   */
   S.lineToRowModel = function (line, schedule, options) {
     options = options || {};
     if (!line || !schedule) return null;
@@ -63,6 +58,9 @@ window.Scheduler = window.Scheduler || {};
     }
 
     return {
+      id: line.id,
+      teamId: (teamMeta && teamMeta.id) || "",
+      shiftId: line.shiftId || "",
       team: padTeamName((teamMeta && (teamMeta.name || teamMeta.id)) || ""),
       line: line.lineCode || "",
       shift: shiftName,
@@ -79,7 +77,6 @@ window.Scheduler = window.Scheduler || {};
     };
   };
 
-  /** Map all lines to seven-day row models without reading S.state. */
   S.getRowModels = function (lines, schedule, options) {
     if (!Array.isArray(lines) || !schedule) return [];
     return lines.map(function (line) {
@@ -87,10 +84,6 @@ window.Scheduler = window.Scheduler || {};
     }).filter(Boolean);
   };
 
-  /**
-   * Build row models for all lines using S.state.
-   * Thin Scheduler-bound helper; pure mapper stays unchanged.
-   */
   S.getLineRowModels = function (options) {
     var lines = (S.state && Array.isArray(S.state.lines)) ? S.state.lines : [];
     var schedule = (S.state && S.state.schedule) || [];
