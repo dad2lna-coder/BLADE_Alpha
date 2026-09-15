@@ -6,7 +6,8 @@ export default defineConfig({
   plugins: [svelte()],
   resolve: {
     alias: {
-      // Ensure Svelte runtime is bundled, not pulled from node_modules
+      "@tanstack/svelte-virtual": resolve(__dirname, "node_modules/@tanstack/svelte-virtual/dist/index.js"),
+      "@tanstack/virtual-core": resolve(__dirname, "node_modules/@tanstack/virtual-core/dist/esm/index.js"),
     },
   },
   build: {

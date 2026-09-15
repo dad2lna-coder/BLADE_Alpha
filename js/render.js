@@ -418,6 +418,8 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderLines = function () {
+    // Classic bypass: when Svelte virtualized table is active, skip DOM work.
+    if (S.__USE_SVELTE_LINES) return;
     var thead = S.$("lines-thead");
     var tbody = S.$("lines-tbody");
     if (!thead || !tbody) return;
@@ -794,6 +796,57 @@ window.Scheduler = window.Scheduler || {};
     S.renderIssues();
   };
 
+  S.getLineRowModels = function () {
+    var filtered = S.sortLinesForView(S.filterLinesForView(S.state.lines));
+    var days = (S.state.weekCount || 1) * 7;
+    return filtered.map(function (line) {
+      var schedule = S.state.schedule[line.id] || [];
+      var fr = S.state.functionRotation || {};
+      var frLine = fr[String(line.id)] || [];
+      var isBagDay = [], isDfoDay = [], isRdoDay = [];
+      var dayModels = [];
+      for (var d = 0; d < days; d++) {
+        var v = schedule[d] || 'RDO';
+        var duty = frLine[d] || line.function || null;
+        var isBag = duty === 'BAG' || duty === 'BAGS';
+        var isDfo = duty === 'DFO';
+        var isRdo = v !== 'WORK';
+        isBagDay[d] = isBag;
+        isDfoDay[d] = isDfo;
+        isRdoDay[d] = isRdo;
+        dayModels.push({
+          dayIndex: d,
+          value: v,
+          duty: isBag ? 'BAG' : isDfo ? 'DFO' : (duty === 'PAX' ? 'PAX' : null),
+          label: v === 'WORK' ? (line.shiftLabel || 'WORK') : 'RDO'
+        });
+      }
+      var hours = 0;
+      for (var d = 0; d < days; d++) if (schedule[d] === 'WORK') hours += line.paid || 0;
+      var teamMeta = S.teamMetaForLine(line.id);
+      return {
+        id: line.id,
+        lineCode: line.lineCode,
+        shiftId: line.shiftId,
+        shiftName: line.shiftName,
+        shiftLabel: line.shiftLabel,
+        empClass: line.isStso ? 'STSO' : line.isLtso ? 'LTSO' : line.empClass,
+        sex: line.sex,
+        function: line.function,
+        rdoText: S.rdoTextForLine(line),
+        rdoDays: line.rdoDays || [],
+        rdoHard: line.rdoHard,
+        teamName: teamMeta.name,
+        teamId: teamMeta.id,
+        days: dayModels,
+        hours: hours,
+        isBagDay: isBagDay,
+        isDfoDay: isDfoDay,
+        isRdoDay: isRdoDay
+      };
+    });
+  };
+
   S.switchTab = function (name) {
     document.querySelectorAll(".tab-btn").forEach(function (b) {
       b.classList.toggle("active", b.dataset.tab === name);
@@ -806,5 +859,9 @@ window.Scheduler = window.Scheduler || {};
     if (name === "lines" && S.renderLines) S.renderLines();
     if (name === "coverage" && S.renderCoverageBars) S.renderCoverageBars();
     if (name === "reports" && S.renderReports) S.renderReports();
+    // Dispatch render request for Svelte Lines table (if active)
+    if (S.__USE_SVELTE_LINES) {
+      window.dispatchEvent(new CustomEvent('lines:request-render', { detail: { source: 'tab-switch' } }));
+    }
   };
 })(window.Scheduler);

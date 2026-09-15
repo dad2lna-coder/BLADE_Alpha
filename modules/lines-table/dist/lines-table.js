@@ -1,173 +1,187 @@
-var z = Object.defineProperty;
-var J = (e, t, n) => t in e ? z(e, t, { enumerable: !0, configurable: !0, writable: !0, value: n }) : e[t] = n;
-var E = (e, t, n) => J(e, typeof t != "symbol" ? t + "" : t, n);
-function p() {
+var Et = Object.defineProperty;
+var Ot = (e, t, n) => t in e ? Et(e, t, { enumerable: !0, configurable: !0, writable: !0, value: n }) : e[t] = n;
+var Ve = (e, t, n) => Ot(e, typeof t != "symbol" ? t + "" : t, n);
+import { createVirtualizer as Lt } from "https://esm.sh/@tanstack/svelte-virtual@3.13.39?deps=svelte@4.2.19&target=es2022";
+function ae() {
 }
-function q(e) {
+function ht(e) {
   return e();
 }
-function N() {
+function ot() {
   return /* @__PURE__ */ Object.create(null);
 }
-function A(e) {
-  e.forEach(q);
+function ue(e) {
+  e.forEach(ht);
 }
-function G(e) {
+function vt(e) {
   return typeof e == "function";
 }
-function Q(e, t) {
+function kt(e, t) {
   return e != e ? t == t : e !== t || e && typeof e == "object" || typeof e == "function";
 }
-function X(e) {
+function It(e) {
   return Object.keys(e).length === 0;
 }
-function Z(e) {
-  return e ?? "";
-}
-function y(e, t) {
+function i(e, t) {
   e.appendChild(t);
 }
-function v(e, t, n) {
+function ce(e, t, n) {
   e.insertBefore(t, n || null);
 }
-function b(e) {
+function se(e) {
   e.parentNode && e.parentNode.removeChild(e);
 }
-function x(e, t) {
+function pt(e, t) {
   for (let n = 0; n < e.length; n += 1)
     e[n] && e[n].d(t);
 }
-function _(e) {
+function a(e) {
   return document.createElement(e);
 }
-function H(e) {
+function N(e) {
   return document.createTextNode(e);
 }
-function W() {
-  return H(" ");
+function C() {
+  return N(" ");
 }
-function w(e, t, n) {
+function R(e, t, n, l) {
+  return e.addEventListener(t, n, l), () => e.removeEventListener(t, n, l);
+}
+function s(e, t, n) {
   n == null ? e.removeAttribute(t) : e.getAttribute(t) !== n && e.setAttribute(t, n);
 }
-function K(e) {
+function At(e) {
   return Array.from(e.childNodes);
 }
-function ee(e, t) {
+function le(e, t) {
   t = "" + t, e.data !== t && (e.data = /** @type {string} */
   t);
 }
-let M;
-function S(e) {
-  M = e;
+function g(e, t) {
+  e.value = t ?? "";
 }
-const m = [], R = [];
-let $ = [];
-const j = [], te = /* @__PURE__ */ Promise.resolve();
-let O = !1;
-function ne() {
-  O || (O = !0, te.then(Y));
+function w(e, t, n, l) {
+  n == null ? e.style.removeProperty(t) : e.style.setProperty(t, n, "");
 }
-function L(e) {
-  $.push(e);
+let de;
+function re(e) {
+  de = e;
 }
-const T = /* @__PURE__ */ new Set();
-let g = 0;
-function Y() {
-  if (g !== 0)
+function Ft() {
+  if (!de) throw new Error("Function called outside component initialization");
+  return de;
+}
+function Mt(e) {
+  Ft().$$.on_mount.push(e);
+}
+const ie = [], Ge = [];
+let oe = [];
+const at = [], Pt = /* @__PURE__ */ Promise.resolve();
+let Ue = !1;
+function Rt() {
+  Ue || (Ue = !0, Pt.then(gt));
+}
+function Xe(e) {
+  oe.push(e);
+}
+const We = /* @__PURE__ */ new Set();
+let ne = 0;
+function gt() {
+  if (ne !== 0)
     return;
-  const e = M;
+  const e = de;
   do {
     try {
-      for (; g < m.length; ) {
-        const t = m[g];
-        g++, S(t), le(t.$$);
+      for (; ne < ie.length; ) {
+        const t = ie[ne];
+        ne++, re(t), Dt(t.$$);
       }
     } catch (t) {
-      throw m.length = 0, g = 0, t;
+      throw ie.length = 0, ne = 0, t;
     }
-    for (S(null), m.length = 0, g = 0; R.length; ) R.pop()();
-    for (let t = 0; t < $.length; t += 1) {
-      const n = $[t];
-      T.has(n) || (T.add(n), n());
+    for (re(null), ie.length = 0, ne = 0; Ge.length; ) Ge.pop()();
+    for (let t = 0; t < oe.length; t += 1) {
+      const n = oe[t];
+      We.has(n) || (We.add(n), n());
     }
-    $.length = 0;
-  } while (m.length);
-  for (; j.length; )
-    j.pop()();
-  O = !1, T.clear(), S(e);
+    oe.length = 0;
+  } while (ie.length);
+  for (; at.length; )
+    at.pop()();
+  Ue = !1, We.clear(), re(e);
 }
-function le(e) {
+function Dt(e) {
   if (e.fragment !== null) {
-    e.update(), A(e.before_update);
+    e.update(), ue(e.before_update);
     const t = e.dirty;
-    e.dirty = [-1], e.fragment && e.fragment.p(e.ctx, t), e.after_update.forEach(L);
+    e.dirty = [-1], e.fragment && e.fragment.p(e.ctx, t), e.after_update.forEach(Xe);
   }
 }
-function re(e) {
+function Nt(e) {
   const t = [], n = [];
-  $.forEach((l) => e.indexOf(l) === -1 ? t.push(l) : n.push(l)), n.forEach((l) => l()), $ = t;
+  oe.forEach((l) => e.indexOf(l) === -1 ? t.push(l) : n.push(l)), n.forEach((l) => l()), oe = t;
 }
-const oe = /* @__PURE__ */ new Set();
-function ie(e, t) {
-  e && e.i && (oe.delete(e), e.i(t));
+const jt = /* @__PURE__ */ new Set();
+function zt(e, t) {
+  e && e.i && (jt.delete(e), e.i(t));
 }
-function k(e) {
+function Me(e) {
   return e?.length !== void 0 ? e : Array.from(e);
 }
-function ce(e, t, n) {
-  const { fragment: l, after_update: o } = e.$$;
-  l && l.m(t, n), L(() => {
-    const r = e.$$.on_mount.map(q).filter(G);
-    e.$$.on_destroy ? e.$$.on_destroy.push(...r) : A(r), e.$$.on_mount = [];
-  }), o.forEach(L);
+function Ht(e, t, n) {
+  const { fragment: l, after_update: r } = e.$$;
+  l && l.m(t, n), Xe(() => {
+    const o = e.$$.on_mount.map(ht).filter(vt);
+    e.$$.on_destroy ? e.$$.on_destroy.push(...o) : ue(o), e.$$.on_mount = [];
+  }), r.forEach(Xe);
 }
-function se(e, t) {
+function Bt(e, t) {
   const n = e.$$;
-  n.fragment !== null && (re(n.after_update), A(n.on_destroy), n.fragment && n.fragment.d(t), n.on_destroy = n.fragment = null, n.ctx = []);
+  n.fragment !== null && (Nt(n.after_update), ue(n.on_destroy), n.fragment && n.fragment.d(t), n.on_destroy = n.fragment = null, n.ctx = []);
 }
-function ue(e, t) {
-  e.$$.dirty[0] === -1 && (m.push(e), ne(), e.$$.dirty.fill(0)), e.$$.dirty[t / 31 | 0] |= 1 << t % 31;
+function Vt(e, t) {
+  e.$$.dirty[0] === -1 && (ie.push(e), Rt(), e.$$.dirty.fill(0)), e.$$.dirty[t / 31 | 0] |= 1 << t % 31;
 }
-function fe(e, t, n, l, o, r, s = null, f = [-1]) {
-  const u = M;
-  S(e);
-  const c = e.$$ = {
+function Wt(e, t, n, l, r, o, _ = null, m = [-1]) {
+  const b = de;
+  re(e);
+  const d = e.$$ = {
     fragment: null,
     ctx: [],
     // state
-    props: r,
-    update: p,
-    not_equal: o,
-    bound: N(),
+    props: o,
+    update: ae,
+    not_equal: r,
+    bound: ot(),
     // lifecycle
     on_mount: [],
     on_destroy: [],
     on_disconnect: [],
     before_update: [],
     after_update: [],
-    context: new Map(t.context || (u ? u.$$.context : [])),
+    context: new Map(t.context || (b ? b.$$.context : [])),
     // everything else
-    callbacks: N(),
-    dirty: f,
+    callbacks: ot(),
+    dirty: m,
     skip_bound: !1,
-    root: t.target || u.$$.root
+    root: t.target || b.$$.root
   };
-  s && s(c.root);
-  let a = !1;
-  if (c.ctx = n ? n(e, t.props || {}, (d, i, ...h) => {
-    const C = h.length ? h[0] : i;
-    return c.ctx && o(c.ctx[d], c.ctx[d] = C) && (!c.skip_bound && c.bound[d] && c.bound[d](C), a && ue(e, d)), i;
-  }) : [], c.update(), a = !0, A(c.before_update), c.fragment = l ? l(c.ctx) : !1, t.target) {
+  _ && _(d.root);
+  let v = !1;
+  if (d.ctx = n ? n(e, t.props || {}, (u, h, ...$) => {
+    const D = $.length ? $[0] : h;
+    return d.ctx && r(d.ctx[u], d.ctx[u] = D) && (!d.skip_bound && d.bound[u] && d.bound[u](D), v && Vt(e, u)), h;
+  }) : [], d.update(), v = !0, ue(d.before_update), d.fragment = l ? l(d.ctx) : !1, t.target) {
     if (t.hydrate) {
-      const d = K(t.target);
-      c.fragment && c.fragment.l(d), d.forEach(b);
+      const u = At(t.target);
+      d.fragment && d.fragment.l(u), u.forEach(se);
     } else
-      c.fragment && c.fragment.c();
-    t.intro && ie(e.$$.fragment), ce(e, t.target, t.anchor), Y();
+      d.fragment && d.fragment.c();
+    t.intro && zt(e.$$.fragment), Ht(e, t.target, t.anchor), gt();
   }
-  S(u);
+  re(b);
 }
-class ae {
+class Gt {
   constructor() {
     /**
      * ### PRIVATE API
@@ -176,7 +190,7 @@ class ae {
      *
      * @type {any}
      */
-    E(this, "$$");
+    Ve(this, "$$");
     /**
      * ### PRIVATE API
      *
@@ -184,11 +198,11 @@ class ae {
      *
      * @type {any}
      */
-    E(this, "$$set");
+    Ve(this, "$$set");
   }
   /** @returns {void} */
   $destroy() {
-    se(this, 1), this.$destroy = p;
+    Bt(this, 1), this.$destroy = ae;
   }
   /**
    * @template {Extract<keyof Events, string>} K
@@ -197,12 +211,12 @@ class ae {
    * @returns {() => void}
    */
   $on(t, n) {
-    if (!G(n))
-      return p;
+    if (!vt(n))
+      return ae;
     const l = this.$$.callbacks[t] || (this.$$.callbacks[t] = []);
     return l.push(n), () => {
-      const o = l.indexOf(n);
-      o !== -1 && l.splice(o, 1);
+      const r = l.indexOf(n);
+      r !== -1 && l.splice(r, 1);
     };
   }
   /**
@@ -210,272 +224,512 @@ class ae {
    * @returns {void}
    */
   $set(t) {
-    this.$$set && !X(t) && (this.$$.skip_bound = !0, this.$$set(t), this.$$.skip_bound = !1);
+    this.$$set && !It(t) && (this.$$.skip_bound = !0, this.$$set(t), this.$$.skip_bound = !1);
   }
 }
-const de = "4";
-typeof window < "u" && (window.__svelte || (window.__svelte = { v: /* @__PURE__ */ new Set() })).v.add(de);
-function P(e, t, n) {
+const Ut = "4";
+typeof window < "u" && (window.__svelte || (window.__svelte = { v: /* @__PURE__ */ new Set() })).v.add(Ut);
+function st(e, t, n) {
   const l = e.slice();
-  return l[4] = t[n], l;
-}
-function B(e, t, n) {
-  const l = e.slice();
-  return l[7] = t[n], l;
-}
-function D(e, t, n) {
-  const l = e.slice();
-  return l[7] = t[n], l;
-}
-function _e(e) {
-  let t;
-  return {
-    c() {
-      t = _("p"), t.textContent = "Generate or import to build lines", w(t, "class", "muted");
-    },
-    m(n, l) {
-      v(n, t, l);
-    },
-    p,
-    d(n) {
-      n && b(t);
-    }
-  };
-}
-function he(e) {
-  let t, n, l, o, r, s = k(
-    /*COLUMNS*/
-    e[2]
-  ), f = [];
-  for (let a = 0; a < s.length; a += 1)
-    f[a] = I(D(e, s, a));
-  let u = k(
+  l[16] = t[n];
+  const r = (
     /*rows*/
-    e[0]
-  ), c = [];
-  for (let a = 0; a < u.length; a += 1)
-    c[a] = U(P(e, u, a));
-  return {
-    c() {
-      t = _("table"), n = _("thead"), l = _("tr");
-      for (let a = 0; a < f.length; a += 1)
-        f[a].c();
-      o = W(), r = _("tbody");
-      for (let a = 0; a < c.length; a += 1)
-        c[a].c();
-      w(t, "class", "data-table lines-table-svelte svelte-u16cro");
-    },
-    m(a, d) {
-      v(a, t, d), y(t, n), y(n, l);
-      for (let i = 0; i < f.length; i += 1)
-        f[i] && f[i].m(l, null);
-      y(t, o), y(t, r);
-      for (let i = 0; i < c.length; i += 1)
-        c[i] && c[i].m(r, null);
-    },
-    p(a, d) {
-      if (d & /*COLUMNS*/
-      4) {
-        s = k(
-          /*COLUMNS*/
-          a[2]
-        );
-        let i;
-        for (i = 0; i < s.length; i += 1) {
-          const h = D(a, s, i);
-          f[i] ? f[i].p(h, d) : (f[i] = I(h), f[i].c(), f[i].m(l, null));
-        }
-        for (; i < f.length; i += 1)
-          f[i].d(1);
-        f.length = s.length;
-      }
-      if (d & /*rows, COLUMNS, DAY_NAMES, cellValue*/
-      15) {
-        u = k(
-          /*rows*/
-          a[0]
-        );
-        let i;
-        for (i = 0; i < u.length; i += 1) {
-          const h = P(a, u, i);
-          c[i] ? c[i].p(h, d) : (c[i] = U(h), c[i].c(), c[i].m(r, null));
-        }
-        for (; i < c.length; i += 1)
-          c[i].d(1);
-        c.length = u.length;
-      }
-    },
-    d(a) {
-      a && b(t), x(f, a), x(c, a);
-    }
-  };
+    l[0][
+      /*virtualRow*/
+      l[16].index
+    ]
+  );
+  return l[17] = r, l;
 }
-function I(e) {
+function rt(e, t, n) {
+  const l = e.slice();
+  return l[20] = t[n], l;
+}
+function Xt(e) {
   let t;
   return {
     c() {
-      t = _("th"), t.textContent = `${/*col*/
-      e[7].label}`;
+      t = a("div"), t.textContent = "Classic Lines mode active", s(t, "class", "muted");
     },
     m(n, l) {
-      v(n, t, l);
+      ce(n, t, l);
     },
-    p,
+    p: ae,
     d(n) {
-      n && b(t);
+      n && se(t);
     }
   };
 }
-function F(e) {
-  let t, n = (
-    /*cellValue*/
-    e[3](
-      /*row*/
-      e[4],
-      /*col*/
-      e[7].key
-    ) + ""
-  ), l;
+function qt(e) {
+  let t, n, l, r, o, _, m, b = Me(
+    /*virtualizer*/
+    e[3]?.getVirtualItems() ?? []
+  ), d = [];
+  for (let v = 0; v < b.length; v += 1)
+    d[v] = ut(st(e, b, v));
   return {
     c() {
-      t = _("td"), l = H(n), w(t, "class", Z(
-        /*DAY_NAMES*/
-        e[1].includes(
-          /*col*/
-          e[7].key
-        ) ? "day-cell" : ""
-      ) + " svelte-u16cro");
+      t = a("div"), n = a("table"), l = a("thead"), l.innerHTML = '<tr><th class="svelte-1ord1h3">Team</th> <th class="svelte-1ord1h3">Line</th> <th class="svelte-1ord1h3">Shift</th> <th class="svelte-1ord1h3">Start</th> <th class="svelte-1ord1h3">End</th> <th class="svelte-1ord1h3">Position</th> <th class="svelte-1ord1h3">Emp</th> <th class="svelte-1ord1h3">Sex</th> <th class="svelte-1ord1h3">Function</th> <th class="svelte-1ord1h3">RDOs</th> <th class="svelte-1ord1h3">Paid</th> <th class="svelte-1ord1h3">Sun</th> <th class="svelte-1ord1h3">Mon</th> <th class="svelte-1ord1h3">Tue</th> <th class="svelte-1ord1h3">Wed</th> <th class="svelte-1ord1h3">Thu</th> <th class="svelte-1ord1h3">Fri</th> <th class="svelte-1ord1h3">Sat</th> <th class="svelte-1ord1h3">Hours</th></tr>', r = C(), o = a("tbody");
+      for (let v = 0; v < d.length; v += 1)
+        d[v].c();
+      _ = C(), m = a("div"), w(o, "position", "relative"), w(o, "height", "0"), w(
+        m,
+        "height",
+        /*virtualizer*/
+        (e[3]?.getTotalSize() ?? 0) + "px"
+      ), s(n, "class", "data-table lines-editable svelte-1ord1h3"), w(n, "width", "max-content"), w(n, "min-width", "1100px"), s(t, "class", "lines-virtual-root svelte-1ord1h3"), w(t, "height", "100%"), w(t, "overflow", "auto"), w(t, "position", "relative");
     },
-    m(o, r) {
-      v(o, t, r), y(t, l);
+    m(v, u) {
+      ce(v, t, u), i(t, n), i(n, l), i(n, r), i(n, o);
+      for (let h = 0; h < d.length; h += 1)
+        d[h] && d[h].m(o, null);
+      i(n, _), i(n, m), e[14](t);
     },
-    p(o, r) {
-      r & /*rows*/
-      1 && n !== (n = /*cellValue*/
-      o[3](
-        /*row*/
-        o[4],
-        /*col*/
-        o[7].key
-      ) + "") && ee(l, n);
-    },
-    d(o) {
-      o && b(t);
-    }
-  };
-}
-function U(e) {
-  let t, n, l, o = k(
-    /*COLUMNS*/
-    e[2]
-  ), r = [];
-  for (let s = 0; s < o.length; s += 1)
-    r[s] = F(B(e, o, s));
-  return {
-    c() {
-      t = _("tr");
-      for (let s = 0; s < r.length; s += 1)
-        r[s].c();
-      n = W(), w(t, "data-line-row", l = /*row*/
-      e[4].line ?? /*row*/
-      e[4].id);
-    },
-    m(s, f) {
-      v(s, t, f);
-      for (let u = 0; u < r.length; u += 1)
-        r[u] && r[u].m(t, null);
-      y(t, n);
-    },
-    p(s, f) {
-      if (f & /*DAY_NAMES, COLUMNS, cellValue, rows*/
-      15) {
-        o = k(
-          /*COLUMNS*/
-          s[2]
+    p(v, u) {
+      if (u & /*virtualizer, rows, getFunctionClass, handleDayToggle, getRdoText, handleInlineEdit, getShiftLabel*/
+      9) {
+        b = Me(
+          /*virtualizer*/
+          v[3]?.getVirtualItems() ?? []
         );
-        let u;
-        for (u = 0; u < o.length; u += 1) {
-          const c = B(s, o, u);
-          r[u] ? r[u].p(c, f) : (r[u] = F(c), r[u].c(), r[u].m(t, n));
+        let h;
+        for (h = 0; h < b.length; h += 1) {
+          const $ = st(v, b, h);
+          d[h] ? d[h].p($, u) : (d[h] = ut($), d[h].c(), d[h].m(o, null));
         }
-        for (; u < r.length; u += 1)
-          r[u].d(1);
-        r.length = o.length;
+        for (; h < d.length; h += 1)
+          d[h].d(1);
+        d.length = b.length;
       }
-      f & /*rows*/
-      1 && l !== (l = /*row*/
-      s[4].line ?? /*row*/
-      s[4].id) && w(t, "data-line-row", l);
+      u & /*virtualizer*/
+      8 && w(
+        m,
+        "height",
+        /*virtualizer*/
+        (v[3]?.getTotalSize() ?? 0) + "px"
+      );
     },
-    d(s) {
-      s && b(t), x(r, s);
+    d(v) {
+      v && se(t), pt(d, v), e[14](null);
     }
   };
 }
-function pe(e) {
-  let t;
-  function n(r, s) {
+function dt(e) {
+  let t, n = (
+    /*row*/
+    (e[17]?.days?.find(b)?.label || "RDO") + ""
+  ), l, r, o, _, m;
+  function b(...u) {
     return (
-      /*rows*/
-      r[0] && /*rows*/
-      r[0].length ? he : _e
+      /*func*/
+      e[11](
+        /*day*/
+        e[20],
+        ...u
+      )
     );
   }
-  let l = n(e), o = l(e);
+  function d(...u) {
+    return (
+      /*func_1*/
+      e[12](
+        /*day*/
+        e[20],
+        ...u
+      )
+    );
+  }
+  function v() {
+    return (
+      /*click_handler*/
+      e[13](
+        /*row*/
+        e[17],
+        /*day*/
+        e[20]
+      )
+    );
+  }
   return {
     c() {
-      t = _("div"), o.c(), w(t, "class", "lines-table-root svelte-u16cro");
+      t = a("td"), l = N(n), s(t, "class", r = "cell-toggle " + _t(
+        /*row*/
+        e[17]?.days?.find(d)?.duty
+      ) + " svelte-1ord1h3"), s(t, "data-line-id", o = /*row*/
+      e[17]?.id), s(
+        t,
+        "data-day",
+        /*day*/
+        e[20]
+      );
     },
-    m(r, s) {
-      v(r, t, s), o.m(t, null);
+    m(u, h) {
+      ce(u, t, h), i(t, l), _ || (m = R(t, "click", v), _ = !0);
     },
-    p(r, [s]) {
-      l === (l = n(r)) && o ? o.p(r, s) : (o.d(1), o = l(r), o && (o.c(), o.m(t, null)));
+    p(u, h) {
+      e = u, h & /*rows, virtualizer*/
+      9 && n !== (n = /*row*/
+      (e[17]?.days?.find(b)?.label || "RDO") + "") && le(l, n), h & /*rows, virtualizer*/
+      9 && r !== (r = "cell-toggle " + _t(
+        /*row*/
+        e[17]?.days?.find(d)?.duty
+      ) + " svelte-1ord1h3") && s(t, "class", r), h & /*rows, virtualizer*/
+      9 && o !== (o = /*row*/
+      e[17]?.id) && s(t, "data-line-id", o);
     },
-    i: p,
-    o: p,
-    d(r) {
-      r && b(t), o.d();
+    d(u) {
+      u && se(t), _ = !1, m();
     }
   };
 }
-function V(e) {
-  return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-}
-function be(e, t, n) {
-  let { rows: l = [] } = t;
-  const o = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], r = [
-    { key: "team", label: "Team" },
-    { key: "line", label: "Line" },
-    { key: "shift", label: "Shift" },
-    { key: "start", label: "Start" },
-    { key: "end", label: "End" },
-    { key: "position", label: "Position" },
-    { key: "emp", label: "Emp" },
-    { key: "sex", label: "Sex" },
-    { key: "function", label: "Function" },
-    { key: "rdos", label: "RDOs" },
-    { key: "paid", label: "Paid" },
-    ...o.map((f) => ({ key: f, label: f })),
-    { key: "hours", label: "Hours" }
-  ];
-  function s(f, u) {
-    if (o.includes(u)) {
-      const c = o.indexOf(u);
-      return V(f.days?.[c] ?? "RDO");
+function ut(e) {
+  let t, n, l, r, o, _, m, b, d, v, u, h, $, D, j, T, F, M, f, c, O, z, fe, qe, _e, he = Fe(
+    /*row*/
+    e[17]?.shiftId,
+    /*rows*/
+    e[0].shiftOptions
+  ) + "", Pe, Ke, ve, pe = Fe(
+    /*row*/
+    e[17]?.shiftId,
+    /*rows*/
+    e[0].shiftOptions
+  ) + "", Re, Je, ge, L, H, B, V, W, me, Qe, be, E, G, U, X, q, K, Se, Ye, ye, A, J, Q, Y, we, Ze, Te, k, Z, x, ee, te, Ce, xe, $e, Ee = ft(
+    /*row*/
+    e[17]?.rdoDays,
+    /*row*/
+    e[17]?.rdoHard
+  ) + "", De, et, Oe, Le = (
+    /*row*/
+    e[17]?.paid + ""
+  ), Ne, tt, je, ke, Ie = (
+    /*row*/
+    e[17]?.hours + ""
+  ), ze, nt, Ae, He, lt;
+  function bt(...p) {
+    return (
+      /*change_handler*/
+      e[4](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  function St(...p) {
+    return (
+      /*input_handler*/
+      e[5](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  function yt(...p) {
+    return (
+      /*change_handler_1*/
+      e[6](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  function wt(...p) {
+    return (
+      /*change_handler_2*/
+      e[7](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  function Tt(...p) {
+    return (
+      /*change_handler_3*/
+      e[8](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  function Ct(...p) {
+    return (
+      /*change_handler_4*/
+      e[9](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  function $t(...p) {
+    return (
+      /*change_handler_5*/
+      e[10](
+        /*row*/
+        e[17],
+        ...p
+      )
+    );
+  }
+  let Be = Me(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]), I = [];
+  for (let p = 0; p < 7; p += 1)
+    I[p] = dt(rt(e, Be, p));
+  return {
+    c() {
+      t = a("tr"), n = a("td"), l = a("select"), r = a("option"), r.textContent = "—", o = a("option"), o.textContent = "T1", _ = a("option"), _.textContent = "T2", m = a("option"), m.textContent = "T3", d = C(), v = a("td"), u = a("input"), D = C(), j = a("td"), T = a("select"), F = a("option"), F.textContent = "—", M = a("option"), M.textContent = "S1 (03:30–12:00)", f = a("option"), f.textContent = "S2 (04:00–12:30)", c = a("option"), c.textContent = "S3 (12:00–20:30)", O = a("option"), O.textContent = "S4 (14:30–23:00)", z = a("option"), z.textContent = "S5 (10:30–20:00)", qe = C(), _e = a("td"), Pe = N(he), Ke = C(), ve = a("td"), Re = N(pe), Je = C(), ge = a("td"), L = a("select"), H = a("option"), H.textContent = "—", B = a("option"), B.textContent = "TSO", V = a("option"), V.textContent = "LTSO", W = a("option"), W.textContent = "STSO", Qe = C(), be = a("td"), E = a("select"), G = a("option"), G.textContent = "—", U = a("option"), U.textContent = "FT", X = a("option"), X.textContent = "PT", q = a("option"), q.textContent = "LTSO", K = a("option"), K.textContent = "STSO", Ye = C(), ye = a("td"), A = a("select"), J = a("option"), J.textContent = "—", Q = a("option"), Q.textContent = "M", Y = a("option"), Y.textContent = "F", Ze = C(), Te = a("td"), k = a("select"), Z = a("option"), Z.textContent = "—", x = a("option"), x.textContent = "DFO", ee = a("option"), ee.textContent = "BAG", te = a("option"), te.textContent = "PAX", xe = C(), $e = a("td"), De = N(Ee), et = C(), Oe = a("td"), Ne = N(Le), tt = C();
+      for (let p = 0; p < 7; p += 1)
+        I[p].c();
+      je = C(), ke = a("td"), ze = N(Ie), nt = C(), r.__value = "", g(r, r.__value), o.__value = "T1", g(o, o.__value), _.__value = "T2", g(_, _.__value), m.__value = "T3", g(m, m.__value), s(l, "class", "line-edit svelte-1ord1h3"), s(l, "data-field", "team"), s(l, "data-line-id", b = /*row*/
+      e[17]?.id), s(n, "class", "svelte-1ord1h3"), s(u, "type", "text"), s(u, "class", "line-edit line-code-input svelte-1ord1h3"), s(u, "data-field", "lineCode"), s(u, "data-line-id", h = /*row*/
+      e[17]?.id), u.value = $ = /*row*/
+      e[17]?.lineCode, s(v, "class", "svelte-1ord1h3"), F.__value = "", g(F, F.__value), M.__value = "S1", g(M, M.__value), f.__value = "S2", g(f, f.__value), c.__value = "S3", g(c, c.__value), O.__value = "S4", g(O, O.__value), z.__value = "S5", g(z, z.__value), s(T, "class", "line-edit svelte-1ord1h3"), s(T, "data-field", "shift"), s(T, "data-line-id", fe = /*row*/
+      e[17]?.id), s(j, "class", "svelte-1ord1h3"), s(_e, "class", "svelte-1ord1h3"), s(ve, "class", "svelte-1ord1h3"), H.__value = "", g(H, H.__value), B.__value = "TSO", g(B, B.__value), V.__value = "LTSO", g(V, V.__value), W.__value = "STSO", g(W, W.__value), s(L, "class", "line-edit svelte-1ord1h3"), s(L, "data-field", "position"), s(L, "data-line-id", me = /*row*/
+      e[17]?.id), s(ge, "class", "svelte-1ord1h3"), G.__value = "", g(G, G.__value), U.__value = "FT", g(U, U.__value), X.__value = "PT", g(X, X.__value), q.__value = "LTSO", g(q, q.__value), K.__value = "STSO", g(K, K.__value), s(E, "class", "line-edit svelte-1ord1h3"), s(E, "data-field", "emp"), s(E, "data-line-id", Se = /*row*/
+      e[17]?.id), s(be, "class", "svelte-1ord1h3"), J.__value = "", g(J, J.__value), Q.__value = "M", g(Q, Q.__value), Y.__value = "F", g(Y, Y.__value), s(A, "class", "line-edit svelte-1ord1h3"), s(A, "data-field", "sex"), s(A, "data-line-id", we = /*row*/
+      e[17]?.id), s(ye, "class", "svelte-1ord1h3"), Z.__value = "", g(Z, Z.__value), x.__value = "DFO", g(x, x.__value), ee.__value = "BAG", g(ee, ee.__value), te.__value = "PAX", g(te, te.__value), s(k, "class", "line-edit svelte-1ord1h3"), s(k, "data-field", "function"), s(k, "data-line-id", Ce = /*row*/
+      e[17]?.id), s(Te, "class", "svelte-1ord1h3"), s($e, "class", "line-rdo-cell svelte-1ord1h3"), s(Oe, "class", "svelte-1ord1h3"), s(ke, "class", "line-hours svelte-1ord1h3"), w(t, "position", "absolute"), w(
+        t,
+        "top",
+        /*virtualRow*/
+        e[16].start + "px"
+      ), w(t, "left", "0"), w(t, "width", "100%"), w(
+        t,
+        "height",
+        /*virtualRow*/
+        e[16].size + "px"
+      ), s(t, "data-line-row", Ae = /*row*/
+      e[17]?.id);
+    },
+    m(p, S) {
+      ce(p, t, S), i(t, n), i(n, l), i(l, r), i(l, o), i(l, _), i(l, m), i(t, d), i(t, v), i(v, u), i(t, D), i(t, j), i(j, T), i(T, F), i(T, M), i(T, f), i(T, c), i(T, O), i(T, z), i(t, qe), i(t, _e), i(_e, Pe), i(t, Ke), i(t, ve), i(ve, Re), i(t, Je), i(t, ge), i(ge, L), i(L, H), i(L, B), i(L, V), i(L, W), i(t, Qe), i(t, be), i(be, E), i(E, G), i(E, U), i(E, X), i(E, q), i(E, K), i(t, Ye), i(t, ye), i(ye, A), i(A, J), i(A, Q), i(A, Y), i(t, Ze), i(t, Te), i(Te, k), i(k, Z), i(k, x), i(k, ee), i(k, te), i(t, xe), i(t, $e), i($e, De), i(t, et), i(t, Oe), i(Oe, Ne), i(t, tt);
+      for (let y = 0; y < 7; y += 1)
+        I[y] && I[y].m(t, null);
+      i(t, je), i(t, ke), i(ke, ze), i(t, nt), He || (lt = [
+        R(l, "change", bt),
+        R(u, "input", St),
+        R(T, "change", yt),
+        R(L, "change", wt),
+        R(E, "change", Tt),
+        R(A, "change", Ct),
+        R(k, "change", $t)
+      ], He = !0);
+    },
+    p(p, S) {
+      if (e = p, S & /*rows, virtualizer*/
+      9 && b !== (b = /*row*/
+      e[17]?.id) && s(l, "data-line-id", b), S & /*rows, virtualizer*/
+      9 && h !== (h = /*row*/
+      e[17]?.id) && s(u, "data-line-id", h), S & /*rows, virtualizer*/
+      9 && $ !== ($ = /*row*/
+      e[17]?.lineCode) && u.value !== $ && (u.value = $), S & /*rows, virtualizer*/
+      9 && fe !== (fe = /*row*/
+      e[17]?.id) && s(T, "data-line-id", fe), S & /*rows, virtualizer*/
+      9 && he !== (he = Fe(
+        /*row*/
+        e[17]?.shiftId,
+        /*rows*/
+        e[0].shiftOptions
+      ) + "") && le(Pe, he), S & /*rows, virtualizer*/
+      9 && pe !== (pe = Fe(
+        /*row*/
+        e[17]?.shiftId,
+        /*rows*/
+        e[0].shiftOptions
+      ) + "") && le(Re, pe), S & /*rows, virtualizer*/
+      9 && me !== (me = /*row*/
+      e[17]?.id) && s(L, "data-line-id", me), S & /*rows, virtualizer*/
+      9 && Se !== (Se = /*row*/
+      e[17]?.id) && s(E, "data-line-id", Se), S & /*rows, virtualizer*/
+      9 && we !== (we = /*row*/
+      e[17]?.id) && s(A, "data-line-id", we), S & /*rows, virtualizer*/
+      9 && Ce !== (Ce = /*row*/
+      e[17]?.id) && s(k, "data-line-id", Ce), S & /*rows, virtualizer*/
+      9 && Ee !== (Ee = ft(
+        /*row*/
+        e[17]?.rdoDays,
+        /*row*/
+        e[17]?.rdoHard
+      ) + "") && le(De, Ee), S & /*rows, virtualizer*/
+      9 && Le !== (Le = /*row*/
+      e[17]?.paid + "") && le(Ne, Le), S & /*getFunctionClass, rows, virtualizer, handleDayToggle*/
+      9) {
+        Be = Me(["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]);
+        let y;
+        for (y = 0; y < 7; y += 1) {
+          const it = rt(e, Be, y);
+          I[y] ? I[y].p(it, S) : (I[y] = dt(it), I[y].c(), I[y].m(t, je));
+        }
+        for (; y < 7; y += 1)
+          I[y].d(1);
+      }
+      S & /*rows, virtualizer*/
+      9 && Ie !== (Ie = /*row*/
+      e[17]?.hours + "") && le(ze, Ie), S & /*virtualizer*/
+      8 && w(
+        t,
+        "top",
+        /*virtualRow*/
+        e[16].start + "px"
+      ), S & /*virtualizer*/
+      8 && w(
+        t,
+        "height",
+        /*virtualRow*/
+        e[16].size + "px"
+      ), S & /*rows, virtualizer*/
+      9 && Ae !== (Ae = /*row*/
+      e[17]?.id) && s(t, "data-line-row", Ae);
+    },
+    d(p) {
+      p && se(t), pt(I, p), He = !1, ue(lt);
     }
-    return V(f[u] ?? "");
+  };
+}
+function Kt(e) {
+  let t;
+  function n(o, _) {
+    return (
+      /*mode*/
+      o[1] === "svelte" ? qt : Xt
+    );
+  }
+  let l = n(e), r = l(e);
+  return {
+    c() {
+      t = a("div"), r.c(), s(t, "class", "lines-table-root svelte-1ord1h3");
+    },
+    m(o, _) {
+      ce(o, t, _), r.m(t, null);
+    },
+    p(o, [_]) {
+      l === (l = n(o)) && r ? r.p(o, _) : (r.d(1), r = l(o), r && (r.c(), r.m(t, null)));
+    },
+    i: ae,
+    o: ae,
+    d(o) {
+      o && se(t), r.d();
+    }
+  };
+}
+let Jt = 42;
+function mt(e, t) {
+  const n = new CustomEvent(e, { detail: t, bubbles: !0, composed: !0 });
+  window.dispatchEvent(n);
+}
+function P(e) {
+  mt("lines:inline-edit-response", e);
+}
+function ct(e) {
+  mt("lines:day-toggle-response", e);
+}
+function ft(e, t) {
+  const n = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"], l = (e || []).map(Number).filter((o) => Number.isInteger(o) && o >= 0 && o <= 6), r = l.length ? l.map((o) => n[o] || o).join(",") : "—";
+  return t ? r + " (hard)" : r;
+}
+function Fe(e, t) {
+  const n = t?.find((l) => l.id === e);
+  return n && n.start && n.end ? n.start + "–" + n.end : n && n.start ? n.start : "";
+}
+function _t(e) {
+  return e === "BAG" ? "cell-function-duty cell-bag" : e === "DFO" ? "cell-function-duty cell-dfo" : e === "PAX" ? "cell-function-duty cell-pax" : "";
+}
+function Qt(e, t, n) {
+  let { rows: l = [] } = t, { mode: r = "svelte" } = t, o, _;
+  Mt(() => {
+    if (r !== "svelte") return;
+    n(3, _ = Lt({
+      count: l.length,
+      getScrollElement: () => o,
+      estimateSize: () => Jt,
+      overscan: 5,
+      getItemKey: (c) => l[c]?.id ?? c,
+      onChange: (c, O) => {
+      }
+      // Optional: handle scroll position changes
+    }));
+    const f = {
+      "lines:inline-edit": (c) => P(c.detail),
+      "lines:day-toggle": (c) => ct(c.detail),
+      "lines:filter-change": () => m(),
+      "lines:sort-change": () => m(),
+      "lines:coverage-refresh": () => m(),
+      "lines:request-render": () => m()
+    };
+    return Object.entries(f).forEach(([c, O]) => {
+      window.addEventListener(c, O);
+    }), () => {
+      Object.entries(f).forEach(([c, O]) => {
+        window.removeEventListener(c, O);
+      });
+    };
+  });
+  function m() {
+    r === "svelte" && _?.setOptions({ count: l.length });
+  }
+  const b = (f, c) => P({
+    lineId: f?.id,
+    field: "team",
+    value: c.target.value
+  }), d = (f, c) => P({
+    lineId: f?.id,
+    field: "lineCode",
+    value: c.target.value
+  }), v = (f, c) => P({
+    lineId: f?.id,
+    field: "shift",
+    value: c.target.value
+  }), u = (f, c) => P({
+    lineId: f?.id,
+    field: "position",
+    value: c.target.value
+  }), h = (f, c) => P({
+    lineId: f?.id,
+    field: "emp",
+    value: c.target.value
+  }), $ = (f, c) => P({
+    lineId: f?.id,
+    field: "sex",
+    value: c.target.value
+  }), D = (f, c) => P({
+    lineId: f?.id,
+    field: "function",
+    value: c.target.value
+  }), j = (f, c) => c.dayIndex === f, T = (f, c) => c.dayIndex === f, F = (f, c) => ct({ lineId: f?.id, day: c, next: "RDO" });
+  function M(f) {
+    Ge[f ? "unshift" : "push"](() => {
+      o = f, n(2, o);
+    });
   }
   return e.$$set = (f) => {
-    "rows" in f && n(0, l = f.rows);
-  }, [l, o, r, s];
+    "rows" in f && n(0, l = f.rows), "mode" in f && n(1, r = f.mode);
+  }, [
+    l,
+    r,
+    o,
+    _,
+    b,
+    d,
+    v,
+    u,
+    h,
+    $,
+    D,
+    j,
+    T,
+    F,
+    M
+  ];
 }
-class ge extends ae {
+class Yt extends Gt {
   constructor(t) {
-    super(), fe(this, t, be, pe, Q, { rows: 0 });
+    super(), Wt(this, t, Qt, Kt, kt, { rows: 0, mode: 1 });
   }
 }
-function ye(e) {
+function en(e) {
   const t = e || window.Scheduler;
   if (!t) return;
   const n = document.getElementById("lines-table-root");
@@ -483,20 +737,37 @@ function ye(e) {
     console.warn("lines-table: #lines-table-root not found");
     return;
   }
+  if (t.__USE_SVELTE_LINES === !1 || !t.__USE_SVELTE_LINES) {
+    n.innerHTML = "", n.style.display = "none", t.renderLines && t.renderLines();
+    return;
+  }
   if (n._linesTableMounted) return;
   n._linesTableMounted = !0;
   const l = () => {
-    const o = typeof t.getLineRowModels == "function" ? t.getLineRowModels() : [], r = Array.isArray(o) ? o.slice(0, 50) : [];
-    n._linesTableApp && (n._linesTableApp.$destroy(), n._linesTableApp = null), n._linesTableApp = new ge({
-      target: n,
-      props: { rows: r }
-    });
+    try {
+      const o = typeof t.getLineRowModels == "function" ? t.getLineRowModels() : [], _ = n._linesTableApp;
+      _ ? (_.rows = Array.isArray(o) ? o : [], _.$$ && _.$$[Symbol.for("$bond")] && _.$$[Symbol.for("$bond")]()) : n._linesTableApp = new Yt({
+        target: n,
+        props: { rows: Array.isArray(o) ? o : [] }
+      });
+    } catch (o) {
+      console.error("lines-table: refresh failed", o), t.renderLines && t.renderLines();
+    }
   };
   l(), document.addEventListener("click", (o) => {
-    const r = o.target.closest?.(".tab-btn");
-    r && r.dataset.tab === "lines" && l();
-  });
+    const _ = o.target.closest?.(".tab-btn");
+    _ && _.dataset.tab === "lines" && l();
+  }), Object.entries({
+    "lines:request-render": l,
+    "lines:filter-change": l,
+    "lines:sort-change": l,
+    "lines:coverage-refresh": l
+  }).forEach(([o, _]) => {
+    n.addEventListener(o, _);
+  }), n.refresh = l, n.setRows = (o) => {
+    n._linesTableApp.rows = o, n._linesTableApp.$$ && n._linesTableApp.$$[Symbol.for("$bond")] && n._linesTableApp.$$[Symbol.for("$bond")]();
+  };
 }
 export {
-  ye as initLinesTable
+  en as initLinesTable
 };

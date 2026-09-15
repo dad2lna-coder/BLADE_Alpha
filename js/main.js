@@ -117,7 +117,20 @@ window.Scheduler = window.Scheduler || {};
     safeInit("shiftDayTimes", S.initShiftDayTimes);
     safeInit("functionCoverage", S.initFunctionCoverage);
     safeInit("reports", S.initReports);
-    safeInit("linesUI", S.bindLinesUI);
+    safeInit("linesUI", function () {
+  // Feature flag: S.__USE_SVELTE_LINES controls whether Svelte virtualized table is active.
+  // Read from localStorage or URL param; default false until validated.
+  var flag = localStorage.getItem('blade:lines:svelte');
+  if (flag === '1') S.__USE_SVELTE_LINES = true;
+  else if (location.search.indexOf('?lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
+  // If flag set to '0' or 'classic', keep default false.
+  if (S.__USE_SVELTE_LINES) {
+    console.log('BLADE: Svelte Lines table enabled via flag/localStorage/URL');
+  } else {
+    console.log('BLADE: Classic Lines table active (Svelte flag off)');
+  }
+  S.bindLinesUI();
+});
     safeInit("capacity", S.initCapacity);
 
     function onNewTeam(e) {
