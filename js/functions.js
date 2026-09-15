@@ -416,19 +416,23 @@ window.Scheduler = window.Scheduler || {};
           if (need <= 0) return;
           var slots = bandSlots(band);
           var counts = bagSlotCounts(d, band, role);
-          var have = slots.length ? counts[0] : 0;
-          for (var i = 1; i < counts.length; i++) if (counts[i] < have) have = counts[i];
-          var short = need - have;
-          if (short <= 0) return;
-          while (short > 0) {
+          // Track shortfall per slot independently (never average/minimize to one slot)
+          var slotShort = [];
+          for (var i = 0; i < slots.length; i++) slotShort.push(need - counts[i]);
+          var totalShort = slotShort.reduce(function (a, b) { return a + b; }, 0);
+          if (totalShort <= 0) return;
+          while (totalShort > 0) {
             var cands = (S.state.lines || []).filter(function (l) {
               if (!ensureEligible(l).dfo) return false;
               if (S.lineRoleKey(l) !== role) return false;
               if (!worksDay(l, d) || getDuty(l.id, d) === "BAG") return false;
+              // Only count as candidate if they cover at least one slot still below floor
+              var coversShort = false;
               for (var i = 0; i < slots.length; i++) {
-                if (S.lineCoversSlot(l, d, slots[i]) && counts[i] < need) return true;
+                if (S.lineCoversSlot(l, d, slots[i]) && counts[i] < need) { coversShort = true; break; }
               }
-              return false;
+              if (!coversShort) return false;
+              return true;
             }).sort(function (a, b) {
               var ca = bagFillCount[String(a.id)] || 0, cb = bagFillCount[String(b.id)] || 0;
               if (ca !== cb) return ca - cb;
@@ -438,12 +442,14 @@ window.Scheduler = window.Scheduler || {};
             var chosen = cands[0];
             setDuty(chosen.id, d, "BAG");
             bagFillCount[String(chosen.id)] = (bagFillCount[String(chosen.id)] || 0) + 1;
+            // Recalculate slot counts after adding chosen person
             for (var i = 0; i < slots.length; i++) {
-              if (S.lineCoversSlot(chosen, d, slots[i])) counts[i]++;
+              if (S.lineCoversSlot(chosen, d, slots[i])) {
+                counts[i]++;
+                slotShort[i]--;
+                totalShort--;
+              }
             }
-            have = slots.length ? counts[0] : 0;
-            for (var i = 1; i < counts.length; i++) if (counts[i] < have) have = counts[i];
-            short = need - have;
           }
         });
       });
