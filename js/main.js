@@ -118,16 +118,20 @@ window.Scheduler = window.Scheduler || {};
     safeInit("functionCoverage", S.initFunctionCoverage);
     safeInit("reports", S.initReports);
     safeInit("linesUI", function () {
-  // Feature flag: S.__USE_SVELTE_LINES controls whether Svelte virtualized table is active.
-  // Read from localStorage or URL param; default false until validated.
+  // Svelte Lines table is default-on. Override to classic via:
+  //   localStorage.setItem('blade:lines:svelte', '0')
+  //   ?lines=classic
+  // Re-enable with '1' or 'svelte'.
   var flag = localStorage.getItem('blade:lines:svelte');
-  if (flag === '1') S.__USE_SVELTE_LINES = true;
-  else if (location.search.indexOf('?lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
-  // If flag set to '0' or 'classic', keep default false.
+  if (flag === '0' || flag === 'classic') S.__USE_SVELTE_LINES = false;
+  else if (flag === '1' || flag === 'svelte') S.__USE_SVELTE_LINES = true;
+  else if (location.search.indexOf('lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
+  else if (location.search.indexOf('lines=classic') !== -1) S.__USE_SVELTE_LINES = false;
+  else S.__USE_SVELTE_LINES = true; // default-on
   if (S.__USE_SVELTE_LINES) {
-    console.log('BLADE: Svelte Lines table enabled via flag/localStorage/URL');
+    console.log('BLADE: Svelte Lines table enabled (default-on)');
   } else {
-    console.log('BLADE: Classic Lines table active (Svelte flag off)');
+    console.log('BLADE: Classic Lines table active (flag override)');
   }
   S.bindLinesUI();
 });

@@ -2,7 +2,9 @@
   "team-builder": {
     "entry": "modules/team-builder/index.js",
     "init": "initTeamBuilder",
-    "css": ["modules/team-builder/styles/team-builder.css"],
+    "css": [
+      "modules/team-builder/styles/team-builder.css"
+    ],
     "panel": "modules/team-builder/panel.html",
     "docks": "modules/team-builder/docks.html",
     "mount": "#tab-teams"
@@ -10,7 +12,9 @@
   "setup-panel": {
     "entry": "modules/setup-panel/index.js",
     "init": "initSetupPanel",
-    "css": ["modules/setup-panel/styles/setup-panel.css"],
+    "css": [
+      "modules/setup-panel/styles/setup-panel.css"
+    ],
     "panel": "modules/setup-panel/panel.html",
     "mount": "#tab-setup"
   },
@@ -19,6 +23,9 @@
     "init": "initLinesTable",
     "panel": "modules/lines-table/panel.html",
     "mount": "#lines-table-root",
-    "docks": null
+    "docks": null,
+    "css": [
+      "modules/lines-table/dist/lines-table.css"
+    ]
   }
 }

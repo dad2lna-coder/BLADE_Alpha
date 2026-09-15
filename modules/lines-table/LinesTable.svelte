@@ -1,9 +1,10 @@
 <script>
-  import { createVirtualizer } from 'https://esm.sh/@tanstack/svelte-virtual@3.13.39?deps=svelte@4.2.19&target=es2022';
+  import { createVirtualizer } from '@tanstack/svelte-virtual';
   import { onMount, onDestroy } from 'svelte';
 
   export let rows = [];
   export let mode = 'svelte'; // 'svelte' | 'classic'
+  export let shiftOptions = [];
 
   let virtualRoot;
   let virtualizer;
@@ -72,17 +73,17 @@
     return rdoHard ? text + ' (hard)' : text;
   }
 
-  function getShiftLabel(shiftId, shifts) {
-    const shift = shifts?.find(s => s.id === shiftId);
+  function getShiftLabel(shiftId) {
+    const shift = shiftOptions?.find(s => s.id === shiftId);
     if (shift && shift.start && shift.end) return shift.start + '–' + shift.end;
     if (shift && shift.start) return shift.start;
     return '';
   }
 
-  function getFunctionClass(func) {
-    if (func === 'BAG') return 'cell-function-duty cell-bag';
-    if (func === 'DFO') return 'cell-function-duty cell-dfo';
-    if (func === 'PAX') return 'cell-function-duty cell-pax';
+  function getFunctionClass(duty) {
+    if (duty === 'BAG') return 'cell-function-duty cell-bag';
+    if (duty === 'DFO') return 'cell-function-duty cell-dfo';
+    if (duty === 'PAX') return 'cell-function-duty cell-pax';
     return '';
   }
 </script>
@@ -172,8 +173,8 @@
                 <option value="S5">S5 (10:30–20:00)</option>
               </select></td>
 
-              <td>{getShiftLabel(row?.shiftId, rows.shiftOptions)}</td>
-              <td>{getShiftLabel(row?.shiftId, rows.shiftOptions)}</td>
+              <td>{getShiftLabel(row?.shiftId)}</td>
+              <td>{getShiftLabel(row?.shiftId)}</td>
 
               <td><select
                 class="line-edit"

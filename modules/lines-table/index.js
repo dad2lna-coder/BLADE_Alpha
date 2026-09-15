@@ -51,7 +51,10 @@ export function initLinesTable(scheduler) {
         // New mount
         root._linesTableApp = new LinesTable({
           target: root,
-          props: { rows: Array.isArray(models) ? models : [] }
+          props: {
+            rows: Array.isArray(models) ? models : [],
+            shiftOptions: Array.isArray(S.state.shifts) ? S.state.shifts : []
+          }
         });
       }
     } catch (err) {
