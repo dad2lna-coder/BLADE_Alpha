@@ -43,6 +43,22 @@ function patchBagViewRoles(S) {
   };
 }
 
+function patchImportCoverage(S) {
+  if (!S || S._fcImportPatch || typeof S.applyPayload !== "function") return;
+  S._fcImportPatch = true;
+  var orig = S.applyPayload;
+  S.applyPayload = function (payload) {
+    orig.call(S, payload);
+    var cfg = payload && (payload.config || payload.legacy || payload);
+    var incoming = cfg && cfg.functionCoverage;
+    if (incoming && typeof incoming === "object" && S.state) {
+      S.state.functionCoverage = Object.assign(S.state.functionCoverage || {}, incoming);
+      if (S.ensureFunctionCoverage) S.ensureFunctionCoverage();
+      if (S.fillFunctionCoverageForm) S.fillFunctionCoverageForm();
+    }
+  };
+}
+
 export function bindSetupActions(S) {
   if (!S) return;
   if (typeof S.generateFunctionAssignments === "function") {
@@ -50,6 +66,7 @@ export function bindSetupActions(S) {
   }
   S.addFcBand = S.addFcBand || function () { addFcBandClassic(S); };
   patchBagViewRoles(S);
+  patchImportCoverage(S);
 
   function bindOnce(el, type, fn) {
     if (!el || el._spBound) return;
