@@ -20,6 +20,8 @@ Boot: classic scripts keep `coverageSlots` / `computeHourlyByDow` / `S.coverageV
 
 `js/render.js` keeps `coverageSlots` / `computeHourlyByDow` only (stub `renderCoverageBars` until `attachRender`). Filter handlers live only in `actions/bind.js`. `switchTab("coverage")`, Generate, and Lines edits still *call* `S.renderCoverageBars`. Tauri `scripts/copy-frontend.js` copies `modules/`.
 
+Baggage view (`funcView === "bag"`) counts BAG/DFO duties for all roles; STSO/LTSO filter checkboxes are not required.
+
 ### Module: `lines-table` (Svelte island in Lines tab)
 
 | File | Depends On | Provides | Notes |
@@ -41,4 +43,8 @@ Team boards are compact-by-default (`TeamBoard.js`): header/counts only; LineCar
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.
 
-Function coverage: `#fc-generate` calls `S.generateFunctionAssignments` (aliased as `S.generateFcAssignments`); `#fc-add-band` uses classic read/push/render/preview (`S.addFcBand`). `initSetupPanel` re-calls `initFunctionCoverage` after the panel is mounted so early `_funcCoverageBound` is not a silent no-op.
+Function coverage mode is exclusive: `#fc-mode-dfo` / `#fc-mode-bag` / neither. Stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`.
+
+**One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Standalone `#fc-generate` (“Re-assign functions”) is the same assigner for power users — not a second engine.
+
+DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on every WORK day (no PAX). Bands apply to DFO minimums and are hidden in BAG mode.
