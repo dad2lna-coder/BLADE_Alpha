@@ -28,5 +28,17 @@ export {
   clearLineFunctions,
 } from "./lib/duty.js";
 
+// Re-export all pools module functions (real implementations + bindPoolsApi)
+export {
+  bindPoolsApi,
+  ensureFunctionCoverage,
+  getFunctionMode,
+  fteCapsByRoleSex,
+  capFunctionPoolsToFte,
+  buildCertifiedPools,
+  bagPoolTotal,
+  dfoPoolTotal,
+} from "./lib/pools.js";
+
 // Named re-exports of all lib modules for future wiring
 export { pools, bands, assign };

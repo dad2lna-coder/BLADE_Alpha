@@ -14,7 +14,7 @@ export function lineRoleKey(line) {
 }
 
 export function isOpsFunctionRole(line) {
-  var role = api.lineRoleKey(line);
+  var role = lineRoleKey(line);
   return role === "STSO" || role === "LTSO" || role === "TSO";
 }
 
@@ -46,7 +46,7 @@ export function lineStartMin(line) {
 }
 export function phaseOfStart(startMin, anchors, threshold) {
   threshold = threshold != null ? threshold : 15;
-  anchors = anchors || api.computeShiftAnchors();
+  anchors = anchors || computeShiftAnchors();
   if (startMin <= anchors.am - threshold && startMin < 11 * 60) return "Opening";
   if (startMin >= anchors.pm + threshold && startMin >= 11 * 60 + 15) return "Closing";
   if (startMin < anchors.pm) return "AM";
