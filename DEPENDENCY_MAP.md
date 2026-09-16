@@ -43,7 +43,7 @@ Team boards are compact-by-default (`TeamBoard.js`): header/counts only; LineCar
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.
 
-Function coverage mode is exclusive: `#fc-mode-dfo` / `#fc-mode-bag` / neither. Stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`.
+Function coverage mode is still exclusive at runtime (`#fc-mode-dfo` / `#fc-mode-bag` / neither), stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`. Classic `js/functions.js` still loads first; module init overwrites the same `S.*` FC API.
 
 **One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Function duties only via main Schedule Generate — no separate coverage generate control.
 
@@ -105,6 +105,7 @@ DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on
 | `lines-table` | `modules/lines-table/dist/lines-table.js` | `initLinesTable` |
 | `team-builder` | `modules/team-builder/index.js` | `initTeamBuilder` |
 | `setup-panel` | `modules/setup-panel/index.js` | `initSetupPanel` |
+| `function-coverage` | `modules/function-coverage/dist/function-coverage.js` | `initFunctionCoverage` |
 
 ### `lib/` — Bundled vendors
 
