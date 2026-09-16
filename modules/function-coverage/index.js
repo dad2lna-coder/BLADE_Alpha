@@ -11,6 +11,7 @@ export function initFunctionCoverage(scheduler) {
   bindDutyApi(scheduler);
   bindPoolsApi(scheduler);
   bindBandsApi(scheduler);
+  bindAssignApi(scheduler);
   return scheduler;
 }
 
@@ -58,6 +59,17 @@ export {
   addExtraPosition,
   buildExtraPositionLines,
 } from "./lib/bands.js";
+
+// Bare named re-exports from lib/assign.js
+export {
+  bindAssignApi,
+  generateFunctionAssignments,
+  markDfo,
+  markBag,
+  fillBandShortfalls,
+  bagSlotCounts,
+  worstBagCoverage,
+} from "./lib/assign.js";
 
 // Named re-exports of all lib modules for future wiring
 export { pools, bands, assign };
