@@ -230,7 +230,9 @@ export function buildExtraPositionLines() {
 }
 
 export function bindFunctionCoverageUi() {
-  if (api._funcCoverageBound) return;
+  var addBandEl = api.$("fc-add-band");
+  if (api._funcCoverageBound && addBandEl && addBandEl._fcBound) return;
+  if (!api.$("fc-bands-tbody")) return;
   api._funcCoverageBound = true;
 
   ensureFunctionCoverage();
