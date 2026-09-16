@@ -174,7 +174,7 @@ export function renderExtraPositions() {
     }).join("");
     return '<div class="extra-pos-card" data-extra-card="' + pos.id + '">' +
       '<div class="fte-sex-row extra-pos-head">' +
-      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, "&quot;") + '" style="width:7rem"></label>' +
+      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, """) + '" style="width:7rem"></label>' +
       '<label>Male <input type="number" min="0" data-extra-m="' + pos.id + '" value="' + num0(pos.m) + '" style="width:4.5rem"></label>' +
       '<label>Female <input type="number" min="0" data-extra-f="' + pos.id + '" value="' + num0(pos.f) + '" style="width:4.5rem"></label>' +
       '<button type="button" class="btn btn-red btn-sm" data-extra-remove="' + pos.id + '">Remove</button>' +
@@ -227,4 +227,123 @@ export function buildExtraPositionLines() {
     pushSex("F", num0(pos.f));
   });
   return out;
+}
+
+export function bindFunctionCoverageUi() {
+  if (api._funcCoverageBound) return;
+  api._funcCoverageBound = true;
+
+  ensureFunctionCoverage();
+  ensureExtraPositions();
+
+  fillFunctionCoverageForm();
+  renderFunctionBandsTable();
+  updateFunctionCoveragePreview();
+  renderExtraPositions();
+
+  var el;
+  el = api.$("btn-open-func-coverage");
+  if (el) el.addEventListener("click", function () { openFunctionCoverageModal(); });
+  el = api.$("func-coverage-close");
+  if (el) el.addEventListener("click", function () { closeFunctionCoverageModal(); });
+  el = api.$("fc-cancel");
+  if (el) el.addEventListener("click", function () { closeFunctionCoverageModal(); });
+  el = api.$("fc-save");
+  if (el) el.addEventListener("click", function () {
+    readFunctionBandsFromDom();
+    syncFunctionModeUi();
+    renderFunctionBandsTable();
+    updateFunctionCoveragePreview();
+    if (api.updateStatus) api.updateStatus("Function coverage settings saved.");
+  });
+
+  el = api.$("fc-add-band");
+  if (el && !el._fcBound) {
+    el._fcBound = true;
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      readFunctionBandsFromDom();
+      ensureFunctionCoverage().bands.push({ start: "12:00", end: "16:00", stso: 0, ltso: 0, tso: 0 });
+      renderFunctionBandsTable();
+      updateFunctionCoveragePreview();
+    });
+  }
+
+  if (!api._funcDocBound) {
+    api._funcDocBound = true;
+    document.addEventListener("click", function (e) {
+      var t = e.target;
+      if (!t) return;
+      if (t.getAttribute && t.getAttribute("data-fc-remove") != null) {
+        readFunctionBandsFromDom();
+        var idx = +t.getAttribute("data-fc-remove");
+        var bands = ensureFunctionCoverage().bands;
+        if (idx >= 0 && idx < bands.length) bands.splice(idx, 1);
+        renderFunctionBandsTable();
+        updateFunctionCoveragePreview();
+      }
+    });
+    document.addEventListener("change", function (e) {
+      var t = e.target;
+      if (!t) return;
+      if ((t.getAttribute && t.getAttribute("data-fc-band") != null) || (t.id && t.id.indexOf("fc-") === 0)) {
+        readFunctionBandsFromDom();
+        updateFunctionCoveragePreview();
+      }
+    });
+  }
+
+  el = api.$("btn-add-position");
+  if (el && !el._extraBound) {
+    el._extraBound = true;
+    el.addEventListener("click", function (e) {
+      e.preventDefault();
+      addExtraPosition("MSTI");
+    });
+  }
+
+  if (!api._extraDocBound) {
+    api._extraDocBound = true;
+    document.addEventListener("click", function (e) {
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      var rem = t.getAttribute("data-extra-remove");
+      if (rem != null) {
+        readExtraPositionsFromDom();
+        api.state.extraPositions = ensureExtraPositions().filter(function (p) { return p.id !== rem; });
+        renderExtraPositions();
+        return;
+      }
+      var addBand = t.getAttribute("data-extra-add-band");
+      if (addBand != null) {
+        readExtraPositionsFromDom();
+        var list = ensureExtraPositions();
+        var pos = null;
+        for (var i = 0; i < list.length; i++) if (list[i].id === addBand) pos = list[i];
+        if (pos) {
+          if (!Array.isArray(pos.bands)) pos.bands = [];
+          pos.bands.push({ start: "12:00", end: "16:00", min: 0 });
+        }
+        renderExtraPositions();
+        return;
+      }
+      var bandRem = t.getAttribute("data-extra-band-remove");
+      var bi = t.getAttribute("data-extra-bi");
+      if (bandRem != null && bi != null) {
+        readExtraPositionsFromDom();
+        var plist = ensureExtraPositions();
+        var p = null;
+        for (var j = 0; j < plist.length; j++) if (plist[j].id === bandRem) p = plist[j];
+        if (p && Array.isArray(p.bands)) p.bands.splice(+bi, 1);
+        renderExtraPositions();
+      }
+    });
+    document.addEventListener("change", function (e) {
+      var t = e.target;
+      if (!t || !t.getAttribute) return;
+      if (t.getAttribute("data-extra-name") != null || t.getAttribute("data-extra-m") != null || t.getAttribute("data-extra-f") != null || t.getAttribute("data-extra-band") != null) {
+        readExtraPositionsFromDom();
+      }
+    });
+  }
 }
