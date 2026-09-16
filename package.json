@@ -8,6 +8,7 @@
     "dev": "tauri dev",
     "build": "tauri build",
     "build:win": "tauri build --bundles nsis",
+    "build:function-coverage": "vite build --config vite.function-coverage.config.mjs",
     "build:lines-table": "vite build --config vite.lines-table.config.mjs",
     "copy-frontend": "node scripts/copy-frontend.js"
   },
