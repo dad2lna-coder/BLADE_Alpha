@@ -119,6 +119,19 @@ export function markDfo(role, sex, n, fc) {
   var needPm = fc.amPmSplit ? Math.floor(n / 2) : 0;
   if (amSide.length < needAm) { needPm += needAm - amSide.length; needAm = amSide.length; }
   if (pmSide.length < needPm) { needAm = Math.min(amSide.length, needAm + (needPm - pmSide.length)); needPm = pmSide.length; }
+  var closeNeed = 0;
+  if (closeBand) {
+    if (role === "STSO") closeNeed = closeBand.stso || 0;
+    else if (role === "LTSO") closeNeed = closeBand.ltso || 0;
+    else if (role === "TSO") closeNeed = closeBand.tso || 0;
+  }
+  var closeCapable = closeBand
+    ? pmSide.filter(function (line) { return coversBandStart(line, closeBand); })
+    : [];
+  var needClose = Math.min(closeNeed, closeCapable.length, n);
+  needPm = Math.max(needPm, needClose);
+  if (needAm + needPm > n) needAm = n - needPm;
+  if (needAm < 0) { needAm = 0; needPm = Math.min(n, needPm); }
   while (needAm + needPm > n) {
     if (needPm >= needAm && needPm > 0) needPm--;
     else if (needAm > 0) needAm--;
@@ -134,7 +147,11 @@ export function markDfo(role, sex, n, fc) {
     }
     return taken;
   }
-  var gotAm = take(amSide, needAm), gotPm = take(pmSide, needPm), short = n - gotAm - gotPm;
+  var gotClose = take(closeCapable, needClose);
+  var gotAm = take(amSide, needAm);
+  var stillNeedPm = Math.max(0, needPm - gotClose);
+  var gotPm = gotClose + take(pmSide, stillNeedPm);
+  var short = n - gotAm - gotPm;
   if (short > 0) gotPm += take(unused(role, sex, fc), short);
   return { am: gotAm, pm: gotPm, total: gotAm + gotPm };
 }
