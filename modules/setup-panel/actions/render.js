@@ -21,7 +21,6 @@ function addFcBandClassic(S) {
 }
 
 function patchBagViewRoles(S) {
-  /* Role filters stay user-controlled on every coverage lens, including Baggage. */
   return S;
 }
 
@@ -52,7 +51,14 @@ export function bindSetupActions(S) {
     el._spBound = true;
     el.addEventListener(type, fn);
   }
-  /* fc-add-band is bound in S.initFunctionCoverage (once, after panel mount). */
+  bindOnce(document.getElementById("fc-add-band"), "click", function (e) {
+    e.preventDefault();
+    if (S.addFcBand) S.addFcBand();
+  });
+  bindOnce(document.getElementById("btn-add-position"), "click", function (e) {
+    e.preventDefault();
+    if (S.addExtraPosition) S.addExtraPosition("MSTI");
+  });
   bindOnce(document.getElementById("btn-add-shift"), "click", function (e) {
     e.preventDefault();
     if (S.addShift) S.addShift();

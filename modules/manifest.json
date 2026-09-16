@@ -9,6 +9,10 @@
     "docks": "modules/team-builder/docks.html",
     "mount": "#tab-teams"
   },
+  "function-coverage": {
+    "entry": "modules/function-coverage/dist/function-coverage.js",
+    "init": "initFunctionCoverage"
+  },
   "setup-panel": {
     "entry": "modules/setup-panel/index.js",
     "init": "initSetupPanel",
@@ -30,9 +34,5 @@
     ],
     "panel": "modules/coverage/panel.html",
     "mount": "#tab-coverage"
-  },
-  "function-coverage": {
-    "entry": "modules/function-coverage/dist/function-coverage.js",
-    "init": "initFunctionCoverage"
   }
 }
