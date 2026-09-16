@@ -10,7 +10,7 @@
     "mount": "#tab-teams"
   },
   "function-coverage": {
-    "entry": "modules/function-coverage/dist/function-coverage.js",
+    "entry": "modules/function-coverage/index.js",
     "init": "initFunctionCoverage"
   },
   "setup-panel": {
