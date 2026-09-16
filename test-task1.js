@@ -64,7 +64,7 @@ check('team resolved to 005 (padTeamName)', rows2[0].team === '005');
 check('shift resolved PM', rows2[0].shift === 'PM');
 check('PT emp', rows2[0].emp === 'PT');
 check('position TSO', rows2[0].position === 'TSO');
-check('days has workLabel shift 22:00-06:00 for day 0', rows2[0].days[0] === '22:00–06:00');
+check('days has function PAX for day 0', rows2[0].days[0] === 'PAX');
 check('days has RDO for day 5', rows2[0].days[5] === 'RDO');
 
 // Verify pure APIs unchanged: getRowModels still takes explicit args

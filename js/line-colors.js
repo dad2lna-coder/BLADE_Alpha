@@ -74,6 +74,7 @@ window.Scheduler = window.Scheduler || {};
     var orig = S[name];
     if (typeof orig !== "function" || orig._lineColorsWrapped) return;
     var wrapped = function () {
+      if (S.__USE_SVELTE_LINES) return orig.apply(this, arguments);
       var result = orig.apply(this, arguments);
       setTimeout(paintLinesTable, 0);
       return result;

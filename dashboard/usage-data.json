@@ -1,0 +1,2851 @@
+{
+  "timestamp": "2026-09-16T00:30:00Z",
+  "system": {
+  "runtimeVersion": "2026.9.4",
+  "hostDesktop": {
+    "enabled": false,
+    "state": "disabled",
+    "port": 5900
+  },
+  "heartbeat": {
+    "defaultAgentId": "main",
+    "agents": [
+      {
+        "agentId": "main",
+        "enabled": true,
+        "every": "30m",
+        "everyMs": 1800000,
+        "waitingForRoute": true
+      },
+      {
+        "agentId": "mark",
+        "enabled": false,
+        "every": "disabled",
+        "everyMs": null,
+        "waitingForRoute": false
+      },
+      {
+        "agentId": "openclaw",
+        "enabled": false,
+        "every": "disabled",
+        "everyMs": null,
+        "waitingForRoute": false
+      }
+    ]
+  },
+  "channelSummary": [],
+  "queuedSystemEvents": [],
+  "degradedSecretOwners": [],
+  "degradedPlugins": [],
+  "tasks": {
+    "total": 215,
+    "active": 1,
+    "terminal": 214,
+    "failures": 122,
+    "byStatus": {
+      "queued": 0,
+      "running": 1,
+      "succeeded": 92,
+      "failed": 106,
+      "timed_out": 16,
+      "cancelled": 0,
+      "lost": 0
+    },
+    "byRuntime": {
+      "subagent": 15,
+      "acp": 0,
+      "cli": 42,
+      "cron": 158
+    }
+  },
+  "taskAudit": {
+    "total": 0,
+    "warnings": 0,
+    "errors": 0,
+    "byCode": {
+      "stale_queued": 0,
+      "stale_running": 0,
+      "lost": 0,
+      "delivery_failed": 0,
+      "missing_cleanup": 0,
+      "inconsistent_timestamps": 0
+    }
+  },
+  "sessions": {
+    "paths": [
+      "/root/.openclaw/agents/main/agent/openclaw-agent.sqlite",
+      "/root/.openclaw/agents/mark/agent/openclaw-agent.sqlite",
+      "/root/.openclaw/agents/openclaw/agent/openclaw-agent.sqlite"
+    ],
+    "count": 42,
+    "defaults": {
+      "model": "openrouter/free",
+      "contextTokens": 200000
+    },
+    "recent": [
+      {
+        "agentId": "mark",
+        "key": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+        "kind": "direct",
+        "sessionId": "bda1f649-ed46-425d-82b3-9a3ae9a78c61",
+        "updatedAt": 1789518524305,
+        "age": 85136,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 355786,
+        "outputTokens": 3936,
+        "cacheRead": 96,
+        "cacheWrite": 0,
+        "totalTokens": 61224,
+        "totalTokensFresh": true,
+        "remainingTokens": 138776,
+        "percentUsed": 31,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:bda1f649-ed46-425d-82b3-9a3ae9a78c61"
+        ]
+      },
+      {
+        "agentId": "mark",
+        "key": "agent:mark:subagent:cc276641-9286-4b0c-a6a7-40b3129e0041",
+        "kind": "spawn-child",
+        "sessionId": "ac70e577-f71a-48dc-89c5-364a10bc1d29",
+        "updatedAt": 1789515404156,
+        "age": 3205285,
+        "thinkingLevel": "off",
+        "fastMode": false,
+        "inputTokens": 293863,
+        "outputTokens": 4661,
+        "cacheRead": 41152,
+        "cacheWrite": 0,
+        "totalTokens": 56162,
+        "totalTokensFresh": true,
+        "remainingTokens": 143838,
+        "percentUsed": 28,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "think:off",
+          "fast:off",
+          "id:ac70e577-f71a-48dc-89c5-364a10bc1d29"
+        ]
+      },
+      {
+        "agentId": "mark",
+        "key": "agent:mark:subagent:12c6449f-8769-4505-93bd-42ea4a8850f9",
+        "kind": "spawn-child",
+        "sessionId": "eb5e75a0-f523-4202-911f-ece2f5fc377c",
+        "updatedAt": 1789515397297,
+        "age": 3212144,
+        "thinkingLevel": "off",
+        "fastMode": false,
+        "inputTokens": 244848,
+        "outputTokens": 7281,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 54795,
+        "totalTokensFresh": true,
+        "remainingTokens": 145205,
+        "percentUsed": 27,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "think:off",
+          "fast:off",
+          "id:eb5e75a0-f523-4202-911f-ece2f5fc377c"
+        ]
+      },
+      {
+        "agentId": "mark",
+        "key": "agent:mark:subagent:b418a500-51cb-4d5c-8f2a-91e8624d9458",
+        "kind": "spawn-child",
+        "sessionId": "34d8f0d3-94e7-4cf5-95a6-88a2b5632d1f",
+        "updatedAt": 1789515266208,
+        "age": 3343233,
+        "thinkingLevel": "off",
+        "fastMode": false,
+        "inputTokens": 109634,
+        "outputTokens": 4079,
+        "cacheRead": 66656,
+        "cacheWrite": 0,
+        "totalTokens": 30006,
+        "totalTokensFresh": true,
+        "remainingTokens": 169994,
+        "percentUsed": 15,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "think:off",
+          "fast:off",
+          "id:34d8f0d3-94e7-4cf5-95a6-88a2b5632d1f"
+        ]
+      },
+      {
+        "agentId": "main",
+        "key": "agent:main:dashboard:9fcf6b6f-727d-4c3f-a5a9-5d136e2a2039",
+        "kind": "direct",
+        "sessionId": "701acd04-076f-4d6d-834d-930da0fc7bcf",
+        "updatedAt": 1789513915390,
+        "age": 4694051,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 257418,
+        "outputTokens": 583,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 116318,
+        "totalTokensFresh": true,
+        "remainingTokens": 83682,
+        "percentUsed": 58,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:701acd04-076f-4d6d-834d-930da0fc7bcf"
+        ]
+      },
+      {
+        "agentId": "main",
+        "key": "agent:main:dashboard:9522affc-4796-4f94-b109-98f37164d092",
+        "kind": "spawn-child",
+        "sessionId": "dc4bfa81-a5ff-405e-98e3-85ea91fba68d",
+        "updatedAt": 1789508528495,
+        "age": 10080946,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 38492,
+        "outputTokens": 90,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 38492,
+        "totalTokensFresh": true,
+        "remainingTokens": 161508,
+        "percentUsed": 19,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:dc4bfa81-a5ff-405e-98e3-85ea91fba68d"
+        ]
+      },
+      {
+        "agentId": "main",
+        "key": "agent:main:main",
+        "kind": "direct",
+        "sessionId": "b22c3635-19bf-431e-b2b7-d1711603b7cd",
+        "updatedAt": 1789505333250,
+        "age": 13276191,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 115260,
+        "outputTokens": 551,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 59585,
+        "totalTokensFresh": true,
+        "remainingTokens": 140415,
+        "percentUsed": 30,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:b22c3635-19bf-431e-b2b7-d1711603b7cd"
+        ]
+      },
+      {
+        "agentId": "main",
+        "key": "agent:main:dashboard:63b1b94c-465e-4e2c-b03e-fdbbc6f1d758",
+        "kind": "direct",
+        "sessionId": "177d3636-364e-4504-95b8-04334ba6e473",
+        "updatedAt": 1789505130506,
+        "age": 13478935,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 15980,
+        "outputTokens": 265,
+        "cacheRead": 46464,
+        "cacheWrite": 0,
+        "totalTokens": 62444,
+        "totalTokensFresh": true,
+        "remainingTokens": 137556,
+        "percentUsed": 31,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:177d3636-364e-4504-95b8-04334ba6e473"
+        ]
+      },
+      {
+        "agentId": "main",
+        "key": "agent:main:dashboard:a56b9e8f-828e-44ae-84ff-8db3aab337b7",
+        "kind": "direct",
+        "sessionId": "65ab8315-9375-438e-ae51-ef1049eeb5bc",
+        "updatedAt": 1789503748482,
+        "age": 14860959,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 268967,
+        "outputTokens": 642,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 58260,
+        "totalTokensFresh": true,
+        "remainingTokens": 141740,
+        "percentUsed": 29,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:65ab8315-9375-438e-ae51-ef1049eeb5bc"
+        ]
+      },
+      {
+        "agentId": "main",
+        "key": "agent:main:dashboard:995ea206-7cc6-4844-a60f-eb8cf32c3f2e",
+        "kind": "direct",
+        "sessionId": "ef8b0696-c28a-4a01-be34-9f53d4b2e6c2",
+        "updatedAt": 1789490008182,
+        "age": 28601259,
+        "systemSent": true,
+        "abortedLastRun": false,
+        "inputTokens": 116907,
+        "outputTokens": 130,
+        "cacheRead": 0,
+        "cacheWrite": 0,
+        "totalTokens": 116907,
+        "totalTokensFresh": true,
+        "remainingTokens": 83093,
+        "percentUsed": 58,
+        "model": "openrouter/free",
+        "configuredModel": "openrouter/openrouter/free",
+        "selectedModel": "openrouter/openrouter/free",
+        "modelSelectionReason": null,
+        "runtime": "OpenClaw Default",
+        "contextTokens": 200000,
+        "flags": [
+          "system",
+          "id:ef8b0696-c28a-4a01-be34-9f53d4b2e6c2"
+        ]
+      }
+    ],
+    "byAgent": [
+      {
+        "agentId": "main",
+        "path": "/root/.openclaw/agents/main/agent/openclaw-agent.sqlite",
+        "count": 33,
+        "recent": [
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:9fcf6b6f-727d-4c3f-a5a9-5d136e2a2039",
+            "kind": "direct",
+            "sessionId": "701acd04-076f-4d6d-834d-930da0fc7bcf",
+            "updatedAt": 1789513915390,
+            "age": 4694051,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 257418,
+            "outputTokens": 583,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 116318,
+            "totalTokensFresh": true,
+            "remainingTokens": 83682,
+            "percentUsed": 58,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:701acd04-076f-4d6d-834d-930da0fc7bcf"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:9522affc-4796-4f94-b109-98f37164d092",
+            "kind": "spawn-child",
+            "sessionId": "dc4bfa81-a5ff-405e-98e3-85ea91fba68d",
+            "updatedAt": 1789508528495,
+            "age": 10080946,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 38492,
+            "outputTokens": 90,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 38492,
+            "totalTokensFresh": true,
+            "remainingTokens": 161508,
+            "percentUsed": 19,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:dc4bfa81-a5ff-405e-98e3-85ea91fba68d"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:main",
+            "kind": "direct",
+            "sessionId": "b22c3635-19bf-431e-b2b7-d1711603b7cd",
+            "updatedAt": 1789505333250,
+            "age": 13276191,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 115260,
+            "outputTokens": 551,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 59585,
+            "totalTokensFresh": true,
+            "remainingTokens": 140415,
+            "percentUsed": 30,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:b22c3635-19bf-431e-b2b7-d1711603b7cd"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:63b1b94c-465e-4e2c-b03e-fdbbc6f1d758",
+            "kind": "direct",
+            "sessionId": "177d3636-364e-4504-95b8-04334ba6e473",
+            "updatedAt": 1789505130506,
+            "age": 13478935,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 15980,
+            "outputTokens": 265,
+            "cacheRead": 46464,
+            "cacheWrite": 0,
+            "totalTokens": 62444,
+            "totalTokensFresh": true,
+            "remainingTokens": 137556,
+            "percentUsed": 31,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:177d3636-364e-4504-95b8-04334ba6e473"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:a56b9e8f-828e-44ae-84ff-8db3aab337b7",
+            "kind": "direct",
+            "sessionId": "65ab8315-9375-438e-ae51-ef1049eeb5bc",
+            "updatedAt": 1789503748482,
+            "age": 14860959,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 268967,
+            "outputTokens": 642,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 58260,
+            "totalTokensFresh": true,
+            "remainingTokens": 141740,
+            "percentUsed": 29,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:65ab8315-9375-438e-ae51-ef1049eeb5bc"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:995ea206-7cc6-4844-a60f-eb8cf32c3f2e",
+            "kind": "direct",
+            "sessionId": "ef8b0696-c28a-4a01-be34-9f53d4b2e6c2",
+            "updatedAt": 1789490008182,
+            "age": 28601259,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 116907,
+            "outputTokens": 130,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 116907,
+            "totalTokensFresh": true,
+            "remainingTokens": 83093,
+            "percentUsed": 58,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:ef8b0696-c28a-4a01-be34-9f53d4b2e6c2"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:e37c2f3a-e3aa-4c2c-bbba-3ee1f29ca8d5",
+            "kind": "direct",
+            "sessionId": "acd4ebc2-ccb4-4955-80d4-b90de0758384",
+            "updatedAt": 1789480622024,
+            "age": 37987417,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 142496,
+            "outputTokens": 222,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 142496,
+            "totalTokensFresh": true,
+            "remainingTokens": 57504,
+            "percentUsed": 71,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:acd4ebc2-ccb4-4955-80d4-b90de0758384"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:5dadf231-085b-4455-9540-f27f162746ce",
+            "kind": "spawn-child",
+            "sessionId": "962ae362-62a9-4f04-8f3e-71e5b312676a",
+            "updatedAt": 1789480605969,
+            "age": 38003472,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 246178,
+            "outputTokens": 932,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 85173,
+            "totalTokensFresh": true,
+            "remainingTokens": 114827,
+            "percentUsed": 43,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:962ae362-62a9-4f04-8f3e-71e5b312676a"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:discord:channel:1549045446670815253",
+            "kind": "group",
+            "sessionId": "bc0d1052-6160-44cb-a9fe-123389d00f75",
+            "updatedAt": 1789480582136,
+            "age": 38027305,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 94657,
+            "outputTokens": 2394,
+            "cacheRead": 384,
+            "cacheWrite": 0,
+            "totalTokens": 31489,
+            "totalTokensFresh": true,
+            "remainingTokens": 168511,
+            "percentUsed": 16,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:bc0d1052-6160-44cb-a9fe-123389d00f75"
+            ]
+          },
+          {
+            "agentId": "main",
+            "key": "agent:main:dashboard:293de764-4c3e-4bcd-b0f5-41ac4269f03e",
+            "kind": "direct",
+            "sessionId": "bbaab065-0894-405a-a614-887522e24cee",
+            "updatedAt": 1789464907343,
+            "age": 53702098,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 114908,
+            "outputTokens": 449,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 114908,
+            "totalTokensFresh": true,
+            "remainingTokens": 85092,
+            "percentUsed": 57,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:bbaab065-0894-405a-a614-887522e24cee"
+            ]
+          }
+        ]
+      },
+      {
+        "agentId": "mark",
+        "path": "/root/.openclaw/agents/mark/agent/openclaw-agent.sqlite",
+        "count": 9,
+        "recent": [
+          {
+            "agentId": "mark",
+            "key": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+            "kind": "direct",
+            "sessionId": "bda1f649-ed46-425d-82b3-9a3ae9a78c61",
+            "updatedAt": 1789518524305,
+            "age": 85136,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 355786,
+            "outputTokens": 3936,
+            "cacheRead": 96,
+            "cacheWrite": 0,
+            "totalTokens": 61224,
+            "totalTokensFresh": true,
+            "remainingTokens": 138776,
+            "percentUsed": 31,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:bda1f649-ed46-425d-82b3-9a3ae9a78c61"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:subagent:cc276641-9286-4b0c-a6a7-40b3129e0041",
+            "kind": "spawn-child",
+            "sessionId": "ac70e577-f71a-48dc-89c5-364a10bc1d29",
+            "updatedAt": 1789515404156,
+            "age": 3205285,
+            "thinkingLevel": "off",
+            "fastMode": false,
+            "inputTokens": 293863,
+            "outputTokens": 4661,
+            "cacheRead": 41152,
+            "cacheWrite": 0,
+            "totalTokens": 56162,
+            "totalTokensFresh": true,
+            "remainingTokens": 143838,
+            "percentUsed": 28,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "think:off",
+              "fast:off",
+              "id:ac70e577-f71a-48dc-89c5-364a10bc1d29"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:subagent:12c6449f-8769-4505-93bd-42ea4a8850f9",
+            "kind": "spawn-child",
+            "sessionId": "eb5e75a0-f523-4202-911f-ece2f5fc377c",
+            "updatedAt": 1789515397297,
+            "age": 3212144,
+            "thinkingLevel": "off",
+            "fastMode": false,
+            "inputTokens": 244848,
+            "outputTokens": 7281,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 54795,
+            "totalTokensFresh": true,
+            "remainingTokens": 145205,
+            "percentUsed": 27,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "think:off",
+              "fast:off",
+              "id:eb5e75a0-f523-4202-911f-ece2f5fc377c"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:subagent:b418a500-51cb-4d5c-8f2a-91e8624d9458",
+            "kind": "spawn-child",
+            "sessionId": "34d8f0d3-94e7-4cf5-95a6-88a2b5632d1f",
+            "updatedAt": 1789515266208,
+            "age": 3343233,
+            "thinkingLevel": "off",
+            "fastMode": false,
+            "inputTokens": 109634,
+            "outputTokens": 4079,
+            "cacheRead": 66656,
+            "cacheWrite": 0,
+            "totalTokens": 30006,
+            "totalTokensFresh": true,
+            "remainingTokens": 169994,
+            "percentUsed": 15,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "think:off",
+              "fast:off",
+              "id:34d8f0d3-94e7-4cf5-95a6-88a2b5632d1f"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:dashboard:adcd63d8-2a7d-4c61-bcff-0a8ef64c5e7f",
+            "kind": "direct",
+            "sessionId": "b853460f-4e13-4072-902a-24fdfea8d7ce",
+            "updatedAt": 1789468323351,
+            "age": 50286090,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 117480,
+            "outputTokens": 722,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 30619,
+            "totalTokensFresh": true,
+            "remainingTokens": 169381,
+            "percentUsed": 15,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:b853460f-4e13-4072-902a-24fdfea8d7ce"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:cron:47a6a34a-2989-432c-9e93-5aaddbf80277",
+            "kind": "cron",
+            "sessionId": "e34fd837-d0d4-4787-93c7-664db53dcebf",
+            "updatedAt": 1789441201365,
+            "age": 77408076,
+            "systemSent": true,
+            "totalTokens": null,
+            "totalTokensFresh": false,
+            "remainingTokens": null,
+            "percentUsed": null,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:e34fd837-d0d4-4787-93c7-664db53dcebf"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:dashboard:98157dde-2333-418e-8d51-18e5aa74daf6",
+            "kind": "direct",
+            "sessionId": "939a7e16-9929-46bc-a6ef-76cb46a6d42a",
+            "updatedAt": 1789404503844,
+            "age": 114105597,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 50953,
+            "outputTokens": 10,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 50953,
+            "totalTokensFresh": true,
+            "remainingTokens": 149047,
+            "percentUsed": 25,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:939a7e16-9929-46bc-a6ef-76cb46a6d42a"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:main",
+            "kind": "direct",
+            "sessionId": "aee8461a-9fb8-41e0-bed3-c2fd17ffddd7",
+            "updatedAt": 1789388378360,
+            "age": 130231081,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 403794,
+            "outputTokens": 2862,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 44904,
+            "totalTokensFresh": true,
+            "remainingTokens": 155096,
+            "percentUsed": 22,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:aee8461a-9fb8-41e0-bed3-c2fd17ffddd7"
+            ]
+          },
+          {
+            "agentId": "mark",
+            "key": "agent:mark:dashboard:8d19ad8f-fd57-432b-b82d-b603e66d1211",
+            "kind": "direct",
+            "sessionId": "187b1252-7fdd-4abd-83b9-354fb251d2fd",
+            "updatedAt": 1789381812454,
+            "age": 136796987,
+            "systemSent": true,
+            "abortedLastRun": false,
+            "inputTokens": 85142,
+            "outputTokens": 1578,
+            "cacheRead": 0,
+            "cacheWrite": 0,
+            "totalTokens": 31001,
+            "totalTokensFresh": true,
+            "remainingTokens": 168999,
+            "percentUsed": 16,
+            "model": "openrouter/free",
+            "configuredModel": "openrouter/openrouter/free",
+            "selectedModel": "openrouter/openrouter/free",
+            "modelSelectionReason": null,
+            "runtime": "OpenClaw Default",
+            "contextTokens": 200000,
+            "flags": [
+              "system",
+              "id:187b1252-7fdd-4abd-83b9-354fb251d2fd"
+            ]
+          }
+        ]
+      },
+      {
+        "agentId": "openclaw",
+        "path": "/root/.openclaw/agents/openclaw/agent/openclaw-agent.sqlite",
+        "count": 0,
+        "recent": []
+      }
+    ]
+  },
+  "os": {
+    "platform": "linux",
+    "arch": "x64",
+    "release": "7.0.2-4-pve",
+    "label": "linux 7.0.2-4-pve (x64)"
+  },
+  "update": {
+    "root": "/usr/lib/node_modules/openclaw",
+    "installKind": "package",
+    "packageManager": "npm",
+    "deps": {
+      "manager": "npm",
+      "status": "unknown",
+      "lockfilePath": "/usr/lib/node_modules/openclaw/package-lock.json",
+      "markerPath": "/usr/lib/node_modules/openclaw/node_modules",
+      "reason": "lockfile missing"
+    }
+  },
+  "updateChannel": "stable",
+  "updateChannelSource": "default",
+  "memory": null,
+  "memoryPlugin": {
+    "enabled": true,
+    "slot": "memory-core"
+  },
+  "gateway": {
+    "mode": "local",
+    "url": "ws://127.0.0.1:18789",
+    "urlSource": "local loopback",
+    "misconfigured": false,
+    "reachable": true,
+    "connectLatencyMs": 1537,
+    "self": null,
+    "error": "missing scope: operator.read",
+    "authWarning": null
+  },
+  "gatewayService": {
+    "label": "systemd user",
+    "installed": false,
+    "loaded": false,
+    "loadState": {
+      "status": "not-loaded"
+    },
+    "managedByOpenClaw": false,
+    "externallyManaged": false,
+    "loadedText": "disabled",
+    "runtime": {
+      "status": "stopped",
+      "missingUnit": true,
+      "state": "inactive",
+      "subState": "dead",
+      "lastExitStatus": 0,
+      "lastExitReason": "0",
+      "systemd": {
+        "unit": "openclaw-gateway.service",
+        "killMode": "control-group",
+        "result": "success",
+        "nRestarts": 0,
+        "startLimitBurst": 5
+      }
+    },
+    "runtimeShort": "stopped (state inactive)"
+  },
+  "nodeService": {
+    "label": "systemd user",
+    "installed": false,
+    "loaded": false,
+    "loadState": {
+      "status": "not-loaded"
+    },
+    "managedByOpenClaw": false,
+    "externallyManaged": false,
+    "loadedText": "disabled",
+    "runtime": {
+      "status": "stopped",
+      "missingUnit": true,
+      "state": "inactive",
+      "subState": "dead",
+      "lastExitStatus": 0,
+      "lastExitReason": "0",
+      "systemd": {
+        "unit": "openclaw-node.service",
+        "killMode": "control-group",
+        "result": "success",
+        "nRestarts": 0,
+        "startLimitBurst": 5
+      }
+    },
+    "runtimeShort": "stopped (state inactive)"
+  },
+  "agents": {
+    "defaultId": null,
+    "ownership": "explicit",
+    "selectionRequired": true,
+    "agents": [
+      {
+        "id": "main",
+        "name": "Clawesome",
+        "workspaceDir": "/root/.openclaw/workspace",
+        "bootstrapPending": false,
+        "sessionsPath": "/root/.openclaw/agents/main/agent/openclaw-agent.sqlite",
+        "sessionsCount": 33,
+        "lastUpdatedAt": 1789513915390,
+        "lastActiveAgeMs": 4690732
+      },
+      {
+        "id": "mark",
+        "name": "Mark",
+        "workspaceDir": "/root/.openclaw/workspace/mark",
+        "bootstrapPending": false,
+        "sessionsPath": "/root/.openclaw/agents/mark/agent/openclaw-agent.sqlite",
+        "sessionsCount": 9,
+        "lastUpdatedAt": 1789518524305,
+        "lastActiveAgeMs": 81817
+      },
+      {
+        "id": "openclaw",
+        "workspaceDir": "/root/.openclaw/workspace/openclaw",
+        "bootstrapPending": false,
+        "sessionsPath": "/root/.openclaw/agents/openclaw/agent/openclaw-agent.sqlite",
+        "sessionsCount": 0,
+        "lastUpdatedAt": null,
+        "lastActiveAgeMs": null
+      }
+    ],
+    "totalSessions": 42,
+    "bootstrapPendingCount": 0
+  },
+  "secretDiagnostics": []
+},
+  "models": {
+  "configPath": "/root/.openclaw/openclaw.json",
+  "agentDir": "/root/.openclaw/agents/mark/agent",
+  "defaultModel": "openrouter/free",
+  "resolvedDefault": "openrouter/free",
+  "fallbacks": [],
+  "imageModel": null,
+  "imageFallbacks": [],
+  "utilityModel": {
+    "ref": null,
+    "source": "none"
+  },
+  "aliases": {
+    "GPT": "openai/gpt-5.6-sol",
+    "OpenRouter": "openrouter/auto"
+  },
+  "allowed": [],
+  "auth": {
+    "storePath": "/root/.openclaw/state/openclaw.sqlite",
+    "shellEnvFallback": {
+      "enabled": false,
+      "appliedKeys": []
+    },
+    "providersWithOAuth": [],
+    "missingProvidersInUse": [],
+    "modelRouteIssues": [],
+    "runtimeAuthRoutes": [],
+    "providers": [
+      {
+        "provider": "openrouter",
+        "effective": {
+          "kind": "profiles",
+          "detail": "~/.openclaw/state/openclaw.sqlite"
+        },
+        "profiles": {
+          "count": 1,
+          "oauth": 0,
+          "token": 0,
+          "apiKey": 1,
+          "labels": [
+            "openrouter:default=sk-or-v1...a3fdd2e9"
+          ]
+        }
+      }
+    ],
+    "unusableProfiles": [],
+    "oauth": {
+      "warnAfterMs": 86400000,
+      "profiles": [
+        {
+          "profileId": "openrouter:default",
+          "provider": "openrouter",
+          "type": "api_key",
+          "status": "static",
+          "source": "store",
+          "label": "openrouter:default"
+        }
+      ],
+      "providers": [
+        {
+          "provider": "openrouter",
+          "status": "static",
+          "profiles": [
+            {
+              "profileId": "openrouter:default",
+              "provider": "openrouter",
+              "type": "api_key",
+              "status": "static",
+              "source": "store",
+              "label": "openrouter:default"
+            }
+          ],
+          "effectiveProfiles": [
+            {
+              "profileId": "openrouter:default",
+              "provider": "openrouter",
+              "type": "api_key",
+              "status": "static",
+              "source": "store",
+              "label": "openrouter:default"
+            }
+          ]
+        }
+      ]
+    }
+  }
+},
+  "sessions": {
+  "path": null,
+  "stores": [
+    {
+      "agentId": "main",
+      "path": "/root/.openclaw/agents/main/agent/openclaw-agent.sqlite"
+    },
+    {
+      "agentId": "mark",
+      "path": "/root/.openclaw/agents/mark/agent/openclaw-agent.sqlite"
+    }
+  ],
+  "allAgents": true,
+  "count": 42,
+  "totalCount": 42,
+  "limitApplied": 100,
+  "hasMore": false,
+  "activeMinutes": null,
+  "sessions": [
+    {
+      "key": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "updatedAt": 1789518524305,
+      "ageMs": 98329,
+      "sessionId": "bda1f649-ed46-425d-82b3-9a3ae9a78c61",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789514437703,
+      "lastInteractionAt": 1789518521496,
+      "status": "running",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 355786,
+      "outputTokens": 3936,
+      "totalTokens": 61224,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:mark:subagent:cc276641-9286-4b0c-a6a7-40b3129e0041",
+      "updatedAt": 1789515404156,
+      "ageMs": 3218478,
+      "sessionId": "ac70e577-f71a-48dc-89c5-364a10bc1d29",
+      "spawnedBy": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789515215131,
+      "lastInteractionAt": 1789515404016,
+      "label": "Audit runtime risks",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "mark"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 293863,
+      "outputTokens": 4661,
+      "totalTokens": 56162,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:mark:subagent:12c6449f-8769-4505-93bd-42ea4a8850f9",
+      "updatedAt": 1789515397297,
+      "ageMs": 3225337,
+      "sessionId": "eb5e75a0-f523-4202-911f-ece2f5fc377c",
+      "spawnedBy": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789515215147,
+      "lastInteractionAt": 1789515397273,
+      "label": "Audit documentation",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "mark"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 244848,
+      "outputTokens": 7281,
+      "totalTokens": 54795,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:mark:subagent:b418a500-51cb-4d5c-8f2a-91e8624d9458",
+      "updatedAt": 1789515266208,
+      "ageMs": 3356426,
+      "sessionId": "34d8f0d3-94e7-4cf5-95a6-88a2b5632d1f",
+      "spawnedBy": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:dashboard:37ca1bf8-09a7-4de2-be23-89a6b009ad59",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789515215156,
+      "lastInteractionAt": 1789515265982,
+      "label": "Audit build and tests",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "mark"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 109634,
+      "outputTokens": 4079,
+      "totalTokens": 30006,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:dashboard:9fcf6b6f-727d-4c3f-a5a9-5d136e2a2039",
+      "updatedAt": 1789513915390,
+      "ageMs": 4707244,
+      "sessionId": "701acd04-076f-4d6d-834d-930da0fc7bcf",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789507933829,
+      "lastInteractionAt": 1789513883048,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 257418,
+      "outputTokens": 583,
+      "totalTokens": 116318,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:9522affc-4796-4f94-b109-98f37164d092",
+      "updatedAt": 1789508528495,
+      "ageMs": 10094139,
+      "sessionId": "dc4bfa81-a5ff-405e-98e3-85ea91fba68d",
+      "spawnedBy": "agent:main:dashboard:e37c2f3a-e3aa-4c2c-bbba-3ee1f29ca8d5",
+      "parentSessionKey": "agent:main:dashboard:e37c2f3a-e3aa-4c2c-bbba-3ee1f29ca8d5",
+      "spawnDepth": 1,
+      "sessionStartedAt": 1789472803004,
+      "lastInteractionAt": 1789473751563,
+      "label": "Usage Dashboard",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 38492,
+      "outputTokens": 90,
+      "totalTokens": 38492,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "providerOverride": "openrouter",
+      "modelOverride": "openrouter/free",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:main",
+      "updatedAt": 1789505333250,
+      "ageMs": 13289384,
+      "sessionId": "b22c3635-19bf-431e-b2b7-d1711603b7cd",
+      "sessionStartedAt": 1789308333477,
+      "lastInteractionAt": 1789381949263,
+      "status": "done",
+      "visibility": "shared",
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 115260,
+      "outputTokens": 551,
+      "totalTokens": 59585,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:63b1b94c-465e-4e2c-b03e-fdbbc6f1d758",
+      "updatedAt": 1789505130506,
+      "ageMs": 13492128,
+      "sessionId": "177d3636-364e-4504-95b8-04334ba6e473",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789503959034,
+      "lastInteractionAt": 1789504969722,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 15980,
+      "outputTokens": 265,
+      "totalTokens": 62444,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:a56b9e8f-828e-44ae-84ff-8db3aab337b7",
+      "updatedAt": 1789503748482,
+      "ageMs": 14874153,
+      "sessionId": "65ab8315-9375-438e-ae51-ef1049eeb5bc",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789490024285,
+      "lastInteractionAt": 1789503641320,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 268967,
+      "outputTokens": 642,
+      "totalTokens": 58260,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:995ea206-7cc6-4844-a60f-eb8cf32c3f2e",
+      "updatedAt": 1789490008182,
+      "ageMs": 28614453,
+      "sessionId": "ef8b0696-c28a-4a01-be34-9f53d4b2e6c2",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789480638888,
+      "lastInteractionAt": 1789485448827,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 116907,
+      "outputTokens": 130,
+      "totalTokens": 116907,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:e37c2f3a-e3aa-4c2c-bbba-3ee1f29ca8d5",
+      "updatedAt": 1789480622024,
+      "ageMs": 38000611,
+      "sessionId": "acd4ebc2-ccb4-4955-80d4-b90de0758384",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789472434858,
+      "lastInteractionAt": 1789474107530,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 142496,
+      "outputTokens": 222,
+      "totalTokens": 142496,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:5dadf231-085b-4455-9540-f27f162746ce",
+      "updatedAt": 1789480605969,
+      "ageMs": 38016666,
+      "sessionId": "962ae362-62a9-4f04-8f3e-71e5b312676a",
+      "spawnedBy": "agent:main:dashboard:e37c2f3a-e3aa-4c2c-bbba-3ee1f29ca8d5",
+      "parentSessionKey": "agent:main:dashboard:e37c2f3a-e3aa-4c2c-bbba-3ee1f29ca8d5",
+      "spawnDepth": 1,
+      "sessionStartedAt": 1789472811035,
+      "lastInteractionAt": 1789474472412,
+      "label": "Dashboard setup",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 246178,
+      "outputTokens": 932,
+      "totalTokens": 85173,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "providerOverride": "openrouter",
+      "modelOverride": "openrouter/free",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:discord:channel:1549045446670815253",
+      "updatedAt": 1789480582136,
+      "ageMs": 38040499,
+      "sessionId": "bc0d1052-6160-44cb-a9fe-123389d00f75",
+      "sessionStartedAt": 1789393609919,
+      "lastInteractionAt": 1789477072692,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "channel",
+        "id": "909984175656935494"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "observation",
+            "pluginId": "discord",
+            "accountId": "default",
+            "senderKind": "unknown",
+            "id": "909984175656935494"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 94657,
+      "outputTokens": 2394,
+      "totalTokens": 31489,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "group"
+    },
+    {
+      "key": "agent:mark:dashboard:adcd63d8-2a7d-4c61-bcff-0a8ef64c5e7f",
+      "updatedAt": 1789468323351,
+      "ageMs": 50299284,
+      "sessionId": "b853460f-4e13-4072-902a-24fdfea8d7ce",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789467874476,
+      "lastInteractionAt": 1789468266235,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 117480,
+      "outputTokens": 722,
+      "totalTokens": 30619,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:293de764-4c3e-4bcd-b0f5-41ac4269f03e",
+      "updatedAt": 1789464907343,
+      "ageMs": 53715292,
+      "sessionId": "bbaab065-0894-405a-a614-887522e24cee",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789350192462,
+      "lastInteractionAt": 1789381991880,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 114908,
+      "outputTokens": 449,
+      "totalTokens": 114908,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:2d8f8c81-871d-4e7d-846f-ebce97406fe0",
+      "updatedAt": 1789464904846,
+      "ageMs": 53717789,
+      "sessionId": "84d1af5c-b8f6-4c40-80b3-5f0d5bec35e4",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789383205610,
+      "lastInteractionAt": 1789385633664,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 337995,
+      "outputTokens": 984,
+      "totalTokens": 41143,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:discord:channel:1549042100660863099",
+      "updatedAt": 1789464902158,
+      "ageMs": 53720477,
+      "sessionId": "182f09db-5f31-4a37-8ae9-ccf699990bbc",
+      "sessionStartedAt": 1789393593445,
+      "visibility": "shared",
+      "totalTokens": null,
+      "totalTokensFresh": false,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "auto",
+        "source": "implicit"
+      },
+      "kind": "group"
+    },
+    {
+      "key": "agent:main:dashboard:320df319-9442-4b69-aba2-027d2bb2b7bc",
+      "updatedAt": 1789464891061,
+      "ageMs": 53731574,
+      "sessionId": "34ab6eb3-f7d7-4794-922f-9ef94ebc8c88",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789397110885,
+      "lastInteractionAt": 1789397489009,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 212006,
+      "outputTokens": 431,
+      "totalTokens": 53736,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "updatedAt": 1789464878429,
+      "ageMs": 53744206,
+      "sessionId": "1a79a041-e8d1-42a5-9809-a8d121355b7f",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789407416464,
+      "lastInteractionAt": 1789409842557,
+      "status": "killed",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": true,
+      "inputTokens": 417862,
+      "outputTokens": 12869,
+      "totalTokens": 141482,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:bd398b11-4bf0-43ff-8cee-fc02fd06b1fc",
+      "updatedAt": 1789464870376,
+      "ageMs": 53752259,
+      "sessionId": "4fdf3ad0-d49e-4690-90fe-2833659e8118",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789408635615,
+      "lastInteractionAt": 1789408636192,
+      "status": "failed",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 1500910,
+      "outputTokens": 24255,
+      "totalTokens": 84550,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:4e1d7e22-5809-4a34-9d5b-8c702ad01417",
+      "updatedAt": 1789464866310,
+      "ageMs": 53756325,
+      "sessionId": "b29d25a9-4c3b-4011-90ed-9bd2eebb91ef",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789410859401,
+      "lastInteractionAt": 1789411839443,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 79236,
+      "outputTokens": 385,
+      "totalTokens": 63561,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:dc8502c5-ad7a-48c4-a7f7-2bfed05691f7",
+      "updatedAt": 1789464864177,
+      "ageMs": 53758458,
+      "sessionId": "37015f8e-2edb-4270-89f7-1b2445f190e6",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789413936121,
+      "lastInteractionAt": 1789420061631,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 504412,
+      "outputTokens": 2128,
+      "totalTokens": 84586,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:fb4ed4a3-cb28-4588-84c0-4b63d906fab4",
+      "updatedAt": 1789464860299,
+      "ageMs": 53762336,
+      "sessionId": "4def5d28-7a0f-4e47-bbe0-1feb9c34d643",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789420439357,
+      "lastInteractionAt": 1789423175546,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 112321,
+      "outputTokens": 1443,
+      "totalTokens": 108182,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "nvidia/nemotron-3.5-lightning:free",
+      "modelProvider": "openrouter",
+      "providerOverride": "openrouter",
+      "modelOverride": "nvidia/nemotron-3.5-lightning:free",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:90aeff26-325a-4786-bbcf-5baf215fdefc",
+      "updatedAt": 1789464857765,
+      "ageMs": 53764870,
+      "sessionId": "6c3fe135-3671-49ac-9a5d-cfe6284d9922",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789424792283,
+      "lastInteractionAt": 1789427388302,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 20801,
+      "outputTokens": 385,
+      "totalTokens": 100935,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:097359f2-cd10-46d9-b97f-487648afdb5a",
+      "updatedAt": 1789464854720,
+      "ageMs": 53767915,
+      "sessionId": "535ac351-fdce-4896-8da4-31b4cdb406f8",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789427446004,
+      "lastInteractionAt": 1789428741620,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 154294,
+      "outputTokens": 130,
+      "totalTokens": 77216,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:8088a17b-f4ca-4368-87ac-44e1c2599b94",
+      "updatedAt": 1789464851342,
+      "ageMs": 53771293,
+      "sessionId": "a000b996-e7cd-4d11-b0a6-1ee4d427517a",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789432816519,
+      "lastInteractionAt": 1789435200295,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 1376141,
+      "outputTokens": 24606,
+      "totalTokens": 101929,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:9c1cb07f-d251-47d2-b352-6e17d72e1682",
+      "updatedAt": 1789464843640,
+      "ageMs": 53778995,
+      "sessionId": "8bad9b05-5367-4815-a31b-a3a365261f27",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789438298415,
+      "lastInteractionAt": 1789438298567,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 121807,
+      "outputTokens": 553,
+      "totalTokens": 29438,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:1b51d693-23a5-4f6a-8906-f1a9954b25e9",
+      "updatedAt": 1789464839226,
+      "ageMs": 53783409,
+      "sessionId": "c633c504-9ae7-439f-a0b3-ccf95551eccf",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789438739493,
+      "lastInteractionAt": 1789464698303,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 401037,
+      "outputTokens": 326,
+      "totalTokens": 135380,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:dashboard:5cb481ce-94d5-44d1-ab2f-61c486915c39",
+      "updatedAt": 1789464836771,
+      "ageMs": 53785864,
+      "sessionId": "f0e92f2d-71b6-460a-9743-61141bda717c",
+      "spawnedBy": "agent:main:dashboard:1b51d693-23a5-4f6a-8906-f1a9954b25e9",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:1b51d693-23a5-4f6a-8906-f1a9954b25e9",
+      "spawnDepth": 1,
+      "sessionStartedAt": 1789438857817,
+      "lastInteractionAt": 1789438857912,
+      "label": "Review Svelte Lines state wiring",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "systemSent": true,
+      "inputTokens": 223369,
+      "outputTokens": 4685,
+      "totalTokens": 55430,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "providerOverride": "openrouter",
+      "modelOverride": "openrouter/free",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:cron:31d8ffd6-adfb-4cee-94de-b2e0043d6863",
+      "updatedAt": 1789460872653,
+      "ageMs": 57749982,
+      "sessionId": "ff1b62df-7090-4f31-8f30-9b9d3a7e0717",
+      "sessionStartedAt": 1789460872580,
+      "lastInteractionAt": 1789460872580,
+      "label": "Automation: skill-collection-review-main",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "system"
+      },
+      "systemSent": true,
+      "inputTokens": 40542,
+      "outputTokens": 1625,
+      "totalTokens": 7149,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "cron"
+    },
+    {
+      "key": "agent:mark:cron:47a6a34a-2989-432c-9e93-5aaddbf80277",
+      "updatedAt": 1789441201365,
+      "ageMs": 77421270,
+      "sessionId": "e34fd837-d0d4-4787-93c7-664db53dcebf",
+      "label": "Automation: Memory Dreaming Promotion",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "system"
+      },
+      "systemSent": true,
+      "totalTokens": null,
+      "totalTokensFresh": false,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "auto",
+        "source": "implicit"
+      },
+      "kind": "cron"
+    },
+    {
+      "key": "agent:main:subagent:d5b9b92a-7fa8-4c59-962d-eb89ef3def3d",
+      "updatedAt": 1789433114812,
+      "ageMs": 85507823,
+      "sessionId": "176ab7b2-644d-480f-8f43-a1d600522c85",
+      "spawnedBy": "agent:main:dashboard:8088a17b-f4ca-4368-87ac-44e1c2599b94",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:8088a17b-f4ca-4368-87ac-44e1c2599b94",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789432953340,
+      "lastInteractionAt": 1789433114786,
+      "label": "Audit Lines runtime hooks",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 367457,
+      "outputTokens": 7163,
+      "totalTokens": 68350,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:subagent:5476a124-d341-497e-824b-49c0e96c96f6",
+      "updatedAt": 1789432994944,
+      "ageMs": 85627691,
+      "sessionId": "484222f5-1036-4069-9649-3a79aa0b97b2",
+      "spawnedBy": "agent:main:dashboard:8088a17b-f4ca-4368-87ac-44e1c2599b94",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:8088a17b-f4ca-4368-87ac-44e1c2599b94",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789432953356,
+      "lastInteractionAt": 1789432994872,
+      "label": "Audit Svelte virtualizer API",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 164641,
+      "outputTokens": 3810,
+      "totalTokens": 32970,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:subagent:8018379b-0456-4ecf-bcff-1b8f8e29a61d",
+      "updatedAt": 1789408940368,
+      "ageMs": 109682267,
+      "sessionId": "6ee9447b-435e-42a6-9451-6c4eebc9f82b",
+      "spawnedBy": "agent:main:dashboard:bd398b11-4bf0-43ff-8cee-fc02fd06b1fc",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:bd398b11-4bf0-43ff-8cee-fc02fd06b1fc",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789408819304,
+      "lastInteractionAt": 1789408940303,
+      "label": "Lines rendering audit",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 210281,
+      "outputTokens": 3584,
+      "totalTokens": 36040,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:subagent:3dae7543-156b-4c60-8cdf-321ad65fdac8",
+      "updatedAt": 1789408066171,
+      "ageMs": 110556464,
+      "sessionId": "64eae11a-1296-4b58-a02b-ec90feec8de2",
+      "spawnedBy": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789407581764,
+      "lastInteractionAt": 1789408066123,
+      "label": "Investigate esm.sh package options",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 260176,
+      "outputTokens": 6606,
+      "totalTokens": 48379,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:subagent:9b7cdd43-fc28-4081-a318-0e239cf79d23",
+      "updatedAt": 1789407965688,
+      "ageMs": 110656948,
+      "sessionId": "84f3e3b8-6317-45ca-abee-6be47d6998a1",
+      "spawnedBy": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789407581770,
+      "lastInteractionAt": 1789407965675,
+      "label": "Audit lines DOM dependencies",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 457161,
+      "outputTokens": 7467,
+      "totalTokens": 99535,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:main:subagent:b5ccbc64-9c1a-44c0-82fe-42177573013b",
+      "updatedAt": 1789407708092,
+      "ageMs": 110914544,
+      "sessionId": "89f78972-5feb-4bfd-a935-91740c2f5d01",
+      "spawnedBy": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "spawnedWorkspaceDir": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:main:dashboard:952b0660-7247-4d02-9fc8-9ee051cb9cf7",
+      "spawnDepth": 1,
+      "subagentRole": "orchestrator",
+      "subagentControlScope": "children",
+      "sessionStartedAt": 1789407581742,
+      "lastInteractionAt": 1789407708079,
+      "label": "Design virtual lines table plan",
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "agent",
+        "id": "main"
+      },
+      "thinkingLevel": "off",
+      "inputTokens": 138775,
+      "outputTokens": 5116,
+      "totalTokens": 26962,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "spawn-child"
+    },
+    {
+      "key": "agent:mark:dashboard:98157dde-2333-418e-8d51-18e5aa74daf6",
+      "updatedAt": 1789404503844,
+      "ageMs": 114118792,
+      "sessionId": "939a7e16-9929-46bc-a6ef-76cb46a6d42a",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789402137919,
+      "lastInteractionAt": 1789403191596,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 50953,
+      "outputTokens": 10,
+      "totalTokens": 50953,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:e140e9ae-bc3e-4a36-9df8-715be234b194",
+      "updatedAt": 1789393588420,
+      "ageMs": 125034216,
+      "sessionId": "90acc3b4-3b34-41f8-9257-0908a8cd22e7",
+      "sessionStartedAt": 1789393588091,
+      "lastInteractionAt": 1789393588091,
+      "visibility": "shared",
+      "createdActor": {
+        "type": "system"
+      },
+      "systemSent": true,
+      "inputTokens": 4094,
+      "outputTokens": 150,
+      "totalTokens": 4094,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "cron"
+    },
+    {
+      "key": "agent:mark:main",
+      "updatedAt": 1789388378360,
+      "ageMs": 130244276,
+      "sessionId": "aee8461a-9fb8-41e0-bed3-c2fd17ffddd7",
+      "sessionStartedAt": 1789378927310,
+      "lastInteractionAt": 1789383594815,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 403794,
+      "outputTokens": 2862,
+      "totalTokens": 44904,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:mark:dashboard:8d19ad8f-fd57-432b-b82d-b603e66d1211",
+      "updatedAt": 1789381812454,
+      "ageMs": 136810182,
+      "sessionId": "187b1252-7fdd-4abd-83b9-354fb251d2fd",
+      "spawnedCwd": "/root/BLADE_Alpha/.dev/worktree/bright-garden",
+      "parentSessionKey": "agent:mark:main",
+      "spawnDepth": 0,
+      "sessionStartedAt": 1789381689905,
+      "lastInteractionAt": 1789381690504,
+      "status": "done",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "human",
+        "source": "profile",
+        "id": "gateway-owner"
+      },
+      "participants": [
+        {
+          "identity": {
+            "type": "profile",
+            "id": "gateway-owner"
+          }
+        }
+      ],
+      "participantCount": 1,
+      "systemSent": true,
+      "abortedLastRun": false,
+      "inputTokens": 85142,
+      "outputTokens": 1578,
+      "totalTokens": 31001,
+      "totalTokensFresh": true,
+      "totalTokensVersion": 1,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "mark",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "openclaw",
+        "source": "session"
+      },
+      "kind": "direct"
+    },
+    {
+      "key": "agent:main:cron:47a6a34a-2989-432c-9e93-5aaddbf80277",
+      "updatedAt": 1789378537065,
+      "ageMs": 140085571,
+      "sessionId": "5792d127-f2e3-43cc-8f40-951cc63dd183",
+      "label": "Automation: Memory Dreaming Promotion",
+      "visibility": "shared",
+      "createdActor": {
+        "type": "system"
+      },
+      "systemSent": true,
+      "totalTokens": null,
+      "totalTokensFresh": false,
+      "model": "openrouter/free",
+      "modelProvider": "openrouter",
+      "contextTokens": 200000,
+      "agentId": "main",
+      "acpRuntime": false,
+      "agentRuntime": {
+        "id": "auto",
+        "source": "implicit"
+      },
+      "kind": "cron"
+    }
+  ]
+},
+  "gateway": Service: systemd user (disabled)
+File logs: /tmp/openclaw/openclaw-2026-09-16.log
+Host desktop: disabled
+
+Config (cli): ~/.openclaw/openclaw.json
+Config (service): ~/.openclaw/openclaw.json
+
+Gateway: bind=tailnet (100.98.206.101), port=18789 (env/config)
+Probe target: ws://100.98.206.101:18789
+Dashboard: http://100.98.206.101:18789/
+
+CLI version: 2026.9.4 (/usr/bin/openclaw)
+Gateway version: 2026.9.4
+
+Runtime: stopped (state inactive, sub dead, last exit 0, reason 0)
+Connectivity probe: ok
+Capability: connected-no-operator-scope
+
+Listening: 127.0.0.1:18789, 100.98.206.101:18789
+Troubles: run openclaw status
+Troubleshooting: https://docs.openclaw.ai/troubleshooting
+}

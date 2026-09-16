@@ -4,7 +4,7 @@ This document details the boot flow, component dependencies, DOM contracts, and 
 
 Classic scripts load first (`js/render.js`, allocation, schedule, io, …), then `index.html` fetches `modules/manifest.json` and mounts each module panel + `init*(Scheduler)`.
 
-Full classic JS matrix, team-builder file matrix, and older DOM notes live in git history at `a242859` if a section is missing here.
+---
 
 ### Module: `coverage` (Coverage tab)
 
@@ -48,3 +48,73 @@ Function coverage mode is exclusive: `#fc-mode-dfo` / `#fc-mode-bag` / neither. 
 **One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Function duties only via main Schedule Generate — no separate coverage generate control.
 
 DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on every WORK day (no PAX). Bands apply to DFO minimums and are hidden in BAG mode. Six `#fc-pool-*-m/f` inputs feed DFO or BAG pools for the active mode.
+
+---
+
+## Project File Inventory (verified 2026-09-15)
+
+### Boot sequence
+
+1. `index.html` loads `lib/*.min.js`, then `js/constants.js` → `js/state.js` → `js/utils.js` → `js/shifts.js` → `js/allocation.js` → `js/functions.js` → `js/lines-row-model.js` → `js/render.js` → `js/line-colors.js` → `js/reports.js` → `js/schedule.js` → `js/io.js` → `js/airport.js` → `js/capacity.js` → `js/modset-board.js` → `js/export-board.js` → `js/instructions.js` → `js/main.js` → `js/console-chrome.js` → `js/airfield-boot.js` → `js/intro.js`.
+2. After `window.Scheduler` is ready, `index.html`'s inline `<script type="module">` fetches `modules/manifest.json` and loads each module entry (panel HTML, CSS, init).
+
+### Top-level files
+
+| File | Role |
+|------|------|
+| `index.html` | Single-page shell; mount points for all tabs |
+| `vite.lines-table.config.mjs` | Vite build for Svelte lines-table island |
+| `package.json` / `package-lock.json` | npm deps + scripts (`build:lines-table`, `copy-frontend`) |
+| `scripts/copy-frontend.js` | Copies web assets to `dist-frontend/` |
+| `test-task1.js` | Node verification of `getLineRowModels` / row-model APIs |
+
+### `js/` — Classic scripts (IIFE onto `window.Scheduler`)
+
+| File | Status |
+|------|--------|
+| `constants.js` | Shared enums |
+| `state.js` | Central state object |
+| `utils.js` | Time / number / DOM helpers |
+| `shifts.js` | Shift CRUD & validation |
+| `allocation.js` | Schedule generation algorithm |
+| `functions.js` | Function coverage logic (DFO/BAG/PAX) |
+| `lines-row-model.js` | Row-model mapper (`lineToRowModel`, `getRowModels`, `getLineRowModels`) |
+| `render.js` | DOM rendering + UI updates + `renderLines`, `renderAll` |
+| `line-colors.js` | Line color painting (RDO/BAG/DFO) |
+| `reports.js` | Dashboard reports |
+| `schedule.js` | Schedule state & queries |
+| `io.js` | Import/Export JSON & Excel |
+| `airport.js` | Airport config modal |
+| `capacity.js` | Checkpoint capacity |
+| `modset-board.js` | Module set board |
+| `export-board.js` | Export board |
+| `instructions.js` | In-app instructions loader |
+| `main.js` | App init, feature-flag parsing |
+| `console-chrome.js` | Console chrome UI |
+| `airfield-boot.js` | Airfield boot |
+| `intro.js` | Intro screen |
+| `coverage-cuts.js` | Coverage cuts (kept for backward compat; module owns the real logic) |
+| `team-core.js` | Removed — handled by `modules/team-builder/` |
+| `team-build.js` | Removed — handled by `modules/team-builder/` |
+
+### `modules/` — ES module islands
+
+| Module | Entry | Init |
+|--------|-------|------|
+| `coverage` | `modules/coverage/index.js` | `initCoverage` |
+| `lines-table` | `modules/lines-table/dist/lines-table.js` | `initLinesTable` |
+| `team-builder` | `modules/team-builder/index.js` | `initTeamBuilder` |
+| `setup-panel` | `modules/setup-panel/index.js` | `initSetupPanel` |
+
+### `lib/` — Bundled vendors
+
+`dayjs.min.js`, `Sortable.min.js`, `luxon.min.js`, `exceljs.min.js`
+
+### `css/`
+
+`styles.css`, `team-build.css`, `line-print.css`, `rotation-join.css`, `console.css`, `intro.css`
+
+### Build artifacts
+
+- `dist/` — empty (no longer used by Tauri pipeline on this branch)
+- `dist-frontend/` — copied web assets (index.html, INSTRUCTIONS.md, css/, js/, lib/, modules/)

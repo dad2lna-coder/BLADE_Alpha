@@ -1,7 +1,7 @@
-# BrokeSched - Schedule Builder Instructions
+# BLADE Alpha — Schedule Builder Instructions
 
 ## Overview
-BrokeSched is an offline HTML/JS application designed to generate airport staffing schedules for TSO (Transportation Security Officer), LTSO (Lead TSO), and STSO (Supervisory TSO) positions. This guide walks you through the complete workflow from setup to team assignment and final export.
+BLADE Alpha is an offline HTML/JS application designed to generate airport staffing schedules for TSO (Transportation Security Officer), LTSO (Lead TSO), and STSO (Supervisory TSO) positions. This guide walks you through the complete workflow from setup to team assignment and final export.
 
 ---
 

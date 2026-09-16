@@ -564,8 +564,7 @@ window.Scheduler = window.Scheduler || {};
     if (name === "lines" && S.renderLines) S.renderLines();
     if (name === "coverage" && S.renderCoverageBars) S.renderCoverageBars();
     if (name === "reports" && S.renderReports) S.renderReports();
-        if (S.__USE_SVELTE_LINES) {
-      window.dispatchEvent(new CustomEvent('lines:request-render', { detail: { source: 'tab-switch' } }));
+    if (S.__USE_SVELTE_LINES) {
       window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "tab-switch" } }));
     }
   };

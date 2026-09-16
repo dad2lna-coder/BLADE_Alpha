@@ -24,7 +24,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         entryFileNames: "lines-table.js",
-        assetFileNames: "lines-table.[extname]",
+        assetFileNames: "lines-table.[ext]",
       },
     },
   },

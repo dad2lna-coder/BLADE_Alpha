@@ -37,8 +37,9 @@ export function initLinesTable(scheduler) {
       ? S.sortLinesForView(S.filterLinesForView(lines))
       : lines;
     const schedule = (S.state && S.state.schedule) || {};
-    const models = typeof S.getRowModels === "function"
-      ? S.getRowModels(filtered, schedule, resolvers())
+    // Svelte uses S.getLineRowModels which reads state internally; pass empty options as no external overrides needed
+    const models = typeof S.getLineRowModels === "function"
+      ? S.getLineRowModels({ teamResolver: resolvers().teamResolver, shiftResolver: resolvers().shiftResolver, rotationDutyResolver: resolvers().rotationDutyResolver })
       : [];
     return Array.isArray(models) ? models : [];
   }
