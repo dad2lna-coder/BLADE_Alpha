@@ -43,7 +43,7 @@ Team boards are compact-by-default (`TeamBoard.js`): header/counts only; LineCar
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.
 
-Function coverage mode is still exclusive at runtime (`#fc-mode-dfo` / `#fc-mode-bag` / neither), stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`. Classic `js/functions.js` still loads first; module init overwrites the same `S.*` FC API.
+Function coverage mode is still exclusive at runtime (`#fc-mode-dfo` / `#fc-mode-bag` / neither), stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`. **`modules/function-coverage/` is the SoT for FC.** Classic `js/functions.js` was deleted in E7; runtime relies on the module bridge only.
 
 **One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Function duties only via main Schedule Generate — no separate coverage generate control.
 
@@ -55,7 +55,7 @@ DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on
 
 ### Boot sequence
 
-1. `index.html` loads `lib/*.min.js`, then `js/constants.js` → `js/state.js` → `js/utils.js` → `js/shifts.js` → `js/allocation.js` → `js/functions.js` → `js/lines-row-model.js` → `js/render.js` → `js/line-colors.js` → `js/reports.js` → `js/schedule.js` → `js/io.js` → `js/airport.js` → `js/capacity.js` → `js/modset-board.js` → `js/export-board.js` → `js/instructions.js` → `js/main.js` → `js/console-chrome.js` → `js/airfield-boot.js` → `js/intro.js`.
+1. `index.html` loads `lib/*.min.js`, then `js/constants.js` → `js/state.js` → `js/utils.js` → `js/shifts.js` → `js/allocation.js` → `js/lines-row-model.js` → `js/render.js` → `js/line-colors.js` → `js/reports.js` → `js/schedule.js` → `js/io.js` → `js/airport.js` → `js/capacity.js` → `js/modset-board.js` → `js/export-board.js` → `js/instructions.js` → `js/main.js` → `js/console-chrome.js` → `js/airfield-boot.js` → `js/intro.js`. (E7: `js/functions.js` removed from classic chain; FC now bootstrapped via `modules/function-coverage/` in the module loader.)
 2. After `window.Scheduler` is ready, `index.html`'s inline `<script type="module">` fetches `modules/manifest.json` and loads each module entry (panel HTML, CSS, init).
 
 ### Top-level files
@@ -77,7 +77,7 @@ DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on
 | `utils.js` | Time / number / DOM helpers |
 | `shifts.js` | Shift CRUD & validation |
 | `allocation.js` | Schedule generation algorithm |
-| `functions.js` | Function coverage logic (DFO/BAG/PAX) |
+| `functions.js` | **Removed in E7** — FC logic moved to `modules/function-coverage/` |
 | `lines-row-model.js` | Row-model mapper (`lineToRowModel`, `getRowModels`, `getLineRowModels`) |
 | `render.js` | DOM rendering + UI updates + `renderLines`, `renderAll` |
 | `line-colors.js` | Line color painting (RDO/BAG/DFO) |
