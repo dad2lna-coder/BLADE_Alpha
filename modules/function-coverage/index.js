@@ -8,7 +8,9 @@ import * as duty from "./lib/duty.js";
 import * as assign from "./lib/assign.js";
 
 export function initFunctionCoverage(scheduler) {
-  // no-op; classic js/functions.js still owns runtime
+  bindDutyApi(scheduler);
+  bindPoolsApi(scheduler);
+  bindBandsApi(scheduler);
   return scheduler;
 }
 
@@ -39,6 +41,23 @@ export {
   bagPoolTotal,
   dfoPoolTotal,
 } from "./lib/pools.js";
+
+// Bare named re-exports from lib/bands.js (same style as duty/pools)
+export {
+  bindBandsApi,
+  syncFunctionModeUi,
+  fillFunctionCoverageForm,
+  openFunctionCoverageModal,
+  closeFunctionCoverageModal,
+  renderFunctionBandsTable,
+  readFunctionBandsFromDom,
+  updateFunctionCoveragePreview,
+  ensureExtraPositions,
+  readExtraPositionsFromDom,
+  renderExtraPositions,
+  addExtraPosition,
+  buildExtraPositionLines,
+} from "./lib/bands.js";
 
 // Named re-exports of all lib modules for future wiring
 export { pools, bands, assign };
