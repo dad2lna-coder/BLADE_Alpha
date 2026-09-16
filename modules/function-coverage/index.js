@@ -32,6 +32,8 @@ import {
 } from "./lib/assign.js";
 
 export function initFunctionCoverage(scheduler) {
+  scheduler = scheduler || (typeof window !== "undefined" ? window.Scheduler : null);
+  if (!scheduler) return null;
   bindDutyApi(scheduler);
   bindPoolsApi(scheduler);
   bindBandsApi(scheduler);

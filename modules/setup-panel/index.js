@@ -34,7 +34,7 @@ export function initSetupPanel(scheduler) {
     var addBtn = document.getElementById("fc-add-band");
     if (!S._funcCoverageBound || (addBtn && !addBtn._fcBound)) {
       S._funcCoverageBound = false;
-      S.initFunctionCoverage();
+      S.initFunctionCoverage(S);
     } else if (S.fillFunctionCoverageForm) {
       try { S.fillFunctionCoverageForm(); } catch (e) {}
     }
