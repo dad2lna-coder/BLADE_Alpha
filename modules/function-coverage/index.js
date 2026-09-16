@@ -6,7 +6,30 @@ import * as pools from "./lib/pools.js";
 import * as bands from "./lib/bands.js";
 import * as duty from "./lib/duty.js";
 import * as assign from "./lib/assign.js";
-import { bindFunctionCoverageUi } from "./lib/bands.js";
+
+import {
+  bindDutyApi, lineRoleKey, isOpsFunctionRole, lineIsDfoTagged, getRotationDuty,
+  lineStartMin, phaseOfStart, isAmSide, computeShiftAnchors, lineCoversSlot,
+  bandForMinute, clearLineFunctions
+} from "./lib/duty.js";
+
+import {
+  bindPoolsApi, ensureFunctionCoverage, getFunctionMode, fteCapsByRoleSex,
+  capFunctionPoolsToFte, buildCertifiedPools, bagPoolTotal, dfoPoolTotal
+} from "./lib/pools.js";
+
+import {
+  bindBandsApi, syncFunctionModeUi, fillFunctionCoverageForm,
+  openFunctionCoverageModal, closeFunctionCoverageModal, renderFunctionBandsTable,
+  readFunctionBandsFromDom, updateFunctionCoveragePreview, ensureExtraPositions,
+  readExtraPositionsFromDom, renderExtraPositions, addExtraPosition,
+  buildExtraPositionLines, bindFunctionCoverageUi
+} from "./lib/bands.js";
+
+import {
+  bindAssignApi, generateFunctionAssignments, markDfo, markBag,
+  fillBandShortfalls, bagSlotCounts, worstBagCoverage
+} from "./lib/assign.js";
 
 export function initFunctionCoverage(scheduler) {
   bindDutyApi(scheduler);
