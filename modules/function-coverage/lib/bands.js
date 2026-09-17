@@ -59,6 +59,11 @@ function syncDerivedMode(fc) {
 
 export function renderFunctionBandsTable() {
   const tbody = api.$("fc-bands-tbody"); if (!tbody) return;
+  const table = tbody.closest("table");
+  const thead = table && table.querySelector("thead");
+  if (thead) {
+    thead.innerHTML = "<tr><th>Start</th><th>End</th><th>STSO min</th><th>STSO max</th><th>LTSO min</th><th>LTSO max</th><th>TSO min</th><th>TSO max</th><th></th></tr>";
+  }
   const bands = ensureFunctionCoverage().bands;
   tbody.innerHTML = bands.map(function (b, i) {
     function num(key) {
@@ -67,7 +72,7 @@ export function renderFunctionBandsTable() {
     return "<tr>" +
       '<td><input type="time" data-fc-band="' + i + '" data-fc-field="start" value="' + (b.start || "00:00") + '" step="900"></td>' +
       '<td><input type="time" data-fc-band="' + i + '" data-fc-field="end" value="' + (b.end || "00:00") + '" step="900"></td>' +
-      num("stso") + num("ltso") + num("tso") +
+      num("stsoMin") + num("stsoMax") + num("ltsoMin") + num("ltsoMax") + num("tsoMin") + num("tsoMax") +
       '<td><button type="button" class="btn btn-red btn-sm" data-fc-remove="' + i + '">\u2715</button></td></tr>';
   }).join("");
 }
@@ -93,7 +98,7 @@ export function readFunctionBandsFromDom() {
   }
   for (var i = 0; i < fc.bands.length; i++) {
     var b = fc.bands[i] || {};
-    ["start", "end", "stso", "ltso", "tso"].forEach(function (field) {
+    ["start", "end", "stsoMin", "stsoMax", "ltsoMin", "ltsoMax", "tsoMin", "tsoMax"].forEach(function (field) {
       var el = document.querySelector('[data-fc-band="' + i + '"][data-fc-field="' + field + '"]');
       if (!el) return;
       if (field === "start" || field === "end") b[field] = el.value || b[field];
@@ -110,7 +115,10 @@ export function updateFunctionCoveragePreview() {
   const fc = ensureFunctionCoverage();
   const anchors = computeShiftAnchors();
   const bandTxt = (fc.bands || []).map(function (b) {
-    return (b.start || "?") + "-" + (b.end || "?") + " bag-need " + (b.stso || 0) + "-" + (b.ltso || 0) + "-" + (b.tso || 0);
+    return (b.start || "?") + "-" + (b.end || "?") +
+      " bag-need STSO " + (b.stsoMin || 0) + "\u2013" + (b.stsoMax || 0) +
+      " LTSO " + (b.ltsoMin || 0) + "\u2013" + (b.ltsoMax || 0) +
+      " TSO " + (b.tsoMin || 0) + "\u2013" + (b.tsoMax || 0);
   }).join(" | ");
   el.textContent = "BAG STSO " + fc.poolStsoBagM + "/" + fc.poolStsoBagF +
     " LTSO " + fc.poolLtsoBagM + "/" + fc.poolLtsoBagF +
@@ -265,7 +273,7 @@ export function bindFunctionCoverageUi() {
     el.addEventListener("click", function (e) {
       e.preventDefault();
       readFunctionBandsFromDom();
-      ensureFunctionCoverage().bands.push({ start: "12:00", end: "16:00", stso: 0, ltso: 0, tso: 0 });
+      ensureFunctionCoverage().bands.push({ start: "12:00", end: "16:00", stsoMin: 0, stsoMax: 0, ltsoMin: 0, ltsoMax: 0, tsoMin: 0, tsoMax: 0 });
       renderFunctionBandsTable();
       updateFunctionCoveragePreview();
     });

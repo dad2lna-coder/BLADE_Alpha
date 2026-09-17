@@ -121,9 +121,9 @@ export function markDfo(role, sex, n, fc) {
   if (pmSide.length < needPm) { needAm = Math.min(amSide.length, needAm + (needPm - pmSide.length)); needPm = pmSide.length; }
   var closeNeed = 0;
   if (closeBand) {
-    if (role === "STSO") closeNeed = closeBand.stso || 0;
-    else if (role === "LTSO") closeNeed = closeBand.ltso || 0;
-    else if (role === "TSO") closeNeed = closeBand.tso || 0;
+    if (role === "STSO") closeNeed = closeBand.stsoMin || 0;
+    else if (role === "LTSO") closeNeed = closeBand.ltsoMin || 0;
+    else if (role === "TSO") closeNeed = closeBand.tsoMin || 0;
   }
   var closeCapable = closeBand
     ? pmSide.filter(function (line) { return coversBandStart(line, closeBand); })
@@ -185,14 +185,16 @@ export function fillBandShortfalls(d, fc, bagFillCount) {
   bagFillCount = bagFillCount || {};
   var days = (api.state.weekCount || 1) * 7;
   (fc.bands || []).forEach(function (band) {
-    [["STSO", band.stso || 0], ["LTSO", band.ltso || 0], ["TSO", band.tso || 0]].forEach(function (pair) {
-      var role = pair[0], need = pair[1];
+    [["STSO", band.stsoMin, band.stsoMax], ["LTSO", band.ltsoMin, band.ltsoMax], ["TSO", band.tsoMin, band.tsoMax]].forEach(function (pair) {
+      var role = pair[0], need = pair[1] || 0, maxC = pair[2];
+      if (maxC == null) maxC = need;
+      if (maxC < need) maxC = need;
       if (need <= 0) return;
       var slots = bandSlots(band);
       var counts = bagSlotCounts(d, band, role);
       var slotShort = [];
       for (var i = 0; i < slots.length; i++) slotShort.push(need - counts[i]);
-      var totalShort = slotShort.reduce(function (a, b) { return a + b; }, 0);
+      var totalShort = slotShort.reduce(function (a, b) { return a + Math.max(0, b); }, 0);
       if (totalShort <= 0) return;
       function countFuncDays(line) {
         var n = 0;
@@ -207,10 +209,19 @@ export function fillBandShortfalls(d, fc, bagFillCount) {
           if (lineRoleKey(l) !== role) return false;
           if (!worksDay(l, d) || getDuty(l.id, d) === "BAG") return false;
           var coversShort = false;
+          var allCoveredShortAtMax = true;
+          var wouldExceedMax = false;
           for (var i = 0; i < slots.length; i++) {
-            if (lineCoversSlot(l, d, slots[i]) && counts[i] < need) { coversShort = true; break; }
+            if (!lineCoversSlot(l, d, slots[i])) continue;
+            if (counts[i] >= maxC) wouldExceedMax = true;
+            if (counts[i] < need) {
+              coversShort = true;
+              if (counts[i] < maxC) allCoveredShortAtMax = false;
+            }
           }
           if (!coversShort) return false;
+          if (wouldExceedMax) return false;
+          if (allCoveredShortAtMax) return false;
           return true;
         }).sort(function (a, b) {
           var da = countFuncDays(a), db = countFuncDays(b);
@@ -226,8 +237,10 @@ export function fillBandShortfalls(d, fc, bagFillCount) {
         for (var i = 0; i < slots.length; i++) {
           if (lineCoversSlot(chosen, d, slots[i])) {
             counts[i]++;
-            slotShort[i]--;
-            totalShort--;
+            if (slotShort[i] > 0) {
+              slotShort[i]--;
+              totalShort--;
+            }
           }
         }
       }
@@ -282,7 +295,7 @@ export function generateFunctionAssignments(opts) {
   for (var d2 = 0; d2 < Math.min(7, days); d2++) {
     (fc.bands || []).forEach(function (band) {
       var miss = [];
-      [["STSO", band.stso || 0], ["LTSO", band.ltso || 0], ["TSO", band.tso || 0]].forEach(function (pair) {
+      [["STSO", band.stsoMin || 0], ["LTSO", band.ltsoMin || 0], ["TSO", band.tsoMin || 0]].forEach(function (pair) {
         var role = pair[0], need = pair[1];
         if (need <= 0) return;
         var have = worstBagCoverage(d2, band, role);
