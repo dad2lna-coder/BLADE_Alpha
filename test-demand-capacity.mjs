@@ -72,7 +72,6 @@ function makeS(lines, opts) {
   };
 }
 
-// --- parse ---
 assert.equal(parseDow("Sunday"), 0);
 assert.equal(parseDow("monday"), 1);
 assert.equal(parseDow("Friday"), 5);
@@ -90,27 +89,27 @@ assert.equal(etdToMin(1060), null);
 assert.equal(parseSeats(110), 110);
 assert.equal(parsePctOrig(0.8), 0.8);
 
-var headers = ["AIRPORT", "DAY_OF_WEEK", "ETD", "CAPACITY", "PERCENT_ORIGINATING"];
+var headers = ["AIRPORT", "DAY_OF_WEEK", "ETD", "CAPACITY", "LOAD_FACTOR", "PERCENT_ORIGINATING"];
 var map = headerMapFromRow(headers);
 assert.deepEqual(missingRequired(map), []);
-var flight = parseFlightRow(["DAL", "Friday", 1023, 110, 0.8], map, 1);
+var flight = parseFlightRow(["DAL", "Friday", 1023, 110, 0.84, 0.8], map, 1);
 assert.equal(flight.dow, 5);
 assert.equal(flight.etdMin, 623);
-assert.equal(flight.volume, 110 * 0.8);
+assert.equal(flight.volume, 110 * 0.84 * 0.8);
+assert.equal(parseFlightRow(["DAL", "Friday", 1023, 110, 84, 80], map, 1).volume, 110 * 0.84 * 0.8);
 
 var parsed = parseVolumeRows([
-  ["DAY_OF_WEEK", "ETD", "CAPACITY", "PERCENT_ORIGINATING"],
-  ["Monday", 1023, 110, 0.8],
-  ["bad", "xx", "no", "no"],
-  ["Sunday", 400, 50, 1]
+  ["DAY_OF_WEEK", "ETD", "CAPACITY", "LOAD_FACTOR", "PERCENT_ORIGINATING"],
+  ["Monday", 1023, 110, 0.84, 0.8],
+  ["bad", "xx", "no", "no", "no"],
+  ["Sunday", 400, 50, 1, 1]
 ], 1.5);
 assert.equal(parsed.rowCount, 2);
 assert.equal(parsed.skipped, 1);
-assert.equal(parsed.flights[0].volume, 110 * 0.8 * 1.5);
+assert.equal(parsed.flights[0].volume, 110 * 0.84 * 0.8 * 1.5);
 
 assert.ok(missingRequired(headerMapFromRow(["FOO", "BAR"])).length >= 3);
 
-// --- volume aggregate ---
 assert.equal(landMinFromEtd(623), 503);
 assert.equal(landMinFromEtd(60), 1380);
 
@@ -119,12 +118,12 @@ var Sslots = makeS([]);
 assert.deepEqual(demandSlots(Sslots), slots);
 
 var demand = bucketFlights([
-  { dow: 5, etdMin: 623, seats: 110, pctOrig: 0.8 },
-  { dow: 1, etdMin: 240, seats: 100, pctOrig: 1 }
+  { dow: 5, etdMin: 623, seats: 110, loadFactor: 0.84, pctOrig: 0.8 },
+  { dow: 1, etdMin: 240, seats: 100, loadFactor: 1, pctOrig: 1 }
 ], slots, 1);
 var friIdx = slots.indexOf(Math.floor(503 / 30) * 30);
 assert.ok(friIdx >= 0);
-assert.equal(demand[5][friIdx], 88);
+assert.equal(demand[5][friIdx], 110 * 0.84 * 0.8);
 assert.equal(demand[1].reduce(function (a, b) { return a + b; }, 0), 0);
 
 assert.equal(emptyDemandByDow(3)[0].length, 3);
@@ -136,7 +135,6 @@ assert.equal(roleAllowed("LTSO", "tso"), false);
 assert.equal(roleAllowed("LTSO", "tso-ltso"), true);
 assert.equal(roleAllowed("STSO", "tso-ltso"), false);
 
-// --- 60 PAX TSOs covering a slot → 1080 pax / 30-min (2160 / hour) ---
 var tso60 = [];
 for (var i = 1; i <= 60; i++) tso60.push({ id: i, shiftId: "S1" });
 var S60 = makeS(tso60);
@@ -147,7 +145,6 @@ assert.equal(cap60.capacityByDow[0][0], 60 * 18);
 assert.equal(cap60.capacityByDow[0][0], 1080);
 assert.equal(cap60.capacityByDow[0][0] * 2, 2160);
 
-// BAG / DFO excluded
 var mixed = [
   { id: 1, shiftId: "S1" },
   { id: 2, shiftId: "S1" },
@@ -158,11 +155,9 @@ var capBag = computeStaffCapacity(Sbag, slots, "tso");
 assert.equal(capBag.countsByDow[0][0], 1);
 assert.equal(capBag.capacityByDow[0][0], 18);
 
-// Unassigned duty counts as PAX (not BAG/DFO)
 var Sunset = makeS([{ id: 1, shiftId: "S1" }], { defaultDuty: null });
 assert.equal(computeStaffCapacity(Sunset, slots, "tso").countsByDow[0][0], 1);
 
-// STSO never counts; LTSO only on tso-ltso
 var roles = [
   { id: 1, shiftId: "S1" },
   { id: 2, shiftId: "S1", isLtso: true },
@@ -175,7 +170,6 @@ assert.equal(capTso.countsByDow[0][0], 1);
 assert.equal(capBoth.countsByDow[0][0], 2);
 assert.equal(capBoth.capacityByDow[0][0], 36);
 
-// RDO day does not count
 var Srdo = makeS([{ id: 1, shiftId: "S1" }], {
   schedule: ["RDO", "WORK", "WORK", "WORK", "WORK", "WORK", "WORK"]
 });
