@@ -1,5 +1,5 @@
 /**
- * Bucket originating volume across 30-min slots from ETD−120 through ETD−45.
+ * Bucket originating volume across 30-min slots from ETD−120 through ETD−30.
  * Slot grid matches staffing capacity (coverageSlots preferred).
  */
 
@@ -18,11 +18,11 @@ export function wrapMin(m) {
   return ((Number(m) % 1440) + 1440) % 1440;
 }
 
-/** Inclusive window [ETD−120, ETD−45] in clock minutes (may wrap midnight). */
+/** Inclusive window [ETD−120, ETD−30] in clock minutes (may wrap midnight). */
 export function volumeWindow(etdMin) {
   return {
     start: wrapMin(Number(etdMin) - 120),
-    end: wrapMin(Number(etdMin) - 45)
+    end: wrapMin(Number(etdMin) - 30)
   };
 }
 
@@ -36,7 +36,8 @@ export function slotInVolumeWindow(slotStart, winStart, winEnd) {
   return s >= winStart || s <= winEnd;
 }
 
-export var CURVE_WEIGHTS = [0.5, 0.3, 0.2];
+export var DEFAULT_ARRIVAL_WEIGHTS_PCT = [40, 30, 20, 10];
+export var CURVE_WEIGHTS = [0.4, 0.3, 0.2, 0.1];
 
 export function slotsForEtd(slots, etdMin) {
   var win = volumeWindow(etdMin);
@@ -49,24 +50,37 @@ export function slotsForEtd(slots, etdMin) {
   return out;
 }
 
-/** 50/30/20 on 3 slots; same pattern renormalized if the list is not length 3. */
-export function curveWeights(n) {
-  var base = CURVE_WEIGHTS;
+export function normalizeArrivalWeights(raw) {
+  var src = Array.isArray(raw) && raw.length ? raw : DEFAULT_ARRIVAL_WEIGHTS_PCT;
+  var nums = [];
+  var sum = 0;
+  for (var i = 0; i < 4; i++) {
+    var n = Number(src[i]);
+    if (!Number.isFinite(n) || n < 0) n = 0;
+    nums.push(n);
+    sum += n;
+  }
+  if (!sum) return CURVE_WEIGHTS.slice();
+  return nums.map(function (n) { return n / sum; });
+}
+
+/** 40/30/20/10 on 4 slots; same pattern renormalized if the list is not length 4. */
+export function curveWeights(n, raw) {
+  var base = normalizeArrivalWeights(raw);
   var count = n | 0;
   if (count <= 0) return [];
-  if (count === 3) return base.slice();
-  var take = Math.min(count, base.length);
+  if (count === 4) return base;
   var out = [];
   var sum = 0;
   var i;
-  if (count <= 3) {
-    for (i = 0; i < take; i++) { out.push(base[i]); sum += base[i]; }
+  if (count < 4) {
+    for (i = 0; i < count; i++) { out.push(base[i]); sum += base[i]; }
   } else {
     for (i = 0; i < count; i++) {
-      var t = i * 2 / (count - 1);
+      var t = i * 3 / (count - 1);
       var a = Math.floor(t);
       var f = t - a;
-      var w = a >= 2 ? base[2] : base[a] * (1 - f) + base[a + 1] * f;
+      var w = a >= 3 ? base[3] : base[a] * (1 - f) + base[a + 1] * f;
       out.push(w);
       sum += w;
     }
@@ -76,7 +90,7 @@ export function curveWeights(n) {
   return out;
 }
 
-export function bucketFlights(flights, slots, multiplier) {
+export function bucketFlights(flights, slots, multiplier, arrivalWeights) {
   var demandByDow = emptyDemandByDow(slots.length);
   var unplaced = 0;
   var mult = Number(multiplier);
@@ -96,7 +110,7 @@ export function bucketFlights(flights, slots, multiplier) {
       unplaced += 1;
       continue;
     }
-    var weights = curveWeights(idxs.length);
+    var weights = curveWeights(idxs.length, arrivalWeights);
     for (var i = 0; i < idxs.length; i++) demandByDow[dow][idxs[i]] += vol * weights[i];
   }
   demandByDow.unplaced = unplaced;
