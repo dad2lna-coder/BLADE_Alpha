@@ -15,7 +15,8 @@ function addFcBandClassic(S) {
     : (S.state && S.state.functionCoverage);
   if (!fc) return;
   if (!Array.isArray(fc.bands)) fc.bands = [];
-  fc.bands.push({ start: "12:00", end: "16:00", stso: 0, ltso: 0, tso: 0 });
+  fc.bands.push({ start: "12:00", end: "16:00", stsoMin: 0, stsoMax: 0, ltsoMin: 0, ltsoMax: 0, tsoMin: 0, tsoMax: 0 });
+  if (typeof S.ensureFunctionCoverage === "function") S.ensureFunctionCoverage();
   if (S.renderFunctionBandsTable) S.renderFunctionBandsTable();
   if (S.updateFunctionCoveragePreview) S.updateFunctionCoveragePreview();
 }
