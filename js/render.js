@@ -383,7 +383,7 @@ window.Scheduler = window.Scheduler || {};
       var teamMeta = S.teamMetaForLine(line.id);
       html += "<tr data-line-row=\"" + line.id + "\">" +
         "<td><select class=\"line-edit\" data-field=\"team\" data-line-id=\"" + line.id + "\">" + teamSelectHtml(teamMeta.id) + "<\/select><\/td>" +
-        "<td><input type=\"text\" class=\"line-edit line-code-input\" data-field=\"lineCode\" data-line-id=\"" + line.id + "\" value=\"" + String(line.lineCode || "").replace(/\"/g, """) + "\"><\/td>" +
+        "<td><input type=\"text\" class=\"line-edit line-code-input\" data-field=\"lineCode\" data-line-id=\"" + line.id + "\" value=\"" + String(line.lineCode || "").replace(/"/g, "&amp;quot") + "\"><\/td>" +
         "<td><select class=\"line-edit\" data-field=\"shift\" data-line-id=\"" + line.id + "\">" + shiftSelectHtml(line.shiftId) + "<\/select><\/td>" +
         "<td><select class=\"line-edit\" data-field=\"emp\" data-line-id=\"" + line.id + "\">" + empSelectHtml(empVal) + "<\/select><\/td>" +
         "<td><select class=\"line-edit\" data-field=\"sex\" data-line-id=\"" + line.id + "\">" +
