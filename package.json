@@ -11,7 +11,8 @@
     "build:function-coverage": "vite build --config vite.function-coverage.config.mjs",
     "build:lines-table": "vite build --config vite.lines-table.config.mjs",
     "copy-frontend": "node scripts/copy-frontend.js",
-    "test:function-coverage": "node test-function-coverage.mjs"
+    "test:function-coverage": "node test-function-coverage.mjs",
+    "test:demand-capacity": "node test-demand-capacity.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",

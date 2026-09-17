@@ -35,5 +35,14 @@
     ],
     "panel": "modules/coverage/panel.html",
     "mount": "#tab-coverage"
+  },
+  "demand-capacity": {
+    "entry": "modules/demand-capacity/index.js",
+    "init": "initDemandCapacity",
+    "css": [
+      "modules/demand-capacity/styles/demand-capacity.css"
+    ],
+    "panel": "modules/demand-capacity/panel.html",
+    "mount": "#demand-capacity-root"
   }
 }

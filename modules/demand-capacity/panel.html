@@ -1,0 +1,25 @@
+<div class="card" id="dc-panel">
+  <div class="section-title">Volume demand vs process capacity</div>
+  <p class="muted" id="dc-lead">
+    Originating passengers (ETD − 2 hours) overlaid with airport process throughput.
+    Both series are pax per 30-minute slot — not FTE or coverage headcount.
+  </p>
+  <div class="toolbar dc-toolbar" id="dc-toolbar">
+    <label class="dc-file-label">Volume file
+      <input type="file" id="dc-file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" />
+    </label>
+    <button type="button" class="btn btn-amber" id="dc-import">Import</button>
+    <label>capacityMultiplier
+      <input type="number" id="dc-capacity-multiplier" min="0" step="0.1" value="1.0" />
+    </label>
+    <button type="button" class="btn" id="dc-refresh">Refresh</button>
+    <span class="muted" id="dc-status">Import a flight-list .xlsx to plot demand.</span>
+  </div>
+  <div class="dc-legend" id="dc-legend" hidden>
+    <span><i class="dc-swatch dc-swatch-vol"></i> Volume</span>
+    <span><i class="dc-swatch dc-swatch-cap"></i> Process capacity</span>
+    <span class="muted" id="dc-cap-note">Capacity from current Airfield lanes × volumePerHour (pax / 30-min).</span>
+  </div>
+  <p class="muted dc-empty" id="dc-empty"></p>
+  <div class="dc-charts" id="dc-charts" hidden></div>
+</div>

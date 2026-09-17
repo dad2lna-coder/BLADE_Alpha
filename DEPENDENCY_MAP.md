@@ -22,7 +22,22 @@ Boot: classic scripts keep `coverageSlots` / `computeHourlyByDow` / `S.coverageV
 
 Baggage view (`funcView === "bag"`) counts BAG/DFO duties for all roles; STSO/LTSO filter checkboxes are not required.
 
+### Module: `demand-capacity` (Coverage tab card)
+
+Boot: after `coverage` mounts, the loader injects `modules/demand-capacity/panel.html` into `#demand-capacity-root` (empty host at the top of Coverage) and calls `initDemandCapacity(S)`. Source ESM only — no dist bundle.
+
+| File | Depends On | Provides | Notes |
+|------|-----------|----------|-------|
+| `modules/demand-capacity/index.js` | ExcelJS, `S.computeLaneCapacityMatrix` / `S.computeCapacity`, `S.capacitySlots` | `initDemandCapacity(S)` | Import volume xlsx + Refresh process capacity; stores `S.state.volumeImport` |
+| `modules/demand-capacity/parse.js` | `window.ExcelJS` | header/row parse | Required: DAY_OF_WEEK, ETD, CAPACITY, PERCENT_ORIGINATING |
+| `modules/demand-capacity/aggregate.js` | `S.capacitySlots` else `S.coverageSlots` | ETD−2h bucket + airportPax align | Does **not** call `S.computeHourlyByDow` |
+| `modules/demand-capacity/charts.js` | none | 7 SVG day charts | Volume vs process capacity, same pax/30 unit |
+| `modules/demand-capacity/panel.html` | host `#demand-capacity-root` | file / Import / multiplier / Refresh / charts | Host only in coverage panel — no demand UI stuffed there |
+
+Process capacity series is `row.airportPax` from the existing Capacity API (lanes × volumePerHour / 2). Read-only — does not write Setup, Function Coverage, or `js/capacity.js` math.
+
 ### Module: `lines-table` (Svelte island in Lines tab)
+
 
 | File | Depends On | Provides | Notes |
 |------|-----------|----------|-------|
@@ -102,6 +117,7 @@ DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on
 | Module | Entry | Init |
 |--------|-------|------|
 | `coverage` | `modules/coverage/index.js` | `initCoverage` |
+| `demand-capacity` | `modules/demand-capacity/index.js` | `initDemandCapacity` |
 | `lines-table` | `modules/lines-table/dist/lines-table.js` | `initLinesTable` |
 | `team-builder` | `modules/team-builder/index.js` | `initTeamBuilder` |
 | `setup-panel` | `modules/setup-panel/index.js` | `initSetupPanel` |
