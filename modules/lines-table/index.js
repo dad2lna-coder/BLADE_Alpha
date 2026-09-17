@@ -27,8 +27,31 @@ export function initLinesTable(scheduler) {
     return {
       teamResolver: typeof S.teamMetaForLine === "function" ? S.teamMetaForLine : null,
       shiftResolver: typeof S.getShift === "function" ? S.getShift : null,
-      rotationDutyResolver: typeof S.getRotationDuty === "function" ? S.getRotationDuty : null
+      rotationDutyResolver: typeof S.getRotationDuty === "function" ? S.getRotationDuty : getRotationDutyLocal
     };
+  }
+
+  function getRotationDutyLocal(lineId, dayIndex) {
+    const key = String(lineId);
+    const rot = S.state && S.state.functionRotation && S.state.functionRotation[key];
+    if (!Array.isArray(rot)) return null;
+    const duty = rot[dayIndex];
+    return duty === "BAG" || duty === "PAX" ? duty : null;
+  }
+
+  function setRotationDuty(lineId, dayIndex, duty) {
+    var key = String(lineId);
+    if (!S.state.functionRotation) S.state.functionRotation = {};
+    if (!S.state.functionRotation[key]) S.state.functionRotation[key] = [];
+    while (S.state.functionRotation[key].length <= dayIndex) S.state.functionRotation[key].push(null);
+    S.state.functionRotation[key][dayIndex] = duty; // "BAG" | "PAX" | null
+  }
+
+  function isDfoCapable(line) {
+    if (!line) return false;
+    if (line.function === "DFO") return true;
+    const elig = line.functionEligible;
+    return !!(elig && (elig.dfo === true || elig.DFO === true));
   }
 
   function buildRows() {
@@ -98,8 +121,40 @@ export function initLinesTable(scheduler) {
     const key = line.id;
     if (!S.state.schedule) S.state.schedule = {};
     if (!S.state.schedule[key]) S.state.schedule[key] = [];
+    if (!S.state.functionRotation) S.state.functionRotation = {};
+
     const cur = S.state.schedule[key][dayIndex] || "RDO";
-    S.state.schedule[key][dayIndex] = cur === "WORK" ? "RDO" : "WORK";
+    const bagIdentity = line.function === "BAG";
+    const dfo = isDfoCapable(line);
+
+    if (cur !== "WORK") {
+      S.state.schedule[key][dayIndex] = "WORK";
+      if (bagIdentity) {
+        setRotationDuty(key, dayIndex, "BAG");
+      } else if (dfo) {
+        setRotationDuty(key, dayIndex, "PAX");
+      } else {
+        setRotationDuty(key, dayIndex, null);
+      }
+    } else if (bagIdentity) {
+      S.state.schedule[key][dayIndex] = "RDO";
+      setRotationDuty(key, dayIndex, null);
+    } else if (dfo) {
+      const duty = (typeof S.getRotationDuty === "function"
+        ? S.getRotationDuty(line.id, dayIndex)
+        : getRotationDutyLocal(line.id, dayIndex)) || "PAX";
+      if (duty === "PAX" || !duty) {
+        setRotationDuty(key, dayIndex, "BAG");
+      } else {
+        // BAG → RDO (locked v1: RDO → WORK+PAX → WORK+BAG → RDO)
+        S.state.schedule[key][dayIndex] = "RDO";
+        setRotationDuty(key, dayIndex, null);
+      }
+    } else {
+      S.state.schedule[key][dayIndex] = "RDO";
+      setRotationDuty(key, dayIndex, null);
+    }
+
     if (S.syncRdoDaysFromSchedule) S.syncRdoDaysFromSchedule(line);
     refresh();
     if (S.renderCoverageBars) S.renderCoverageBars();

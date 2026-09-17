@@ -37,12 +37,11 @@
     return name;
   }
 
-  function dayClass(text, fn) {
+  function dayClass(text) {
     const t = String(text || '').toUpperCase();
     if (t === 'RDO' || t === '—') return 'cell-toggle cell-rdo';
-    if (fn === 'BAG') return 'cell-toggle cell-function-duty cell-bag';
-    if (fn === 'DFO') return 'cell-toggle cell-function-duty cell-dfo';
-    if (fn === 'PAX') return 'cell-toggle cell-function-duty cell-pax';
+    if (t === 'BAG') return 'cell-toggle cell-function-duty cell-bag';
+    if (t === 'PAX') return 'cell-toggle cell-function-duty cell-pax';
     return 'cell-toggle cell-work';
   }
 
@@ -149,7 +148,7 @@
               <td class="line-rdo-cell">{row?.rdos ?? '—'}</td>
               <td>{row?.paid ?? ''}</td>
               {#each [0, 1, 2, 3, 4, 5, 6] as i}
-                <td class={dayClass(row?.days?.[i], row?.function)} data-line-id={row?.id} data-day-index={i} on:click={() => emitDay(row?.id, i)}>
+                <td class={dayClass(row?.days?.[i])} data-line-id={row?.id} data-day-index={i} on:click={() => emitDay(row?.id, i)}>
                   {row?.days?.[i] ?? ''}
                 </td>
               {/each}
