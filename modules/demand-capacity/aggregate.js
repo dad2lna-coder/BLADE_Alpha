@@ -36,6 +36,8 @@ export function slotInVolumeWindow(slotStart, winStart, winEnd) {
   return s >= winStart || s <= winEnd;
 }
 
+export var CURVE_WEIGHTS = [0.5, 0.3, 0.2];
+
 export function slotsForEtd(slots, etdMin) {
   var win = volumeWindow(etdMin);
   var out = [];
@@ -43,6 +45,34 @@ export function slotsForEtd(slots, etdMin) {
   for (var i = 0; i < list.length; i++) {
     if (slotInVolumeWindow(list[i], win.start, win.end)) out.push(i);
   }
+  out.sort(function (a, b) { return list[a] - list[b]; });
+  return out;
+}
+
+/** 50/30/20 on 3 slots; same pattern renormalized if the list is not length 3. */
+export function curveWeights(n) {
+  var base = CURVE_WEIGHTS;
+  var count = n | 0;
+  if (count <= 0) return [];
+  if (count === 3) return base.slice();
+  var take = Math.min(count, base.length);
+  var out = [];
+  var sum = 0;
+  var i;
+  if (count <= 3) {
+    for (i = 0; i < take; i++) { out.push(base[i]); sum += base[i]; }
+  } else {
+    for (i = 0; i < count; i++) {
+      var t = i * 2 / (count - 1);
+      var a = Math.floor(t);
+      var f = t - a;
+      var w = a >= 2 ? base[2] : base[a] * (1 - f) + base[a + 1] * f;
+      out.push(w);
+      sum += w;
+    }
+  }
+  if (!sum) return out;
+  for (i = 0; i < out.length; i++) out[i] /= sum;
   return out;
 }
 
@@ -66,8 +96,8 @@ export function bucketFlights(flights, slots, multiplier) {
       unplaced += 1;
       continue;
     }
-    var share = vol / idxs.length;
-    for (var i = 0; i < idxs.length; i++) demandByDow[dow][idxs[i]] += share;
+    var weights = curveWeights(idxs.length);
+    for (var i = 0; i < idxs.length; i++) demandByDow[dow][idxs[i]] += vol * weights[i];
   }
   demandByDow.unplaced = unplaced;
   return demandByDow;
