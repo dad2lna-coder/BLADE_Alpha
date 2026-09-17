@@ -260,7 +260,12 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.renderLines = function () {
-    if (S.__USE_SVELTE_LINES) return;
+    if (S.__USE_SVELTE_LINES) {
+      var root = S.$("lines-table-root");
+      if (root && typeof root.refresh === "function") root.refresh();
+      else window.dispatchEvent(new CustomEvent("lines:request-render"));
+      return;
+    }
     var thead = S.$("lines-thead");
     var tbody = S.$("lines-tbody");
     if (!thead || !tbody) return;
