@@ -1,8 +1,8 @@
 <div class="card" id="dc-panel">
-  <div class="section-title">Volume demand vs process capacity</div>
+  <div class="section-title">Demand / volume vs TSO PAX capacity</div>
   <p class="muted" id="dc-lead">
-    Originating passengers (ETD − 2 hours) overlaid with airport process throughput.
-    Both series are pax per 30-minute slot — not FTE or coverage headcount.
+    Originating passengers (ETD − 2 hours) overlaid with live PAX staffing capacity.
+    Each qualifying person contributes 18 pax per 30-min slot (36 pax/hour). BAG and DFO do not count. STSO does not count.
   </p>
   <div class="toolbar dc-toolbar" id="dc-toolbar">
     <label class="dc-file-label">Volume file
@@ -13,12 +13,16 @@
       <input type="number" id="dc-capacity-multiplier" min="0" step="0.1" value="1.0" />
     </label>
     <button type="button" class="btn" id="dc-refresh">Refresh</button>
-    <span class="muted" id="dc-status">Import a flight-list .xlsx to plot demand.</span>
+    <span class="dc-role-toggle" role="group" aria-label="Capacity roles">
+      <label class="follow-me-label"><input type="radio" name="dc-roles" value="tso" checked /> TSOs only</label>
+      <label class="follow-me-label"><input type="radio" name="dc-roles" value="tso-ltso" /> TSOs + LTSOs</label>
+    </span>
+    <span class="muted" id="dc-status">Import a flight-list .xlsx, then Refresh after Generate.</span>
   </div>
   <div class="dc-legend" id="dc-legend" hidden>
     <span><i class="dc-swatch dc-swatch-vol"></i> Volume</span>
-    <span><i class="dc-swatch dc-swatch-cap"></i> Process capacity</span>
-    <span class="muted" id="dc-cap-note">Capacity from current Airfield lanes × volumePerHour (pax / 30-min).</span>
+    <span><i class="dc-swatch dc-swatch-cap"></i> <span id="dc-cap-legend-label">TSO capacity</span></span>
+    <span class="muted" id="dc-cap-note">Capacity = PAX people covering the slot × 18 pax / 30-min.</span>
   </div>
   <p class="muted dc-empty" id="dc-empty"></p>
   <div class="dc-charts" id="dc-charts" hidden></div>

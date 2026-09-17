@@ -12,11 +12,15 @@ import {
 import {
   landMinFromEtd,
   bucketFlights,
-  emptyDemandByDow,
-  demandSlots,
-  alignAirportPax,
-  pullProcessCapacity
+  emptyDemandByDow
 } from "./modules/demand-capacity/aggregate.js";
+import {
+  demandSlots,
+  computeStaffCapacity,
+  roleAllowed,
+  PAX_PER_SLOT,
+  PAX_PER_HOUR
+} from "./modules/demand-capacity/staffing.js";
 
 function slotsFrom(open, close) {
   var start = Math.floor(open / 30) * 30;
@@ -24,6 +28,48 @@ function slotsFrom(open, close) {
   var out = [];
   for (var m = start; m < end; m += 30) out.push(m);
   return out;
+}
+
+function workWeek() {
+  return ["WORK", "WORK", "WORK", "WORK", "WORK", "WORK", "WORK"];
+}
+
+function makeS(lines, opts) {
+  opts = opts || {};
+  var slots = opts.slots || slotsFrom(210, 1380);
+  var schedule = {};
+  var duties = opts.duties || {};
+  lines.forEach(function (l) {
+    schedule[l.id] = opts.schedule || workWeek();
+  });
+  return {
+    coverageSlots: function () { return slots.slice(); },
+    capacitySlots: function () { throw new Error("must prefer coverageSlots"); },
+    computeLaneCapacityMatrix: function () { throw new Error("must not use lane matrix"); },
+    computeCapacity: function () { throw new Error("must not use computeCapacity"); },
+    computeHourlyByDow: function () { throw new Error("must not use computeHourlyByDow"); },
+    lineRoleKey: function (line) {
+      if (line.isStso) return "STSO";
+      if (line.isLtso) return "LTSO";
+      return "TSO";
+    },
+    getShift: function () { return { start: "03:30", end: "23:00" }; },
+    getEffectiveShiftTimes: function () { return { start: "03:30", end: "23:00" }; },
+    timeToMin: function (t) {
+      var p = String(t).split(":");
+      return (+p[0] || 0) * 60 + (+p[1] || 0);
+    },
+    lineCoversSlot: function (line, dayOff, slot) {
+      var sched = this.state.schedule[line.id] || [];
+      if (sched[dayOff] !== "WORK") return false;
+      return slot >= 210 && slot < 1380;
+    },
+    getRotationDuty: function (id, dayOff) {
+      if (Object.prototype.hasOwnProperty.call(duties, id)) return duties[id];
+      return opts.defaultDuty === undefined ? "PAX" : opts.defaultDuty;
+    },
+    state: { lines: lines, schedule: schedule, weekCount: 1 }
+  };
 }
 
 // --- parse ---
@@ -64,58 +110,77 @@ assert.equal(parsed.flights[0].volume, 110 * 0.8 * 1.5);
 
 assert.ok(missingRequired(headerMapFromRow(["FOO", "BAR"])).length >= 3);
 
-// --- aggregate ---
+// --- volume aggregate ---
 assert.equal(landMinFromEtd(623), 503);
-assert.equal(landMinFromEtd(60), 1380); // 01:00 − 2h wraps to 23:00
+assert.equal(landMinFromEtd(60), 1380);
 
-var slots = slotsFrom(210, 1380); // 03:30–23:00
-var S = {
-  capacitySlots: function () { return slots.slice(); },
-  coverageSlots: function () { throw new Error("must prefer capacitySlots"); },
-  computeHourlyByDow: function () { throw new Error("must not use computeHourlyByDow"); }
-};
-assert.deepEqual(demandSlots(S), slots);
+var slots = slotsFrom(210, 1380);
+var Sslots = makeS([]);
+assert.deepEqual(demandSlots(Sslots), slots);
 
 var demand = bucketFlights([
   { dow: 5, etdMin: 623, seats: 110, pctOrig: 0.8 },
-  { dow: 1, etdMin: 240, seats: 100, pctOrig: 1 } // land 02:00 — before 03:30, skip
+  { dow: 1, etdMin: 240, seats: 100, pctOrig: 1 }
 ], slots, 1);
 var friIdx = slots.indexOf(Math.floor(503 / 30) * 30);
 assert.ok(friIdx >= 0);
 assert.equal(demand[5][friIdx], 88);
 assert.equal(demand[1].reduce(function (a, b) { return a + b; }, 0), 0);
 
-var matrix = {
-  checkpoints: [{ key: "t1c1" }],
-  rows: slots.map(function (slot, i) {
-    return { slot: slot, airportPax: i === 0 ? 1170 : 900 };
-  }),
-  peakPax: 1170,
-  rates: { STD: 150, PRE: 240, MIX: 195 }
-};
-var aligned = alignAirportPax(matrix, slots);
-assert.equal(aligned.empty, false);
-assert.equal(aligned.airportPaxBySlot[0], 1170);
-assert.equal(aligned.airportPaxBySlot[1], 900);
-assert.equal(aligned.airportPaxBySlot.length, slots.length);
-
-var shifted = slots.slice(2);
-var remapped = alignAirportPax(matrix, shifted);
-assert.equal(remapped.airportPaxBySlot.length, shifted.length);
-assert.equal(remapped.airportPaxBySlot[0], matrix.rows[2].airportPax);
-
-S.computeLaneCapacityMatrix = function () { return matrix; };
-S.computeCapacity = S.computeLaneCapacityMatrix;
-var pulled = pullProcessCapacity(S, slots);
-assert.equal(pulled.airportPaxBySlot[0], 1170);
-
-var emptyS = {
-  computeLaneCapacityMatrix: function () {
-    return { checkpoints: [], rows: [], peakPax: 0, rates: { STD: 150, PRE: 240, MIX: 195 } };
-  }
-};
-assert.equal(pullProcessCapacity(emptyS, slots).empty, true);
-
 assert.equal(emptyDemandByDow(3)[0].length, 3);
+
+assert.equal(PAX_PER_HOUR, 36);
+assert.equal(PAX_PER_SLOT, 18);
+assert.equal(roleAllowed("TSO", "tso"), true);
+assert.equal(roleAllowed("LTSO", "tso"), false);
+assert.equal(roleAllowed("LTSO", "tso-ltso"), true);
+assert.equal(roleAllowed("STSO", "tso-ltso"), false);
+
+// --- 60 PAX TSOs covering a slot → 1080 pax / 30-min (2160 / hour) ---
+var tso60 = [];
+for (var i = 1; i <= 60; i++) tso60.push({ id: i, shiftId: "S1" });
+var S60 = makeS(tso60);
+var cap60 = computeStaffCapacity(S60, slots, "tso");
+assert.equal(cap60.empty, false);
+assert.equal(cap60.countsByDow[0][0], 60);
+assert.equal(cap60.capacityByDow[0][0], 60 * 18);
+assert.equal(cap60.capacityByDow[0][0], 1080);
+assert.equal(cap60.capacityByDow[0][0] * 2, 2160);
+
+// BAG / DFO excluded
+var mixed = [
+  { id: 1, shiftId: "S1" },
+  { id: 2, shiftId: "S1" },
+  { id: 3, shiftId: "S1" }
+];
+var Sbag = makeS(mixed, { duties: { 1: "PAX", 2: "BAG", 3: "DFO" } });
+var capBag = computeStaffCapacity(Sbag, slots, "tso");
+assert.equal(capBag.countsByDow[0][0], 1);
+assert.equal(capBag.capacityByDow[0][0], 18);
+
+// Unassigned duty counts as PAX (not BAG/DFO)
+var Sunset = makeS([{ id: 1, shiftId: "S1" }], { defaultDuty: null });
+assert.equal(computeStaffCapacity(Sunset, slots, "tso").countsByDow[0][0], 1);
+
+// STSO never counts; LTSO only on tso-ltso
+var roles = [
+  { id: 1, shiftId: "S1" },
+  { id: 2, shiftId: "S1", isLtso: true },
+  { id: 3, shiftId: "S1", isStso: true }
+];
+var Sroles = makeS(roles);
+var capTso = computeStaffCapacity(Sroles, slots, "tso");
+var capBoth = computeStaffCapacity(Sroles, slots, "tso-ltso");
+assert.equal(capTso.countsByDow[0][0], 1);
+assert.equal(capBoth.countsByDow[0][0], 2);
+assert.equal(capBoth.capacityByDow[0][0], 36);
+
+// RDO day does not count
+var Srdo = makeS([{ id: 1, shiftId: "S1" }], {
+  schedule: ["RDO", "WORK", "WORK", "WORK", "WORK", "WORK", "WORK"]
+});
+var capRdo = computeStaffCapacity(Srdo, slots, "tso");
+assert.equal(capRdo.countsByDow[0][0], 0);
+assert.equal(capRdo.countsByDow[1][0], 1);
 
 console.log("test-demand-capacity: ok");

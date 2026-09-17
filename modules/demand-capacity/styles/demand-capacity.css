@@ -1,7 +1,7 @@
-/* Volume demand vs process capacity — Coverage tab card */
+/* Demand tab — stacked full-width Sun→Sat charts */
 
-#demand-capacity-root {
-  margin-top: 0.25rem;
+#tab-demand-capacity {
+  max-width: none;
 }
 
 .dc-toolbar {
@@ -24,9 +24,24 @@
   width: 5.5rem;
 }
 
+.dc-role-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  align-items: center;
+  padding: 0.15rem 0;
+}
+
+.dc-role-toggle .follow-me-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text);
+}
+
 #dc-status {
   align-self: center;
-  max-width: 42rem;
+  max-width: 48rem;
 }
 
 .dc-legend {
@@ -64,31 +79,33 @@
 }
 
 .dc-charts {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 0.85rem;
-  margin-top: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 0.85rem;
 }
 
 .dc-day {
   margin: 0;
+  width: 100%;
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: 8px;
-  padding: 0.55rem 0.45rem 0.35rem;
+  padding: 0.65rem 0.7rem 0.4rem;
 }
 
 .dc-day-title {
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
-  margin: 0 0.35rem 0.15rem;
+  margin: 0 0.2rem 0.35rem;
 }
 
 .dc-svg {
   display: block;
   width: 100%;
   height: auto;
+  min-height: 240px;
 }
 
 .dc-grid {
@@ -105,7 +122,7 @@
 .dc-ytick,
 .dc-xtick {
   fill: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
   font-family: var(--mono);
 }
 
@@ -117,7 +134,7 @@
 .dc-vol-line {
   fill: none;
   stroke: var(--amber);
-  stroke-width: 1.8;
+  stroke-width: 2.2;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -125,8 +142,8 @@
 .dc-cap-line {
   fill: none;
   stroke: var(--green);
-  stroke-width: 2;
-  stroke-dasharray: 5 3.5;
+  stroke-width: 2.4;
+  stroke-dasharray: 6 4;
   stroke-linejoin: round;
   stroke-linecap: round;
 }
@@ -137,8 +154,8 @@
 }
 
 @media (max-width: 640px) {
-  .dc-charts {
-    grid-template-columns: 1fr;
+  .dc-svg {
+    min-height: 220px;
   }
   .dc-file-label input[type="file"] {
     max-width: 100%;

@@ -37,6 +37,7 @@
 <nav class="tabs">
 <button class="tab-btn active" data-tab="setup">[F1] SETUP</button>
 <button class="tab-btn" data-tab="coverage">[F2] COVERAGE</button>
+<button class="tab-btn" data-tab="demand-capacity">[F7] DEMAND</button>
 <button class="tab-btn" data-tab="lines">[F3] LINES</button>
 <button class="tab-btn" data-tab="teams">[F4] TEAMS</button>
 <button class="tab-btn" data-tab="reports">[F5] REPORTS</button>
@@ -45,6 +46,7 @@
 <main>
 <section class="panel active" id="tab-setup"></section>
 <section class="panel" id="tab-coverage"></section>
+<section class="panel" id="tab-demand-capacity"></section>
 <section class="panel" id="tab-lines"><div class="card"><div class="section-title">Bid lines</div><div id="lines-table-root"></div>
 <div class="toolbar" id="lines-toolbar"><label>Filter role <select id="lines-filter-role"><option value="ALL" selected>All</option><option value="STSO">STSO</option><option value="LTSO">LTSO</option><option value="TSO">TSO (FT/PT)</option></select></label><label>Filter shift <select id="lines-filter-shift"><option value="">All shifts</option></select></label><label>Filter sex <select id="lines-filter-sex"><option value="">All</option><option value="M">M</option><option value="F">F</option></select></label><label>Filter team <select id="lines-filter-team"><option value="">All</option><option value="__none__">Unassigned</option></select></label><button type="button" class="btn btn-amber" id="btn-export-lines-excel">Export Excel (.xlsx)</button></div></div></section>
 
@@ -60,7 +62,7 @@
 <div id="team-detail-modal" class="modal"><div class="modal-content"><span class="modal-close" id="team-detail-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="team-detail-title">Team Details</h2></div><div id="team-detail-content"></div></div></div>
 <div id="instructions-modal" class="modal"><div class="modal-content"><span class="modal-close" id="instructions-modal-close">&times;</span><div class="modal-header"><h2 class="modal-title">Instructions</h2></div><div id="instructions-content" class="instructions-container" style="max-height:70vh;overflow:auto;white-space:pre-wrap"></div></div></div>
 
-<footer class="console-footer"><span>SYSTEM STATUS: <b>READY</b></span><span>LINES GENERATED: <b id="console-lines">0</b></span><span>NAV: F1–F6</span></footer>
+<footer class="console-footer"><span>SYSTEM STATUS: <b>READY</b></span><span>LINES GENERATED: <b id="console-lines">0</b></span><span>NAV: F1–F7</span></footer>
 <script src="lib/dayjs.min.js?v=20260902i"></script>
 <script src="lib/Sortable.min.js?v=20260902i"></script>
 <script src="lib/luxon.min.js?v=20260902i"></script>

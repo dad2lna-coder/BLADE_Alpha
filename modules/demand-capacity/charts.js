@@ -1,5 +1,6 @@
 /**
- * Seven-day SVG charts: volume demand vs process capacity (same pax/30 unit).
+ * Seven stacked full-width SVG charts, Sunday → Saturday.
+ * Volume vs TSO (or TSO+LTSO) PAX capacity. Same pax / 30-min unit.
  */
 
 var DAY_TITLES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -55,12 +56,12 @@ function areaPath(xs, ys, x0, y0, x1, y1, max) {
 }
 
 function drawDaySvg(opts) {
-  var W = opts.width || 640;
-  var H = opts.height || 196;
-  var padL = 44;
-  var padR = 12;
-  var padT = 18;
-  var padB = 28;
+  var W = opts.width || 1120;
+  var H = opts.height || 268;
+  var padL = 56;
+  var padR = 16;
+  var padT = 16;
+  var padB = 32;
   var x0 = padL;
   var y0 = padT;
   var x1 = W - padR;
@@ -87,22 +88,23 @@ function drawDaySvg(opts) {
   var volD = areaPath(xs, vol, x0, y0, x1, y1, axisMax);
   var volL = polyline(xs, vol, x0, y0, x1, y1, axisMax);
   var capL = polyline(xs, cap, x0, y0, x1, y1, axisMax);
+  var capName = opts.capLabel || "TSO capacity";
 
   var grid = "";
   for (var t = 0; t < ticks.length; t++) {
     var gy = y1 - (axisMax > 0 ? (ticks[t] / axisMax) * (y1 - y0) : 0);
     grid += '<line x1="' + x0 + '" y1="' + gy.toFixed(1) + '" x2="' + x1 + '" y2="' + gy.toFixed(1) + '" class="dc-grid" />';
-    grid += '<text x="' + (x0 - 6) + '" y="' + (gy + 3).toFixed(1) + '" class="dc-ytick" text-anchor="end">' + fmt(ticks[t]) + "</text>";
+    grid += '<text x="' + (x0 - 8) + '" y="' + (gy + 4).toFixed(1) + '" class="dc-ytick" text-anchor="end">' + fmt(ticks[t]) + "</text>";
   }
 
   var labels = opts.labels || [];
   var step = 1;
-  if (labels.length > 12) step = 4;
-  else if (labels.length > 8) step = 2;
+  if (labels.length > 16) step = 4;
+  else if (labels.length > 10) step = 2;
   var xlabels = "";
   for (var li = 0; li < labels.length; li += step) {
     var lx = n === 1 ? (x0 + (x1 - x0) / 2) : (x0 + (li / Math.max(n - 1, 1)) * (x1 - x0));
-    xlabels += '<text x="' + lx.toFixed(1) + '" y="' + (H - 8) + '" class="dc-xtick" text-anchor="middle">' + labels[li] + "</text>";
+    xlabels += '<text x="' + lx.toFixed(1) + '" y="' + (H - 10) + '" class="dc-xtick" text-anchor="middle">' + labels[li] + "</text>";
   }
 
   var hoverW = n > 1 ? ((x1 - x0) / (n - 1)) : (x1 - x0);
@@ -111,7 +113,7 @@ function drawDaySvg(opts) {
     var hx = n === 1 ? (x0 + (x1 - x0) / 2) : (x0 + (hi / (n - 1)) * (x1 - x0));
     var title = (labels[hi] || "") +
       " · Volume " + fmt(vol[hi]) +
-      " · Process capacity " + fmt(cap[hi]);
+      " · " + capName + " " + fmt(cap[hi]);
     hits += '<rect class="dc-hit" data-i="' + hi + '" x="' + (hx - hoverW / 2).toFixed(1) +
       '" y="' + y0 + '" width="' + Math.max(hoverW, 6).toFixed(1) + '" height="' + (y1 - y0).toFixed(1) +
       '"><title>' + title + "</title></rect>";
@@ -119,8 +121,8 @@ function drawDaySvg(opts) {
 
   return (
     '<svg class="dc-svg" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + opts.title +
-    ': originating volume versus process capacity">' +
-    "<title>" + opts.title + " — volume vs process capacity (pax / 30 min)</title>" +
+    ': originating volume versus ' + capName + '">' +
+    "<title>" + opts.title + " — volume vs " + capName + " (pax / 30 min)</title>" +
     grid +
     '<line x1="' + x0 + '" y1="' + y1 + '" x2="' + x1 + '" y2="' + y1 + '" class="dc-axis" />' +
     '<line x1="' + x0 + '" y1="' + y0 + '" x2="' + x0 + '" y2="' + y1 + '" class="dc-axis" />' +
@@ -138,7 +140,9 @@ export function renderDemandCharts(host, opts) {
   var S = opts.S;
   var slots = opts.slots || [];
   var demandByDow = opts.demandByDow || [];
-  var airportPaxBySlot = opts.airportPaxBySlot || [];
+  var capacityByDow = opts.capacityByDow || [];
+  var capLabel = opts.capLabel || "TSO capacity";
+  var zeros = slots.map(function () { return 0; });
   var labels = slots.map(function (m) { return slotLabel(m, S); });
   var html = "";
   for (var d = 0; d < 7; d++) {
@@ -148,8 +152,9 @@ export function renderDemandCharts(host, opts) {
       drawDaySvg({
         title: title,
         labels: labels,
-        volume: demandByDow[d] || slots.map(function () { return 0; }),
-        capacity: airportPaxBySlot
+        volume: demandByDow[d] || zeros,
+        capacity: capacityByDow[d] || zeros,
+        capLabel: capLabel
       }) +
       "</figure>";
   }

@@ -1,10 +1,10 @@
 /**
- * Demand vs process capacity — Coverage tab module.
- * Volume from imported flight list; process capacity from S.computeLaneCapacityMatrix().
- * Read-only vs Generate / Assign / capacity math. Not FTE / coverage headcount.
+ * Demand / Volume tab — originating pax vs PAX TSO (optional LTSO) staffing capacity.
+ * Capacity = qualifying people × 18 pax / 30-min (36 pax/hour). Read-only.
  */
 import { parseVolumeWorkbook } from "./parse.js";
-import { demandSlots, bucketFlights, pullProcessCapacity } from "./aggregate.js";
+import { bucketFlights } from "./aggregate.js";
+import { demandSlots, computeStaffCapacity, capacityLegend, normalizeRoleMode } from "./staffing.js";
 import { renderDemandCharts } from "./charts.js";
 
 function $(id) {
@@ -23,15 +23,25 @@ function multiplierFromUi(S) {
   return n;
 }
 
+function roleModeFromUi(S) {
+  var checked = document.querySelector('input[name="dc-roles"]:checked');
+  if (checked && checked.value) return normalizeRoleMode(checked.value);
+  if (S && S.state && S.state.volumeImport && S.state.volumeImport.roleMode) {
+    return normalizeRoleMode(S.state.volumeImport.roleMode);
+  }
+  return "tso";
+}
+
 function setStatus(msg) {
   var el = $("dc-status");
   if (el) el.textContent = msg;
 }
 
 function ensureHost() {
+  var tab = $("tab-demand-capacity");
+  if (!tab) return null;
   var root = $("demand-capacity-root");
-  var tab = $("tab-coverage");
-  if (!root && tab) {
+  if (!root) {
     root = document.createElement("div");
     root.id = "demand-capacity-root";
     tab.appendChild(root);
@@ -51,40 +61,44 @@ async function ensurePanel() {
 }
 
 function emptyMessage(S, vi) {
-  var compute = S.computeLaneCapacityMatrix || S.computeCapacity;
-  if (typeof compute !== "function") {
-    return "Process capacity API is not available.";
-  }
   var last = vi && vi.lastCapacity;
-  if (last && last.empty) {
-    return "No terminals / mod sets configured. Open Airfield to set lanes and programs, then Refresh.";
-  }
   if (!vi || !vi.flights || !vi.flights.length) {
     return "Import a flight-list .xlsx (DAY_OF_WEEK, ETD, CAPACITY, PERCENT_ORIGINATING).";
+  }
+  if (last && last.empty) {
+    return "No bid lines yet. Generate a schedule, then Refresh. Capacity is PAX TSOs covering each slot × 18 pax / 30-min.";
   }
   return "";
 }
 
-export function refreshProcessCapacity(S) {
+function ensureState(S) {
+  if (!S.state) S.state = {};
+  if (!S.state.volumeImport) {
+    S.state.volumeImport = {
+      capacityMultiplier: 1,
+      roleMode: "tso",
+      fileName: "",
+      rowCount: 0,
+      flights: [],
+      demandByDow: null,
+      lastCapacity: null
+    };
+  }
+  return S.state.volumeImport;
+}
+
+export function refreshStaffCapacity(S) {
   var scheduler = S || window.Scheduler;
-  if (!scheduler.state) scheduler.state = {};
-  var vi = scheduler.state.volumeImport || (scheduler.state.volumeImport = {
-    capacityMultiplier: 1,
-    fileName: "",
-    rowCount: 0,
-    flights: [],
-    demandByDow: null,
-    lastCapacity: null
-  });
+  var vi = ensureState(scheduler);
   var slots = demandSlots(scheduler);
   var mult = multiplierFromUi(scheduler);
+  var mode = roleModeFromUi(scheduler);
   vi.capacityMultiplier = mult;
+  vi.roleMode = mode;
   if (vi.flights && vi.flights.length && slots.length) {
     vi.demandByDow = bucketFlights(vi.flights, slots, mult);
-  } else if (slots.length) {
-    vi.demandByDow = null;
   }
-  vi.lastCapacity = pullProcessCapacity(scheduler, slots);
+  vi.lastCapacity = computeStaffCapacity(scheduler, slots, mode);
   return vi.lastCapacity;
 }
 
@@ -94,26 +108,30 @@ export function renderDemandCapacity(S) {
   var empty = $("dc-empty");
   var legend = $("dc-legend");
   var note = $("dc-cap-note");
+  var capLegend = $("dc-cap-legend-label");
   var vi = scheduler.state && scheduler.state.volumeImport;
   var msg = emptyMessage(scheduler, vi);
   if (empty) empty.textContent = msg;
   var last = vi && vi.lastCapacity;
   var slots = (last && last.slots) || demandSlots(scheduler);
   var hasDemand = !!(vi && vi.demandByDow && vi.demandByDow.length);
-  var show = hasDemand && slots.length && !(last && last.empty);
+  var hasCap = !!(last && last.capacityByDow && !last.empty);
+  var show = slots.length && (hasDemand || hasCap);
+  var capLabel = capacityLegend(last && last.roleMode);
   if (legend) legend.hidden = !show;
   if (charts) charts.hidden = !show;
-  if (note && last && last.rates) {
-    var r = last.rates;
-    note.textContent = "Capacity from current Airfield lanes × volumePerHour (STD " +
-      r.STD + " · PRE " + r.PRE + " · MIX " + r.MIX + " /lane/hr → pax / 30-min). Same series all days unless mod-set windows differ.";
+  if (capLegend) capLegend.textContent = capLabel;
+  if (note && last) {
+    note.textContent = capLabel + " = PAX people covering the slot × " +
+      (last.paxPerSlot || 18) + " pax / 30-min (" + (last.paxPerHour || 36) + " pax/hour).";
   }
   if (show && charts) {
     renderDemandCharts(charts, {
       S: scheduler,
       slots: slots,
-      demandByDow: vi.demandByDow,
-      airportPaxBySlot: last.airportPaxBySlot || slots.map(function () { return 0; })
+      demandByDow: (vi && vi.demandByDow) || [],
+      capacityByDow: (last && last.capacityByDow) || [],
+      capLabel: capLabel
     });
   } else if (charts) {
     charts.innerHTML = "";
@@ -140,18 +158,16 @@ async function onImport(S) {
       setStatus("Missing headers: " + parsed.missing.join(", ") + ".");
       return;
     }
-    if (!S.state) S.state = {};
+    var vi = ensureState(S);
     var slots = demandSlots(S);
-    S.state.volumeImport = {
-      capacityMultiplier: mult,
-      fileName: file.name,
-      rowCount: parsed.rowCount,
-      skipped: parsed.skipped,
-      flights: parsed.flights,
-      demandByDow: bucketFlights(parsed.flights, slots, mult),
-      lastCapacity: null
-    };
-    refreshProcessCapacity(S);
+    vi.capacityMultiplier = mult;
+    vi.roleMode = roleModeFromUi(S);
+    vi.fileName = file.name;
+    vi.rowCount = parsed.rowCount;
+    vi.skipped = parsed.skipped;
+    vi.flights = parsed.flights;
+    vi.demandByDow = bucketFlights(parsed.flights, slots, mult);
+    refreshStaffCapacity(S);
     renderDemandCapacity(S);
     var bits = ["Imported " + file.name, parsed.rowCount + " flights"];
     if (parsed.skipped) bits.push(parsed.skipped + " skipped");
@@ -164,19 +180,29 @@ async function onImport(S) {
 }
 
 function onRefresh(S) {
-  var vi = S.state && S.state.volumeImport;
-  refreshProcessCapacity(S);
+  var vi = ensureState(S);
+  refreshStaffCapacity(S);
   renderDemandCapacity(S);
-  var last = S.state.volumeImport && S.state.volumeImport.lastCapacity;
+  var last = vi.lastCapacity;
+  var capLabel = capacityLegend(vi.roleMode);
   if (last && last.empty) {
-    setStatus("No terminals / mod sets configured — process capacity is empty.");
+    setStatus("No bid lines — Generate first. " + capLabel + " is PAX people × 18 pax / 30-min.");
     return;
   }
-  if (!vi || !vi.flights || !vi.flights.length) {
-    setStatus("Process capacity refreshed. Import a volume file to overlay demand.");
+  if (!vi.flights || !vi.flights.length) {
+    setStatus(capLabel + " refreshed from current PAX staffing. Import a volume file to overlay demand.");
     return;
   }
-  setStatus("Refreshed process capacity from Airfield · " + (vi.rowCount || vi.flights.length) + " flights · multiplier " + multiplierFromUi(S));
+  setStatus("Refreshed " + capLabel + " · " + (vi.rowCount || vi.flights.length) + " flights · multiplier " + multiplierFromUi(S));
+}
+
+function onRoleToggle(S) {
+  var vi = ensureState(S);
+  vi.roleMode = roleModeFromUi(S);
+  if (!vi.lastCapacity && !(vi.flights && vi.flights.length)) return;
+  refreshStaffCapacity(S);
+  renderDemandCapacity(S);
+  setStatus(capacityLegend(vi.roleMode) + " — toggle applied, no re-import.");
 }
 
 function offerSampleLink() {
@@ -208,6 +234,9 @@ function bind(S) {
       if (file.files && file.files[0]) setStatus("Ready to import " + file.files[0].name);
     });
   }
+  document.querySelectorAll('input[name="dc-roles"]').forEach(function (el) {
+    el.addEventListener("change", function () { onRoleToggle(S); });
+  });
   offerSampleLink();
 }
 
@@ -217,7 +246,7 @@ function wrapTab(S) {
   var orig = S.switchTab;
   S.switchTab = function (name) {
     var result = orig.apply(this, arguments);
-    if (name === "coverage") renderDemandCapacity(S);
+    if (name === "demand-capacity") renderDemandCapacity(S);
     return result;
   };
 }
@@ -228,7 +257,7 @@ export async function initDemandCapacity(scheduler) {
   bind(S);
   wrapTab(S);
   if (S.state && S.state.volumeImport) {
-    if (!S.state.volumeImport.lastCapacity) refreshProcessCapacity(S);
+    if (!S.state.volumeImport.lastCapacity) refreshStaffCapacity(S);
     renderDemandCapacity(S);
   }
 }

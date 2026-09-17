@@ -22,19 +22,19 @@ Boot: classic scripts keep `coverageSlots` / `computeHourlyByDow` / `S.coverageV
 
 Baggage view (`funcView === "bag"`) counts BAG/DFO duties for all roles; STSO/LTSO filter checkboxes are not required.
 
-### Module: `demand-capacity` (Coverage tab card)
+### Module: `demand-capacity` (Demand tab)
 
-Boot: after `coverage` mounts, the loader injects `modules/demand-capacity/panel.html` into `#demand-capacity-root` (empty host at the top of Coverage) and calls `initDemandCapacity(S)`. Source ESM only — no dist bundle.
+Boot: loader injects `modules/demand-capacity/panel.html` into `#tab-demand-capacity` and calls `initDemandCapacity(S)`. Source ESM only — no dist bundle. Nav: `[F7] DEMAND`.
 
 | File | Depends On | Provides | Notes |
 |------|-----------|----------|-------|
-| `modules/demand-capacity/index.js` | ExcelJS, `S.computeLaneCapacityMatrix` / `S.computeCapacity`, `S.capacitySlots` | `initDemandCapacity(S)` | Import volume xlsx + Refresh process capacity; stores `S.state.volumeImport` |
+| `modules/demand-capacity/index.js` | ExcelJS, `S.lineCoversSlot`, `S.getRotationDuty`, `S.lineRoleKey` | `initDemandCapacity(S)` | Import volume xlsx + Refresh PAX staffing capacity; `S.state.volumeImport` |
 | `modules/demand-capacity/parse.js` | `window.ExcelJS` | header/row parse | Required: DAY_OF_WEEK, ETD, CAPACITY, PERCENT_ORIGINATING |
-| `modules/demand-capacity/aggregate.js` | `S.capacitySlots` else `S.coverageSlots` | ETD−2h bucket + airportPax align | Does **not** call `S.computeHourlyByDow` |
-| `modules/demand-capacity/charts.js` | none | 7 SVG day charts | Volume vs process capacity, same pax/30 unit |
-| `modules/demand-capacity/panel.html` | host `#demand-capacity-root` | file / Import / multiplier / Refresh / charts | Host only in coverage panel — no demand UI stuffed there |
+| `modules/demand-capacity/aggregate.js` | slot list | ETD−2h volume buckets | Shared 30-min grid with staffing |
+| `modules/demand-capacity/staffing.js` | coverage slot cover + PAX duty | people × 18 pax/30-min | TSO, optional LTSO; never BAG/DFO/STSO; never lane `airportPax` |
+| `modules/demand-capacity/charts.js` | none | 7 stacked full-width SVGs | Sunday → Saturday |
 
-Process capacity series is `row.airportPax` from the existing Capacity API (lanes × volumePerHour / 2). Read-only — does not write Setup, Function Coverage, or `js/capacity.js` math.
+Capacity series is qualifying PAX people covering each slot × 18 (36 pax/hour). Read-only — does not Generate, rewrite duties, or call `computeLaneCapacityMatrix`.
 
 ### Module: `lines-table` (Svelte island in Lines tab)
 

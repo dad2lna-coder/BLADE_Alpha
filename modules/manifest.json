@@ -43,6 +43,6 @@
       "modules/demand-capacity/styles/demand-capacity.css"
     ],
     "panel": "modules/demand-capacity/panel.html",
-    "mount": "#demand-capacity-root"
+    "mount": "#tab-demand-capacity"
   }
 }

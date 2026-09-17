@@ -1,13 +1,7 @@
 /**
- * Bucket originating volume into 30-min slots (ETD − 2h) and align
- * process-capacity airportPax onto the same slot list.
+ * Bucket originating volume into 30-min slots (ETD − 2h).
+ * Slot grid matches staffing capacity (coverageSlots preferred).
  */
-
-export function demandSlots(S) {
-  if (S && typeof S.capacitySlots === "function") return S.capacitySlots().slice();
-  if (S && typeof S.coverageSlots === "function") return S.coverageSlots().slice();
-  return [];
-}
 
 export function emptyDemandByDow(slotCount) {
   var n = Math.max(0, slotCount | 0);
@@ -61,40 +55,4 @@ export function bucketFlights(flights, slots, multiplier) {
     demandByDow[dow][si] += vol;
   }
   return demandByDow;
-}
-
-/**
- * Map computeLaneCapacityMatrix() rows onto the demand slot list by minute.
- * Capacity series is airportPax (pax per 30-min), never FTE / headcount.
- */
-export function alignAirportPax(matrix, slots) {
-  var airportPaxBySlot = [];
-  var byMin = new Map();
-  var rows = (matrix && matrix.rows) || [];
-  for (var r = 0; r < rows.length; r++) {
-    var row = rows[r];
-    if (!row || row.slot == null) continue;
-    byMin.set(row.slot, Number(row.airportPax) || 0);
-  }
-  for (var i = 0; i < slots.length; i++) {
-    airportPaxBySlot.push(byMin.has(slots[i]) ? byMin.get(slots[i]) : 0);
-  }
-  var checkpoints = (matrix && matrix.checkpoints) || [];
-  var empty = !checkpoints.length;
-  return {
-    slots: slots.slice(),
-    airportPaxBySlot: airportPaxBySlot,
-    empty: empty,
-    peakPax: matrix && matrix.peakPax != null ? matrix.peakPax : 0,
-    rates: (matrix && matrix.rates) || null
-  };
-}
-
-export function pullProcessCapacity(S, slots) {
-  var compute = (S && (S.computeLaneCapacityMatrix || S.computeCapacity)) || null;
-  if (typeof compute !== "function") {
-    return { slots: (slots || []).slice(), airportPaxBySlot: (slots || []).map(function () { return 0; }), empty: true, peakPax: 0, rates: null };
-  }
-  var matrix = compute.call(S);
-  return alignAirportPax(matrix, slots || []);
 }

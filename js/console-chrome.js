@@ -247,7 +247,7 @@ window.Scheduler = window.Scheduler || {};
       if (e.defaultPrevented) return;
       var tag = (e.target && e.target.tagName) || "";
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      var map = { F1: "setup", F2: "coverage", F3: "lines", F4: "teams", F5: "reports", F6: "capacity", F7: "rotation" };
+      var map = { F1: "setup", F2: "coverage", F3: "lines", F4: "teams", F5: "reports", F6: "capacity", F7: "demand-capacity", F8: "rotation" };
       if (map[e.key] && S.switchTab) { e.preventDefault(); S.switchTab(map[e.key]); }
     });
     var orig = S.renderAll;

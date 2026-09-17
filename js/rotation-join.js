@@ -140,7 +140,7 @@ window.Scheduler = window.Scheduler || {};
       if (e.defaultPrevented) return;
       var tag = (e.target && e.target.tagName) || "";
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      if (e.key === "F7" && S.switchTab) {
+      if (e.key === "F8" && S.switchTab) {
         e.preventDefault();
         S.switchTab("rotation");
       }
