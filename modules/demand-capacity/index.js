@@ -3,7 +3,7 @@
  * Capacity = qualifying people × 18 pax / 30-min (36 pax/hour). Read-only.
  */
 import { parseVolumeWorkbook } from "./parse.js";
-import { bucketFlights } from "./aggregate.js";
+import { bucketFlights, DEFAULT_ARRIVAL_WEIGHTS_PCT } from "./aggregate.js";
 import { demandSlots, computeStaffCapacity, capacityLegend, normalizeRoleMode } from "./staffing.js";
 import { renderDemandCharts } from "./charts.js";
 
@@ -21,6 +21,35 @@ function multiplierFromUi(S) {
     return 1;
   }
   return n;
+}
+
+function arrivalWeightsFromUi(S) {
+  var out = [];
+  for (var i = 0; i < 4; i++) {
+    var el = $("dc-w" + i);
+    var n = el ? Number(el.value) : NaN;
+    out.push(n);
+  }
+  var vi = S && S.state && S.state.volumeImport;
+  var stored = vi && Array.isArray(vi.arrivalWeights) ? vi.arrivalWeights : DEFAULT_ARRIVAL_WEIGHTS_PCT;
+  var valid = 0;
+  var sum = 0;
+  for (var j = 0; j < 4; j++) {
+    if (!Number.isFinite(out[j]) || out[j] < 0) out[j] = Number(stored[j]);
+    if (!Number.isFinite(out[j]) || out[j] < 0) out[j] = DEFAULT_ARRIVAL_WEIGHTS_PCT[j];
+    if (out[j] > 0) valid += 1;
+    sum += out[j];
+  }
+  if (!valid || sum <= 0) return DEFAULT_ARRIVAL_WEIGHTS_PCT.slice();
+  return out;
+}
+
+function syncWeightInputs(weights) {
+  var src = Array.isArray(weights) && weights.length === 4 ? weights : DEFAULT_ARRIVAL_WEIGHTS_PCT;
+  for (var i = 0; i < 4; i++) {
+    var el = $("dc-w" + i);
+    if (el && document.activeElement !== el) el.value = src[i];
+  }
 }
 
 function roleModeFromUi(S) {
@@ -81,8 +110,12 @@ function ensureState(S) {
       rowCount: 0,
       flights: [],
       demandByDow: null,
-      lastCapacity: null
+      lastCapacity: null,
+      arrivalWeights: DEFAULT_ARRIVAL_WEIGHTS_PCT.slice()
     };
+  }
+  if (!Array.isArray(S.state.volumeImport.arrivalWeights) || S.state.volumeImport.arrivalWeights.length !== 4) {
+    S.state.volumeImport.arrivalWeights = DEFAULT_ARRIVAL_WEIGHTS_PCT.slice();
   }
   return S.state.volumeImport;
 }
@@ -95,8 +128,10 @@ export function refreshStaffCapacity(S) {
   var mode = roleModeFromUi(scheduler);
   vi.capacityMultiplier = mult;
   vi.roleMode = mode;
+  vi.arrivalWeights = arrivalWeightsFromUi(scheduler);
+  syncWeightInputs(vi.arrivalWeights);
   if (vi.flights && vi.flights.length && slots.length) {
-    vi.demandByDow = bucketFlights(vi.flights, slots, mult);
+    vi.demandByDow = bucketFlights(vi.flights, slots, mult, vi.arrivalWeights);
   }
   vi.lastCapacity = computeStaffCapacity(scheduler, slots, mode);
   return vi.lastCapacity;
@@ -162,11 +197,12 @@ async function onImport(S) {
     var slots = demandSlots(S);
     vi.capacityMultiplier = mult;
     vi.roleMode = roleModeFromUi(S);
+    vi.arrivalWeights = arrivalWeightsFromUi(S);
     vi.fileName = file.name;
     vi.rowCount = parsed.rowCount;
     vi.skipped = parsed.skipped;
     vi.flights = parsed.flights;
-    vi.demandByDow = bucketFlights(parsed.flights, slots, mult);
+    vi.demandByDow = bucketFlights(parsed.flights, slots, mult, vi.arrivalWeights);
     refreshStaffCapacity(S);
     renderDemandCapacity(S);
     var bits = ["Imported " + file.name, parsed.rowCount + " flights"];
@@ -194,6 +230,18 @@ function onRefresh(S) {
     return;
   }
   setStatus("Refreshed " + capLabel + " · " + (vi.rowCount || vi.flights.length) + " flights · multiplier " + multiplierFromUi(S));
+}
+
+function onWeightsChange(S) {
+  var vi = ensureState(S);
+  vi.arrivalWeights = arrivalWeightsFromUi(S);
+  if (!vi.flights || !vi.flights.length) {
+    setStatus("Weights saved. Import a volume file to apply the curve.");
+    return;
+  }
+  refreshStaffCapacity(S);
+  renderDemandCapacity(S);
+  setStatus("Weights " + vi.arrivalWeights.join("/") + " — re-aggregated, no re-import.");
 }
 
 function onRoleToggle(S) {
@@ -237,6 +285,14 @@ function bind(S) {
   document.querySelectorAll('input[name="dc-roles"]').forEach(function (el) {
     el.addEventListener("change", function () { onRoleToggle(S); });
   });
+  for (var i = 0; i < 4; i++) {
+    var w = $("dc-w" + i);
+    if (!w) continue;
+    w.addEventListener("change", function () { onWeightsChange(S); });
+    w.addEventListener("blur", function () { onWeightsChange(S); });
+  }
+  var vi0 = S.state && S.state.volumeImport;
+  if (vi0 && vi0.arrivalWeights) syncWeightInputs(vi0.arrivalWeights);
   offerSampleLink();
 }
 
