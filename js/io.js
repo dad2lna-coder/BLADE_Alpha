@@ -136,8 +136,19 @@ window.Scheduler = window.Scheduler || {};
     S.state.issues = Array.isArray(results.issues) ? results.issues.map(String) : [];
     ensureTeamsState();
     var incomingTeams = results.teams || payload.teams;
+    var teamsImportedViaBuilder = false;
     if (Array.isArray(incomingTeams)) {
-      S.teams.teams = incomingTeams.map(normalizeTeam).filter(Boolean);
+      if (typeof S.replaceAllTeams === "function") {
+        S.replaceAllTeams(incomingTeams);
+        teamsImportedViaBuilder = true;
+      } else {
+        var live = S.teams.teams;
+        live.length = 0;
+        incomingTeams.map(normalizeTeam).filter(Boolean).forEach(function (t) { live.push(t); });
+        if (typeof S.collectTeamPool === "function") S.collectTeamPool();
+        if (typeof S.renderTeams === "function") S.renderTeams();
+        teamsImportedViaBuilder = true;
+      }
     }
     S.setInputValue("cfg-open", S.state.open); S.setInputValue("cfg-close", S.state.close);
     S.setInputValue("cfg-weeks", S.state.weekCount); S.setInputValue("cfg-ft-m", S.state.ftM); S.setInputValue("cfg-ft-f", S.state.ftF);
@@ -149,8 +160,10 @@ window.Scheduler = window.Scheduler || {};
     S.state.shifts.forEach(function (s) { var m = /^S(\d+)$/.exec(String(s.id)); if (m) maxShiftNum = Math.max(maxShiftNum, Number(m[1])); });
     S.shiftSeq = Math.max(S.shiftSeq, maxShiftNum + 1);
     S.renderShiftsTable(); S.renderAll();
-    if (typeof S.collectTeamPool === "function") S.collectTeamPool();
-    if (typeof S.renderTeams === "function") S.renderTeams();
+    if (!teamsImportedViaBuilder) {
+      if (typeof S.collectTeamPool === "function") S.collectTeamPool();
+      if (typeof S.renderTeams === "function") S.renderTeams();
+    }
     S.updateStatus("Imported " + (S.state.lines.length ? "config and results" : "config only") + " · " + S.state.lines.length + " line(s).");
   };
 
