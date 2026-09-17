@@ -23,6 +23,34 @@ window.Scheduler = window.Scheduler || {};
     };
   }
 
+  function normalizeTeam(raw) {
+    if (!raw || typeof raw !== "object") return null;
+    return {
+      id: raw.id,
+      name: raw.name,
+      members: Array.isArray(raw.members) ? raw.members.slice() : [],
+      followMe: !!raw.followMe,
+      phase: raw.phase != null ? raw.phase : null,
+      modSetId: raw.modSetId != null ? raw.modSetId : null
+    };
+  }
+
+  function serializeTeams() {
+    return (S.teams && Array.isArray(S.teams.teams))
+      ? S.teams.teams.map(normalizeTeam).filter(Boolean)
+      : [];
+  }
+
+  function ensureTeamsState() {
+    S.teams = S.teams || { teams: [], pool: [], filters: { role: "ALL", start: "", rdo: "" }, selected: {}, sortables: [] };
+    if (!Array.isArray(S.teams.teams)) S.teams.teams = [];
+    if (!Array.isArray(S.teams.pool)) S.teams.pool = [];
+    if (!S.teams.filters) S.teams.filters = { role: "ALL", start: "", rdo: "" };
+    if (!S.teams.selected) S.teams.selected = {};
+    if (!Array.isArray(S.teams.sortables)) S.teams.sortables = [];
+    return S.teams;
+  }
+
   function normalizeSchedule(rawSchedule, validLineIds) {
     var out = {};
     if (!rawSchedule || typeof rawSchedule !== "object") return out;
@@ -64,7 +92,7 @@ window.Scheduler = window.Scheduler || {};
         functionCoverage: S.state.functionCoverage || null,
         extraPositions: S.state.extraPositions || []
       },
-      results: { lines: S.state.lines, schedule: S.state.schedule, mode: S.state.mode, issues: S.state.issues, functionRotation: S.state.functionRotation || {} }
+      results: { lines: S.state.lines, schedule: S.state.schedule, mode: S.state.mode, issues: S.state.issues, functionRotation: S.state.functionRotation || {}, teams: serializeTeams() }
     };
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
     var a = document.createElement("a"); var url = URL.createObjectURL(blob);
@@ -106,6 +134,11 @@ window.Scheduler = window.Scheduler || {};
     S.state.functionRotation = results.functionRotation && typeof results.functionRotation === "object" ? results.functionRotation : {};
     S.state.mode = typeof results.mode === "string" ? results.mode : "imported";
     S.state.issues = Array.isArray(results.issues) ? results.issues.map(String) : [];
+    ensureTeamsState();
+    var incomingTeams = results.teams || payload.teams;
+    if (Array.isArray(incomingTeams)) {
+      S.teams.teams = incomingTeams.map(normalizeTeam).filter(Boolean);
+    }
     S.setInputValue("cfg-open", S.state.open); S.setInputValue("cfg-close", S.state.close);
     S.setInputValue("cfg-weeks", S.state.weekCount); S.setInputValue("cfg-ft-m", S.state.ftM); S.setInputValue("cfg-ft-f", S.state.ftF);
     S.setInputValue("cfg-pt-m", S.state.ptM); S.setInputValue("cfg-pt-f", S.state.ptF);
@@ -116,6 +149,8 @@ window.Scheduler = window.Scheduler || {};
     S.state.shifts.forEach(function (s) { var m = /^S(\d+)$/.exec(String(s.id)); if (m) maxShiftNum = Math.max(maxShiftNum, Number(m[1])); });
     S.shiftSeq = Math.max(S.shiftSeq, maxShiftNum + 1);
     S.renderShiftsTable(); S.renderAll();
+    if (typeof S.collectTeamPool === "function") S.collectTeamPool();
+    if (typeof S.renderTeams === "function") S.renderTeams();
     S.updateStatus("Imported " + (S.state.lines.length ? "config and results" : "config only") + " · " + S.state.lines.length + " line(s).");
   };
 
@@ -130,7 +165,8 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.clearAll = function () {
-    S.state.lines = []; S.state.schedule = {}; S.state.issues = []; S.state.functionRotation = {}; S.state.mode = "—";
+    S.state.lines = []; S.state.schedule = {}; S.state.issues = []; S.state.functionRotation = {}; S.state.mode = "\u2014";
+    if (S.teams) S.teams.teams = [];
     S.renderAll(); S.updateStatus("Cleared results. Configuration remains.");
   };
 
@@ -158,7 +194,7 @@ window.Scheduler = window.Scheduler || {};
   }
   function workLabelForLine(line, sh) {
     if (line.shiftLabel) return line.shiftLabel;
-    if (sh && sh.start && sh.end) return sh.start + "–" + sh.end;
+    if (sh && sh.start && sh.end) return sh.start + "\u2013" + sh.end;
     if (sh && sh.start) return sh.start;
     return "WORK";
   }
@@ -314,7 +350,7 @@ window.Scheduler = window.Scheduler || {};
     Object.keys(msMap).forEach(function (id) {
       var info = msMap[id];
       sheet.getCell(kr, 1).value = info.name; applyBaseCell(sheet.getCell(kr, 1), info.argb, "FF000000");
-      sheet.getCell(kr, 2).value = "Mod set · " + (info.checkpoint || ""); applyBaseCell(sheet.getCell(kr, 2), "FFFFFFFF", "FF000000"); kr++;
+      sheet.getCell(kr, 2).value = "Mod set \u00b7 " + (info.checkpoint || ""); applyBaseCell(sheet.getCell(kr, 2), "FFFFFFFF", "FF000000"); kr++;
     });
     return workbook.xlsx.writeBuffer().then(function (buffer) {
       var blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
