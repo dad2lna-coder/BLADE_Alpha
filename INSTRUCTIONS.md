@@ -52,10 +52,11 @@ Select coverage requirements for each function:
 - Define the **pool size** for each function
 - This determines how many personnel are allocated to that function
 
-### 2.3 Configure Headcount Per Schedule Bands
-- Set **headcount per band** for coverage distribution
-- **Basic bands** are provided as default templates
-- Adjust bands according to your operational needs
+### 2.3 Configure Shift Requirements
+- Add existing shifts and set **min/max number of generated lines** per role
+- Min/max are shift counts, not instantaneous headcount
+- Start/end times come from the shift definition
+- 30-minute coverage on the Coverage tab is derived after assignment
 
 ---
 
@@ -170,7 +171,7 @@ Function Coverage Configuration
   ↓
 6. Assign function coverage (Pax/Bag/DFO)
 7. Set pool size
-8. Configure headcount per schedule bands
+8. Configure min/max generated lines per shift and role
 9. Click "Generate Function Assignments"
   ↓
 Teams Tab - Team Formation

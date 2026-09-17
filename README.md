@@ -154,7 +154,7 @@ BLADE_Alpha/
    - LTSO/STSO force
    - RDO hard constraints (days off)
    - Day time overrides (per-day special times)
-5. **Function Coverage** — Click "Function coverage…" to assign DFO/BAG/PAX pools and time bands
+5. **Function Coverage** — Assign DFO/BAG/PAX pools and per-shift min/max line counts
 6. **Generate** — Click "Generate" to create the schedule
 
 ### **Coverage Tab**

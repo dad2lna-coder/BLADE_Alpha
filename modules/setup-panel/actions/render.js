@@ -9,15 +9,18 @@ export function renderAll(S) {
 }
 
 function addFcBandClassic(S) {
+  if (typeof S.addFcShiftRequirement === "function") {
+    S.addFcShiftRequirement();
+    return;
+  }
+  if (typeof S.addFcBand === "function" && S.addFcBand !== addFcBandClassic) {
+    S.addFcBand();
+    return;
+  }
   if (typeof S.readFunctionBandsFromDom === "function") S.readFunctionBandsFromDom();
-  const fc = typeof S.ensureFunctionCoverage === "function"
-    ? S.ensureFunctionCoverage()
-    : (S.state && S.state.functionCoverage);
-  if (!fc) return;
-  if (!Array.isArray(fc.bands)) fc.bands = [];
-  fc.bands.push({ start: "12:00", end: "16:00", stsoMin: 0, stsoMax: 0, ltsoMin: 0, ltsoMax: 0, tsoMin: 0, tsoMax: 0 });
   if (typeof S.ensureFunctionCoverage === "function") S.ensureFunctionCoverage();
-  if (S.renderFunctionBandsTable) S.renderFunctionBandsTable();
+  if (S.renderFunctionShiftsTable) S.renderFunctionShiftsTable();
+  else if (S.renderFunctionBandsTable) S.renderFunctionBandsTable();
   if (S.updateFunctionCoveragePreview) S.updateFunctionCoveragePreview();
 }
 
@@ -34,6 +37,7 @@ function patchImportCoverage(S) {
     var cfg = payload && (payload.config || payload.legacy || payload);
     var incoming = cfg && cfg.functionCoverage;
     if (incoming && typeof incoming === "object" && S.state) {
+      incoming._bandMigrationAttempted = false;
       S.state.functionCoverage = Object.assign(S.state.functionCoverage || {}, incoming);
       if (S.ensureFunctionCoverage) S.ensureFunctionCoverage();
       if (S.fillFunctionCoverageForm) S.fillFunctionCoverageForm();
@@ -43,7 +47,7 @@ function patchImportCoverage(S) {
 
 export function bindSetupActions(S) {
   if (!S) return;
-  S.addFcBand = S.addFcBand || function () { addFcBandClassic(S); };
+  S.addFcBand = S.addFcShiftRequirement || S.addFcBand || function () { addFcBandClassic(S); };
   patchBagViewRoles(S);
   patchImportCoverage(S);
 
@@ -52,10 +56,14 @@ export function bindSetupActions(S) {
     el._spBound = true;
     el.addEventListener(type, fn);
   }
-  bindOnce(document.getElementById("fc-add-band"), "click", function (e) {
-    e.preventDefault();
-    if (S.addFcBand) S.addFcBand();
-  });
+  var addShiftBtn = document.getElementById("fc-add-band");
+  if (addShiftBtn && !addShiftBtn._fcBound) {
+    bindOnce(addShiftBtn, "click", function (e) {
+      e.preventDefault();
+      if (S.addFcShiftRequirement) S.addFcShiftRequirement();
+      else if (S.addFcBand) S.addFcBand();
+    });
+  }
   bindOnce(document.getElementById("btn-add-position"), "click", function (e) {
     e.preventDefault();
     if (S.addExtraPosition) S.addExtraPosition("MSTI");

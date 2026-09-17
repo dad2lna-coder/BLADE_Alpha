@@ -16,7 +16,7 @@
 </div>
 </details>
 <details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
-<p class="muted" style="margin:0 0 0.65rem">BAG and DFO pools run together. Each is Male/Female × STSO/LTSO/TSO, carved from FTE. Generate assigns BAG every WORK day, then DFO (band-fill onto baggage when short, otherwise PAX). Leftover ops lines are PAX. Bands below are baggage need.</p>
+<p class="muted" style="margin:0 0 0.65rem">BAG and DFO pools run together. Each is Male/Female × STSO/LTSO/TSO, carved from FTE. Generate assigns functions to generated shift lines. Min/max below are counts of shifts (lines) per role — not instantaneous headcount. Start/end come from the shift definition. Leftover ops lines are PAX.</p>
 <div class="fc-pool-row" id="fc-pool-row">
 <div class="fc-pool-blocks" id="fc-pool-bag">
 <div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">BAG pool</div>
@@ -47,9 +47,9 @@
     <option value="female">Female</option>
   </select>
 </label>
-<button type="button" class="btn" id="fc-add-band">+ Add band</button>
+<button type="button" class="btn" id="fc-add-band">+ Add shift</button>
 </div>
-<div id="fc-bands-wrap" class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Start</th><th>End</th><th>Min STSO</th><th>Min LTSO</th><th>Min TSO</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
+<div id="fc-bands-wrap" class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Shift</th><th>Start</th><th>End</th><th>STSO min</th><th>STSO max</th><th>LTSO min</th><th>LTSO max</th><th>TSO min</th><th>TSO max</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
 <p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
 </details>
 <div class="card"><div class="section-title">Shifts</div><div class="toolbar"><button type="button" class="btn" id="btn-add-shift">+ Add shift</button></div><div class="lines-scroll" style="max-height:none"><table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Phase</th><th>Paid h</th><th>TSO force</th><th>LTSO force</th><th>STSO force</th><th>Hard RDOs (Sun–Sat)</th><th>Day times</th></tr></thead><tbody id="shifts-tbody"></tbody></table></div></div>
