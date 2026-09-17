@@ -1,0 +1,89 @@
+name: Rebuild lines-table dist
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [bright-garden]
+    paths:
+      - modules/lines-table/**
+      - "!modules/lines-table/dist/**"
+      - vite.lines-table.config.mjs
+      - package.json
+      - package-lock.json
+      - .github/workflows/rebuild-lines-table.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: rebuild-lines-table-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout bright-garden
+        uses: actions/checkout@v4
+        with:
+          ref: bright-garden
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Confirm filtered getRowModels source
+        run: |
+          set -euo pipefail
+          grep -n "getRowModels(filtered" modules/lines-table/index.js
+
+      - name: Install
+        run: npm install
+
+      - name: Build lines-table
+        run: npm run build:lines-table
+
+      - name: Hard-fail gates
+        run: |
+          set -euo pipefail
+          FILE=modules/lines-table/dist/lines-table.js
+          test -f "$FILE"
+          BYTES=$(wc -c < "$FILE")
+          HASH=$(sha256sum "$FILE" | awk '{print $1}')
+          echo "bytes=$BYTES"
+          echo "sha256=$HASH"
+          if [ "$BYTES" -lt 10240 ]; then
+            echo "HARD FAIL: dist/lines-table.js < 10KB ($BYTES)"
+            exit 1
+          fi
+          if grep -qE "PLACEHOLDER_WILL_FAIL|PLACEHOLDER" "$FILE"; then
+            echo "HARD FAIL: placeholder marker in dist"
+            exit 1
+          fi
+          case "$HASH" in
+            0f2093ec*)
+              echo "HARD FAIL: sha256 still 0f2093ec…"
+              exit 1
+              ;;
+          esac
+          echo "gates passed"
+
+      - name: Commit and push dist if changed
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add modules/lines-table/dist/
+          if git diff --cached --quiet; then
+            echo "dist unchanged; nothing to push"
+            sha256sum modules/lines-table/dist/lines-table.js
+            wc -c modules/lines-table/dist/lines-table.js
+            exit 0
+          fi
+          git commit -m "fix(lines): rebuild lines-table dist with filtered buildRows"
+          git push origin HEAD:bright-garden
+          echo "pushed"
+          sha256sum modules/lines-table/dist/lines-table.js
+          wc -c modules/lines-table/dist/lines-table.js
