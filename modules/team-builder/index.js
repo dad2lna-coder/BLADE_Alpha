@@ -4,7 +4,7 @@
  * Unassigned pool and team boards are collapsed-by-default; cards paint on expand.
  */
 import * as store from "./stores/teamBuilderStore.js";
-import { teams } from "./stores/teamBuilderStore.js";
+import { teams, replaceAllTeams } from "./stores/teamBuilderStore.js";
 import { autoFormTeams as runAutoForm } from "./utils/autoForm.js";
 import { collectTeamPool, unassignedPool, assignedIds } from "./utils/pool.js";
 import { renderTeamBoards } from "./components/TeamBoards.js";
@@ -33,7 +33,7 @@ function syncHint() {
   const n = (teams && teams.length) || 0;
   const m = assignedIds().size;
   const k = unassignedPool().length;
-  hint.textContent = n + " team" + (n === 1 ? "" : "s") + " · " + m + " assigned · " + k + " in pool (filtered)";
+  hint.textContent = n + " team" + (n === 1 ? "" : "s") + " \u00b7 " + m + " assigned \u00b7 " + k + " in pool (filtered)";
 }
 
 function bridgeScheduler(S) {
@@ -245,6 +245,13 @@ export function initTeamBuilder(scheduler) {
   S.teams = S.teams || {};
   S.teams.teams = teams;
   if (typeof store.syncSchedulerBridge === "function") store.syncSchedulerBridge(S);
+
+  S.replaceAllTeams = function (list) {
+    replaceAllTeams(list);
+    if (typeof store.syncSchedulerBridge === "function") store.syncSchedulerBridge(S);
+    collectTeamPool();
+    renderAll();
+  };
 
   S.createTeam = S.createTeam || function (name) {
     const t = store.createTeam(name);
