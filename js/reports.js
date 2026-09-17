@@ -38,12 +38,10 @@ window.Scheduler = window.Scheduler || {};
         dte.setDate(dte.getDate() + off);
         dow = dte.getDay();
       } else {
-        // Fallback: treat offset 0 as Sunday when no start date
         dow = off % 7;
       }
       if (dowToOffset[dow] == null) dowToOffset[dow] = off;
     }
-    // Ensure all 7 days map somewhere for single-week schedules
     for (var d0 = 0; d0 < 7; d0++) {
       if (dowToOffset[d0] == null) dowToOffset[d0] = d0 % Math.max(1, days);
     }
@@ -60,7 +58,6 @@ window.Scheduler = window.Scheduler || {};
       var sex = line.sex === "F" ? "F" : "M";
 
       if (mode === "dfoPool") {
-        // Eligible pool only — count if certified DFO, for every WORK slot they cover
         var el = line.functionEligible || {};
         if (!el.dfo) return;
       }
@@ -74,7 +71,7 @@ window.Scheduler = window.Scheduler || {};
           var rotMap = S.state.functionRotation || {};
           var rotRow = rotMap[line.id] || rotMap[String(line.id)];
           var duty = rotRow ? (rotRow[off] || null) : null;
-          if (duty !== "BAG" && duty !== "DFO") continue; // baggage area = BAG + DFO
+          if (duty !== "BAG" && duty !== "DFO") continue;
         } else if (mode === "passenger") {
           var rotMapP = S.state.functionRotation || {};
           var rotRowP = rotMapP[line.id] || rotMapP[String(line.id)];
@@ -113,7 +110,7 @@ window.Scheduler = window.Scheduler || {};
       f += c[r].F || 0;
     });
     var tot = m + f;
-    if (tot === 0) return "<span class=\"muted\">—</span>";
+    if (tot === 0) return "<span class=\"muted\">\u2014</span>";
     var detail = "";
     ["STSO", "LTSO", "TSO"].forEach(function (r) {
       var rm = (c[r] && c[r].M) || 0;
@@ -183,7 +180,7 @@ window.Scheduler = window.Scheduler || {};
       html +=
         "<tr><td>" +
         S.slotLabel(r.startSlot) +
-        "–" +
+        "\u2013" +
         S.slotLabel(r.endSlot % 1440) +
         "</td>";
       for (var d = 0; d < 7; d++) {
@@ -195,7 +192,6 @@ window.Scheduler = window.Scheduler || {};
     el.innerHTML = html;
   };
 
-  /** Dynamic AM/PM anchors from shift start distribution */
   S.computeShiftAnchors = function () {
     var starts = {};
     (S.state.lines || []).forEach(function (l) {
@@ -212,7 +208,6 @@ window.Scheduler = window.Scheduler || {};
         return a.min - b.min;
       });
     if (!entries.length) return { am: 8 * 60, pm: 14 * 60 };
-    // AM anchor = largest cluster in morning (before noon)
     var am = entries[0].min;
     var amN = 0;
     entries.forEach(function (e) {
@@ -221,7 +216,6 @@ window.Scheduler = window.Scheduler || {};
         am = e.min;
       }
     });
-    // PM anchor = largest cluster at/after noon
     var pm = entries[entries.length - 1].min;
     var pmN = 0;
     entries.forEach(function (e) {
@@ -260,7 +254,6 @@ window.Scheduler = window.Scheduler || {};
     });
     var overallFPct = totalM + totalF ? Math.round((100 * totalF) / (totalM + totalF)) : 0;
 
-    // Part A: phase × day gender %
     var phases = ["Opening", "AM", "PM", "Closing"];
     var phaseDay = {};
     phases.forEach(function (p) {
@@ -305,13 +298,13 @@ window.Scheduler = window.Scheduler || {};
       '<h3 class="section-title">Gender balance by shift phase</h3>' +
       '<p class="muted">AM anchor ' +
       S.slotLabel(anchors.am) +
-      " · PM anchor " +
+      " \u00b7 PM anchor " +
       S.slotLabel(anchors.pm) +
-      " · threshold ±" +
+      " \u00b7 threshold \u00b1" +
       thr +
-      " min · overall F% " +
+      " min \u00b7 overall F% " +
       overallFPct +
-      " · skew flag &gt;" +
+      " \u00b7 skew flag >" +
       skewThr +
       " pts</p>" +
       '<div class="lines-scroll"><table class="data-table"><thead><tr><th>Phase</th>';
@@ -330,7 +323,7 @@ window.Scheduler = window.Scheduler || {};
           '">' +
           fPct +
           "% F" +
-          (skew ? " ⚠" : "") +
+          (skew ? " \u26a0" : "") +
           " <span class=\"muted\">(" +
           cell.M +
           "M/" +
@@ -341,7 +334,6 @@ window.Scheduler = window.Scheduler || {};
     });
     html += "</tbody></table></div>";
 
-    // Part B: DFO AM/PM
     var dfoAM = { M: 0, F: 0 };
     var dfoPM = { M: 0, F: 0 };
     S.state.lines.forEach(function (l) {
@@ -381,7 +373,6 @@ window.Scheduler = window.Scheduler || {};
       pctF(dfoPM) +
       "%</td></tr></tbody></table>";
 
-    // Part C: RDO equity
     var rdoM = [0, 0, 0, 0, 0, 0, 0];
     var rdoF = [0, 0, 0, 0, 0, 0, 0];
     S.state.lines.forEach(function (l) {
@@ -408,6 +399,156 @@ window.Scheduler = window.Scheduler || {};
     el.innerHTML = html;
   };
 
+  function lineByMemberId(id) {
+    var lines = (S.state && S.state.lines) || [];
+    var i;
+    for (i = 0; i < lines.length; i++) {
+      if (lines[i].id === id || String(lines[i].id) === String(id)) return lines[i];
+    }
+    return null;
+  }
+
+  function shiftIntervalMins(shiftId, dow) {
+    var times;
+    if (S.getEffectiveShiftTimes) times = S.getEffectiveShiftTimes(shiftId, dow);
+    else {
+      var sh = S.getShift ? S.getShift(shiftId) : null;
+      times = sh ? { start: sh.start, end: sh.end } : null;
+    }
+    if (!times) return null;
+    var a = S.timeToMin(times.start);
+    var b = S.timeToMin(times.end);
+    if (a == null || b == null || isNaN(a) || isNaN(b)) return null;
+    if (b <= a) b += 1440;
+    return { a: a, b: b };
+  }
+
+  function overlapHours(intA, intB) {
+    if (!intA || !intB) return 0;
+    var lo = Math.max(intA.a, intB.a);
+    var hi = Math.min(intA.b, intB.b);
+    if (hi <= lo) return 0;
+    return (hi - lo) / 60;
+  }
+
+  S.teamSupervisorLine = function (team) {
+    var members = (team && team.members) || [];
+    var first = null;
+    var i, line, role;
+    for (i = 0; i < members.length; i++) {
+      line = lineByMemberId(members[i]);
+      if (!line) continue;
+      if (!first) first = line;
+      role = roleOf(line);
+      if (role === "STSO") return line;
+    }
+    return first;
+  };
+
+  S.lineScheduledHours = function (line) {
+    if (!line) return 0;
+    var days = ((S.state && S.state.weekCount) || 1) * 7;
+    var sched = (S.state && S.state.schedule && S.state.schedule[line.id]) || [];
+    var hours = 0;
+    var off, dow, iv;
+    for (off = 0; off < days; off++) {
+      if (sched[off] !== "WORK") continue;
+      dow = off % 7;
+      iv = shiftIntervalMins(line.shiftId, dow);
+      if (!iv) continue;
+      hours += (iv.b - iv.a) / 60;
+    }
+    return hours;
+  };
+
+  S.lineOverlapHoursWith = function (line, supervisorLine) {
+    if (!line || !supervisorLine) return 0;
+    var days = ((S.state && S.state.weekCount) || 1) * 7;
+    var schedA = (S.state && S.state.schedule && S.state.schedule[line.id]) || [];
+    var schedB = (S.state && S.state.schedule && S.state.schedule[supervisorLine.id]) || [];
+    var hours = 0;
+    var off, dow;
+    for (off = 0; off < days; off++) {
+      if (schedA[off] !== "WORK" || schedB[off] !== "WORK") continue;
+      dow = off % 7;
+      hours += overlapHours(shiftIntervalMins(line.shiftId, dow), shiftIntervalMins(supervisorLine.shiftId, dow));
+    }
+    return hours;
+  };
+
+  S.computeTeamCohesion = function (team) {
+    var name = (team && (team.name || team.id)) || "Team";
+    var members = (team && team.members) || [];
+    var stso = 0, ltso = 0, tso = 0;
+    var i, line, role;
+    for (i = 0; i < members.length; i++) {
+      line = lineByMemberId(members[i]);
+      if (!line) continue;
+      role = roleOf(line);
+      if (role === "STSO") stso++;
+      else if (role === "LTSO") ltso++;
+      else tso++;
+    }
+    var supervisor = S.teamSupervisorLine(team);
+    var cohesionPct = null;
+    if (supervisor && members.length) {
+      var ratios = [];
+      for (i = 0; i < members.length; i++) {
+        line = lineByMemberId(members[i]);
+        if (!line) continue;
+        if (line.id === supervisor.id) continue;
+        var den = S.lineScheduledHours(line);
+        if (!den) continue;
+        ratios.push(S.lineOverlapHoursWith(line, supervisor) / den);
+      }
+      if (ratios.length) {
+        var sum = 0;
+        for (i = 0; i < ratios.length; i++) sum += ratios[i];
+        cohesionPct = (sum / ratios.length) * 100;
+      }
+    }
+    return { name: name, stso: stso, ltso: ltso, tso: tso, cohesionPct: cohesionPct };
+  };
+
+  // Pair/group cohesion: retrofit later.
+
+  S.renderTeamCohesionReport = function () {
+    var el = S.$("report-cohesion");
+    if (!el) return;
+    var teams = (S.teams && S.teams.teams) || [];
+    if (!teams.length) {
+      el.innerHTML = "<p class=\"muted\">No teams yet.</p>";
+      return;
+    }
+    var html =
+      "<div class=\"lines-scroll\"><table class=\"data-table\"><thead><tr>" +
+      "<th>Team name</th><th>STSO count</th><th>LTSO count</th><th>TSO count</th><th>Cohesion %</th>" +
+      "</tr></thead><tbody>";
+    teams.forEach(function (team) {
+      var row = S.computeTeamCohesion(team);
+      var pct;
+      if (row.cohesionPct == null) pct = "\u2014";
+      else if (Math.abs(row.cohesionPct - Math.round(row.cohesionPct)) < 0.05) pct = String(Math.round(row.cohesionPct));
+      else pct = row.cohesionPct.toFixed(1);
+      html +=
+        "<tr><td>" +
+        String(row.name).replace(/[&<>]/g, function (c) {
+          return { "&": "&", "<": "<", ">": ">" }[c];
+        }) +
+        "</td><td>" +
+        row.stso +
+        "</td><td>" +
+        row.ltso +
+        "</td><td>" +
+        row.tso +
+        "</td><td>" +
+        pct +
+        "</td></tr>";
+    });
+    html += "</tbody></table></div>";
+    el.innerHTML = html;
+  };
+
   S.renderReports = function () {
     var which = S.reportsView.which || "passenger";
     var map = {
@@ -419,6 +560,7 @@ window.Scheduler = window.Scheduler || {};
     var cfg = map[which] || map.passenger;
     S.renderDeviationReport(cfg[0], cfg[1], cfg[2]);
     S.renderGenderBalanceReports();
+    S.renderTeamCohesionReport();
   };
 
   S.initReports = function () {
