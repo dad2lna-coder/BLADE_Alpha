@@ -22,12 +22,15 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function resolveWorkDayText(line, duty, workLabel) {
-    var rot = duty === "BAG" || duty === "PAX" ? duty : null;
-    if (rot) return rot;
+    if (workLabel) return workLabel;
+    return "WORK";
+  }
+
+  function resolveWorkDayDuty(line, duty) {
+    if (duty === "BAG" || duty === "PAX") return duty;
     if (line.function === "BAG") return "BAG";
-    if (line.function === "DFO") return "PAX";
-    if (line.function === "PAX") return "PAX";
-    return workLabel || line.function || "WORK";
+    if (line.function === "DFO" || line.function === "PAX") return "PAX";
+    return duty === "BAG" || duty === "PAX" ? duty : null;
   }
 
   S.lineToRowModel = function (line, schedule, options) {
@@ -61,7 +64,7 @@ window.Scheduler = window.Scheduler || {};
           : null;
         var text = resolveWorkDayText(line, duty, workLabel);
         days.push(text);
-        dayDuties.push(text === "BAG" || text === "PAX" ? text : (duty || null));
+        dayDuties.push(resolveWorkDayDuty(line, duty));
       } else {
         days.push("RDO");
         dayDuties.push("RDO");

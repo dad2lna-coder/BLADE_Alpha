@@ -117,7 +117,7 @@
               <td class="line-rdo-cell">{row?.rdos ?? '—'}</td>
               <td>{row?.paid ?? ''}</td>
               {#each [0, 1, 2, 3, 4, 5, 6] as i}
-                <td class={dayClass(row?.days?.[i])} data-line-id={row?.id} data-day-index={i} on:click={() => emitDay(row?.id, i)}>
+                <td class={dayClass(row?.dayDuties?.[i] ?? row?.days?.[i])} data-line-id={row?.id} data-day-index={i} on:click={() => emitDay(row?.id, i)}>
                   {row?.days?.[i] ?? ''}
                 </td>
               {/each}
