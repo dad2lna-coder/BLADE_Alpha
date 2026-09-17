@@ -1,11 +1,11 @@
 /**
- * PAX staffing capacity: qualifying people × 36 pax/hour.
- * 30-min slot contribution = 18. Never uses lane/equipment airportPax.
+ * PAX staffing capacity: qualifying people × 36 pax/hour per slot.
+ * Never uses lane/equipment airportPax.
  */
 import { emptyDemandByDow } from "./aggregate.js";
 
 export var PAX_PER_HOUR = 36;
-export var PAX_PER_SLOT = 18;
+export var PAX_PER_SLOT = 36;
 
 export function demandSlots(S) {
   if (S && typeof S.coverageSlots === "function") return S.coverageSlots().slice();
@@ -72,7 +72,7 @@ function lineCovers(S, line, dayOff, slot, dow) {
 }
 
 /**
- * capacityByDow[d][slot] = qualifyingCount × 18 (pax per 30-min).
+ * capacityByDow[d][slot] = qualifyingCount × 36 (pax/hour).
  * Qualifying: role toggle + WORK + PAX duty + shift covers slot.
  */
 export function computeStaffCapacity(S, slots, roleMode) {
