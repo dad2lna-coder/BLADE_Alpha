@@ -167,6 +167,7 @@ export function initLinesTable(scheduler) {
       if (svelteComponent) {
         applyProps(svelteComponent);
       } else {
+        if (root.childNodes.length) root.innerHTML = '';
         const nextRows = buildRows();
         root._linesTableApp = new LinesTable({
           target: root,
