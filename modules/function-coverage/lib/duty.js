@@ -56,29 +56,36 @@ export function isAmSide(startMin, anchors, threshold) {
   return phaseOfStart(startMin, anchors, threshold) === "Opening" || phaseOfStart(startMin, anchors, threshold) === "AM";
 }
 export function lineCoversSlot(line, dayIndex, slotMin) {
-    var sched = api.state.schedule[line.id] || api.state.schedule[String(line.id)];
-    if (!sched || sched[dayIndex] !== "WORK") return false;
-    var dow = dayIndex % 7;
-    var times = api.getEffectiveShiftTimes ? api.getEffectiveShiftTimes(line.shiftId, dow) : null;
-    if (!times) {
-      var sh = api.getShift(line.shiftId);
-      if (!sh) return false;
-      times = { start: sh.start, end: sh.end };
-    }
-    var a = api.timeToMin(times.start), c = api.timeToMin(times.end);
-    if (c <= a) return slotMin >= a || slotMin < c;
-    return slotMin >= a && slotMin < c;
+  var sched = api.state.schedule[line.id] || api.state.schedule[String(line.id)];
+  if (!sched || sched[dayIndex] !== "WORK") return false;
+  var dow = dayIndex % 7;
+  var base = api.state && api.state.startDate;
+  if (base && typeof base.add === "function" && typeof base.day === "function") {
+    dow = base.add(dayIndex, "day").day();
   }
-  export function bandForMinute(m, bands) {
-    bands = bands || api.ensureFunctionCoverage().bands;
-    for (var i = 0; i < bands.length; i++) {
-      var b = bands[i], s = api.timeToMin(b.start), e = api.timeToMin(b.end);
-      if (e <= s) e += 1440;
-      var mm = m; if (e > 1440 && mm < s) mm += 1440;
-      if (mm >= s && mm < e) return b;
-    }
-    return null;
+  var times = api.getEffectiveShiftTimes ? api.getEffectiveShiftTimes(line.shiftId, dow) : null;
+  if (!times) {
+    var sh = api.getShift(line.shiftId);
+    if (!sh) return false;
+    times = { start: sh.start, end: sh.end };
   }
+  var a = api.timeToMin(times.start), c = api.timeToMin(times.end);
+  if (c <= a) return slotMin >= a || slotMin < c;
+  return slotMin >= a && slotMin < c;
+}
+// Legacy: extra-position coverage windows and unmapped fc.bands only.
+// Function Coverage assignment no longer uses bands.
+export function bandForMinute(m, bands) {
+  bands = bands || (api.ensureFunctionCoverage && api.ensureFunctionCoverage().bands) || [];
+  if (!Array.isArray(bands) || !bands.length) return null;
+  for (var i = 0; i < bands.length; i++) {
+    var b = bands[i], s = api.timeToMin(b.start), e = api.timeToMin(b.end);
+    if (e <= s) e += 1440;
+    var mm = m; if (e > 1440 && mm < s) mm += 1440;
+    if (mm >= s && mm < e) return b;
+  }
+  return null;
+}
 export function computeShiftAnchors() {
   var starts = {};
   (api.state.lines || []).forEach(function (l) {

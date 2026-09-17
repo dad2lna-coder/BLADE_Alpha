@@ -10,7 +10,8 @@
     "build:win": "tauri build --bundles nsis",
     "build:function-coverage": "vite build --config vite.function-coverage.config.mjs",
     "build:lines-table": "vite build --config vite.lines-table.config.mjs",
-    "copy-frontend": "node scripts/copy-frontend.js"
+    "copy-frontend": "node scripts/copy-frontend.js",
+    "test:function-coverage": "node test-function-coverage.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",

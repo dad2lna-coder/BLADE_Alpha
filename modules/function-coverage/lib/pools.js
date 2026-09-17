@@ -1,5 +1,8 @@
 let api = null;
 
+import { normalizeRequirements, openingAndClosingShifts, lineOnShift } from "./shifts.js";
+import { migrateFunctionCoverageConfig } from "./migrate.js";
+
 export function bindPoolsApi(scheduler) {
   api = scheduler;
 }
@@ -38,10 +41,27 @@ export function ensureFunctionCoverage() {
   if (fc.amPmSplit == null) fc.amPmSplit = true;
   if (fc.phaseThresholdMin == null) fc.phaseThresholdMin = 15;
   if (fc.bias == null) fc.bias = "none";
-  if (!Array.isArray(fc.bands) || !fc.bands.length) fc.bands = defaultBands();
-  fc.bands.forEach(normalizeBand);
-  delete fc.stsoIsDfo; delete fc.poolDfo; delete fc.poolPax;
   if (!api.state.functionRotation) api.state.functionRotation = {};
+
+  if (Array.isArray(fc.bands) && fc.bands.length && !fc._bandMigrationAttempted) {
+    fc._bandMigrationAttempted = true;
+    migrateFunctionCoverageConfig(fc, {
+      shifts: (api.state && api.state.shifts) || [],
+      issues: api.state && api.state.issues
+    });
+  }
+
+  fc.requirements = normalizeRequirements(fc.requirements);
+  if (!Array.isArray(fc.requirementShiftIds)) fc.requirementShiftIds = [];
+  if (!fc.requirementShiftIds.length) {
+    ["STSO", "LTSO", "TSO"].forEach(function (role) {
+      Object.keys(fc.requirements[role] || {}).forEach(function (id) {
+        if (fc.requirementShiftIds.indexOf(id) < 0) fc.requirementShiftIds.push(id);
+      });
+    });
+  }
+
+  delete fc.stsoIsDfo; delete fc.poolDfo; delete fc.poolPax;
   syncDerivedMode(fc);
   return fc;
 }
@@ -105,6 +125,7 @@ export function buildCertifiedPools(fc) {
   });
   var anchors = api.computeShiftAnchors();
   var thr = fc.phaseThresholdMin || 15;
+  var oc = openingAndClosingShifts();
 
   function ensureEligible(line) {
     if (!line.functionEligible || typeof line.functionEligible !== "object") line.functionEligible = { dfo: false, bag: false, pax: false };
@@ -134,29 +155,15 @@ export function buildCertifiedPools(fc) {
     pool.sort(function (a, b) { return api.lineStartMin(a) - api.lineStartMin(b) || String(a.id).localeCompare(String(b.id)); });
     var amSide = pool.filter(function (l) { return api.isAmSide(api.lineStartMin(l), anchors, thr); });
     var pmSide = pool.filter(function (l) { return !api.isAmSide(api.lineStartMin(l), anchors, thr); });
-    var bands = fc.bands || [];
-    var openBand = bands[0];
-    var closeBand = bands[bands.length - 1];
-    function coversBandStart(line, band) {
-      if (!band) return false;
-      var bandStart = api.timeToMin(band.start);
-      var sh = api.getShift(line.shiftId);
-      if (!sh) return false;
-      var shStart = api.timeToMin(sh.start);
-      var shEnd = api.timeToMin(sh.end);
-      if (shEnd <= shStart) shEnd += 1440;
-      if (bandStart >= shStart && bandStart < shEnd) return true;
-      return false;
-    }
     amSide.sort(function (a, b) {
-      var aOpen = coversBandStart(a, openBand) ? 0 : 1;
-      var bOpen = coversBandStart(b, openBand) ? 0 : 1;
+      var aOpen = lineOnShift(a, oc.open) ? 0 : 1;
+      var bOpen = lineOnShift(b, oc.open) ? 0 : 1;
       if (aOpen !== bOpen) return aOpen - bOpen;
       return api.lineStartMin(a) - api.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
     });
     pmSide.sort(function (a, b) {
-      var aClose = coversBandStart(a, closeBand) ? 0 : 1;
-      var bClose = coversBandStart(b, closeBand) ? 0 : 1;
+      var aClose = lineOnShift(a, oc.close) ? 0 : 1;
+      var bClose = lineOnShift(b, oc.close) ? 0 : 1;
       if (aClose !== bClose) return aClose - bClose;
       return api.lineStartMin(a) - api.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
     });
@@ -197,29 +204,4 @@ export function buildCertifiedPools(fc) {
     tso: { total: dfo.tso.total + dfo.tsoF.total, am: dfo.tso.am + dfo.tsoF.am, pm: dfo.tso.pm + dfo.tsoF.pm },
     anchors: anchors
   };
-}
-
-// Normalize a band to min/max keys; migrate legacy stso/ltso/tso.
-function normalizeBand(band) {
-  if (!band || typeof band !== "object") return band;
-  ["stso", "ltso", "tso"].forEach(function (role) {
-    var minKey = role + "Min";
-    var maxKey = role + "Max";
-    if (band[minKey] == null && band[role] != null) band[minKey] = band[role];
-    if (band[maxKey] == null) band[maxKey] = band[minKey] != null ? band[minKey] : 0;
-    band[minKey] = num0(band[minKey]);
-    band[maxKey] = num0(band[maxKey]);
-    if (band[maxKey] < band[minKey]) band[maxKey] = band[minKey];
-    delete band[role];
-  });
-  return band;
-}
-
-// Default bands when none defined (max = min until the user widens in UI)
-function defaultBands() {
-  return [
-    { start: "03:30", end: "04:00", stsoMin: 1, stsoMax: 1, ltsoMin: 1, ltsoMax: 1, tsoMin: 2, tsoMax: 2 },
-    { start: "04:00", end: "20:30", stsoMin: 1, stsoMax: 1, ltsoMin: 1, ltsoMax: 1, tsoMin: 6, tsoMax: 6 },
-    { start: "20:30", end: "23:00", stsoMin: 1, stsoMax: 1, ltsoMin: 1, ltsoMax: 1, tsoMin: 2, tsoMax: 2 }
-  ];
 }

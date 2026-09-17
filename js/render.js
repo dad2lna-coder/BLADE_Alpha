@@ -76,13 +76,20 @@ window.Scheduler = window.Scheduler || {};
         if (off == null) continue;
         if ((S.state.schedule[line.id] || [])[off] !== "WORK") continue;
         if (!funcOk(line, off)) continue;
-        var times = S.getEffectiveShiftTimes
-          ? S.getEffectiveShiftTimes(line.shiftId, dow)
-          : { start: S.getShift(line.shiftId).start, end: S.getShift(line.shiftId).end };
-        var a = S.timeToMin(times.start);
-        var b = S.timeToMin(times.end);
         slots.forEach(function (slot, si) {
-          if (a < slot + 30 && b > slot) {
+          var covers = false;
+          if (S.lineCoversSlot) {
+            covers = S.lineCoversSlot(line, off, slot);
+          } else {
+            var times = S.getEffectiveShiftTimes
+              ? S.getEffectiveShiftTimes(line.shiftId, dow)
+              : { start: S.getShift(line.shiftId).start, end: S.getShift(line.shiftId).end };
+            var a = S.timeToMin(times.start);
+            var b = S.timeToMin(times.end);
+            if (b <= a) covers = slot >= a || slot < b;
+            else covers = slot >= a && slot < b;
+          }
+          if (covers) {
             if (isM) matrix[si][dow].m++;
             else matrix[si][dow].f++;
             matrix[si][dow].t++;

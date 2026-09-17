@@ -1,8 +1,13 @@
-// ESM assign helpers (full E5) — real implementations from js/functions.js
-import { lineRoleKey, lineCoversSlot, getRotationDuty } from "./duty.js";
+// Shift-driven function assignment.
+// Requirements are (role, shiftId, min, max) counts of generated lines —
+// not 30-minute slot headcounts. Coverage slots are derived afterwards.
+import { lineRoleKey } from "./duty.js";
 import { lineStartMin, isAmSide, computeShiftAnchors } from "./duty.js";
-import { ensureFunctionCoverage, bagPoolTotal, dfoPoolTotal, capFunctionPoolsToFte, buildCertifiedPools } from "./pools.js";
-import { readFunctionBandsFromDom, closeFunctionCoverageModal } from "./bands.js";
+import { ensureFunctionCoverage, capFunctionPoolsToFte, buildCertifiedPools } from "./pools.js";
+import {
+  getShiftRequirement, getEligibleLinesForShift, openingAndClosingShifts,
+  lineOnShift
+} from "./shifts.js";
 
 let api = null;
 
@@ -10,41 +15,10 @@ export function bindAssignApi(scheduler) {
   api = scheduler;
 }
 
-function bandSlots(band) {
-  var start = api.timeToMin(band.start), end = api.timeToMin(band.end);
-  if (end <= start) end += 1440;
-  var slots = [];
-  for (var m = start; m < end; m += 30) slots.push(m % 1440);
-  return slots;
-}
-
 function worksDay(line, d) {
   var sched = api.state.schedule[line.id] || api.state.schedule[String(line.id)];
   if (!sched) return false;
   return sched[d] === "WORK";
-}
-
-export function bagSlotCounts(d, band, role) {
-  var slots = bandSlots(band);
-  var counts = [];
-  for (var i = 0; i < slots.length; i++) counts.push(0);
-  (api.state.lines || []).forEach(function (l) {
-    if (lineRoleKey(l) !== role) return;
-    if (!worksDay(l, d) || getRotationDuty(l.id, d) !== "BAG") return;
-    for (var i = 0; i < slots.length; i++) {
-      if (lineCoversSlot(l, d, slots[i])) counts[i]++;
-    }
-  });
-  return counts;
-}
-
-export function worstBagCoverage(d, band, role) {
-  var slots = bandSlots(band);
-  if (!slots.length) return 0;
-  var counts = bagSlotCounts(d, band, role);
-  var have = counts[0];
-  for (var i = 1; i < counts.length; i++) if (counts[i] < have) have = counts[i];
-  return have;
 }
 
 function ensureEligible(line) {
@@ -60,6 +34,14 @@ function unused(role, sex, fc) {
     if (l.isExtra || l.extraPositionId) return false;
     var el = ensureEligible(l);
     return lineRoleKey(l) === role && l.sex === sex && !el.bag && !el.dfo;
+  });
+}
+
+function sortByBias(arr, fc) {
+  return arr.slice().sort(function (a, b) {
+    if (fc && fc.bias === "male" && a.sex !== b.sex) return a.sex === "M" ? -1 : 1;
+    if (fc && fc.bias === "female" && a.sex !== b.sex) return a.sex === "F" ? -1 : 1;
+    return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
   });
 }
 
@@ -89,29 +71,16 @@ export function markDfo(role, sex, n, fc) {
   });
   var amSide = pool.filter(function (l) { return isAmSide(lineStartMin(l), anchors, thr); });
   var pmSide = pool.filter(function (l) { return !isAmSide(lineStartMin(l), anchors, thr); });
-  var bands = fc.bands || [];
-  var openBand = bands[0];
-  var closeBand = bands[bands.length - 1];
-  function coversBandStart(line, band) {
-    if (!band) return false;
-    var bandStart = api.timeToMin(band.start);
-    var sh = api.getShift(line.shiftId);
-    if (!sh) return false;
-    var shStart = api.timeToMin(sh.start);
-    var shEnd = api.timeToMin(sh.end);
-    if (shEnd <= shStart) shEnd += 1440;
-    if (bandStart >= shStart && bandStart < shEnd) return true;
-    return false;
-  }
+  var oc = openingAndClosingShifts();
   amSide.sort(function (a, b) {
-    var aOpen = coversBandStart(a, openBand) ? 0 : 1;
-    var bOpen = coversBandStart(b, openBand) ? 0 : 1;
+    var aOpen = lineOnShift(a, oc.open) ? 0 : 1;
+    var bOpen = lineOnShift(b, oc.open) ? 0 : 1;
     if (aOpen !== bOpen) return aOpen - bOpen;
     return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
   });
   pmSide.sort(function (a, b) {
-    var aClose = coversBandStart(a, closeBand) ? 0 : 1;
-    var bClose = coversBandStart(b, closeBand) ? 0 : 1;
+    var aClose = lineOnShift(a, oc.close) ? 0 : 1;
+    var bClose = lineOnShift(b, oc.close) ? 0 : 1;
     if (aClose !== bClose) return aClose - bClose;
     return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
   });
@@ -119,19 +88,6 @@ export function markDfo(role, sex, n, fc) {
   var needPm = fc.amPmSplit ? Math.floor(n / 2) : 0;
   if (amSide.length < needAm) { needPm += needAm - amSide.length; needAm = amSide.length; }
   if (pmSide.length < needPm) { needAm = Math.min(amSide.length, needAm + (needPm - pmSide.length)); needPm = pmSide.length; }
-  var closeNeed = 0;
-  if (closeBand) {
-    if (role === "STSO") closeNeed = closeBand.stsoMin || 0;
-    else if (role === "LTSO") closeNeed = closeBand.ltsoMin || 0;
-    else if (role === "TSO") closeNeed = closeBand.tsoMin || 0;
-  }
-  var closeCapable = closeBand
-    ? pmSide.filter(function (line) { return coversBandStart(line, closeBand); })
-    : [];
-  var needClose = Math.min(closeNeed, closeCapable.length, n);
-  needPm = Math.max(needPm, needClose);
-  if (needAm + needPm > n) needAm = n - needPm;
-  if (needAm < 0) { needAm = 0; needPm = Math.min(n, needPm); }
   while (needAm + needPm > n) {
     if (needPm >= needAm && needPm > 0) needPm--;
     else if (needAm > 0) needAm--;
@@ -147,10 +103,8 @@ export function markDfo(role, sex, n, fc) {
     }
     return taken;
   }
-  var gotClose = take(closeCapable, needClose);
   var gotAm = take(amSide, needAm);
-  var stillNeedPm = Math.max(0, needPm - gotClose);
-  var gotPm = gotClose + take(pmSide, stillNeedPm);
+  var gotPm = take(pmSide, needPm);
   var short = n - gotAm - gotPm;
   if (short > 0) gotPm += take(unused(role, sex, fc), short);
   return { am: gotAm, pm: gotPm, total: gotAm + gotPm };
@@ -159,7 +113,9 @@ export function markDfo(role, sex, n, fc) {
 function paintAfterAssign() {
   if (api.renderCoverageBars) api.renderCoverageBars();
   if (api.renderReports) api.renderReports();
-  window.dispatchEvent(new CustomEvent("lines:request-render"));
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("lines:request-render"));
+  }
   if (!api.__USE_SVELTE_LINES && api.renderLines) api.renderLines();
 }
 
@@ -173,81 +129,105 @@ function setDuty(lineId, dayIndex, fn) {
 }
 
 function getDuty(lineId, dayIndex) {
-  var row = api.state.functionRotation[String(lineId)];
+  var row = api.state.functionRotation && api.state.functionRotation[String(lineId)];
   if (!row) return null;
   var cell = row[dayIndex];
   if (cell == null || cell === "") return null;
   return cell;
 }
 
-export function fillBandShortfalls(d, fc, bagFillCount) {
+function shiftLabelOf(shiftId) {
+  var sh = api.getShift ? api.getShift(shiftId) : null;
+  if (!sh) return String(shiftId);
+  var name = sh.name || shiftId;
+  return String(name).replace(":", "");
+}
+
+/**
+ * Assign BAG to generated lines per (role, shift) min/max.
+ * min/max are line counts, not slot headcounts.
+ */
+export function applyShiftFunctionRequirements(fc) {
   fc = fc || ensureFunctionCoverage();
-  bagFillCount = bagFillCount || {};
-  var days = (api.state.weekCount || 1) * 7;
-  (fc.bands || []).forEach(function (band) {
-    [["STSO", band.stsoMin, band.stsoMax], ["LTSO", band.ltsoMin, band.ltsoMax], ["TSO", band.tsoMin, band.tsoMax]].forEach(function (pair) {
-      var role = pair[0], need = pair[1] || 0, maxC = pair[2];
-      if (maxC == null) maxC = need;
-      if (maxC < need) maxC = need;
-      if (need <= 0) return;
-      var slots = bandSlots(band);
-      var counts = bagSlotCounts(d, band, role);
-      var slotShort = [];
-      for (var i = 0; i < slots.length; i++) slotShort.push(need - counts[i]);
-      var totalShort = slotShort.reduce(function (a, b) { return a + Math.max(0, b); }, 0);
-      if (totalShort <= 0) return;
-      function countFuncDays(line) {
-        var n = 0;
-        for (var dd = 0; dd < days; dd++) {
-          if (getDuty(line.id, dd) === "BAG") n++;
-        }
-        return n + (bagFillCount[String(line.id)] || 0);
+  var diagnostics = [];
+  var assignedIds = {};
+  var roles = ["STSO", "LTSO", "TSO"];
+  var configured = {};
+
+  roles.forEach(function (role) {
+    var recs = (fc.requirements && fc.requirements[role]) || {};
+    Object.keys(recs).forEach(function (shiftId) {
+      var req = getShiftRequirement(role, shiftId, fc);
+      if (req.min <= 0 && req.max <= 0) return;
+      configured[role + "|" + shiftId] = true;
+      var eligible = getEligibleLinesForShift(role, shiftId);
+      var bagTagged = eligible.filter(function (l) { return ensureEligible(l).bag; });
+      var unusedLines = eligible.filter(function (l) {
+        var el = ensureEligible(l);
+        return !el.bag && !el.dfo;
+      });
+      var dfoTagged = eligible.filter(function (l) { return ensureEligible(l).dfo; });
+      var ordered = sortByBias(bagTagged, fc)
+        .concat(sortByBias(unusedLines, fc), sortByBias(dfoTagged, fc));
+      var seen = {};
+      ordered = ordered.filter(function (l) {
+        var k = String(l.id);
+        if (seen[k]) return false;
+        seen[k] = true;
+        return true;
+      });
+
+      var want = req.min;
+      if (bagTagged.length > want) want = Math.min(req.max, bagTagged.length);
+      want = Math.min(want, req.max, ordered.length);
+
+      var got = 0;
+      for (var i = 0; i < ordered.length && got < want; i++) {
+        var line = ordered[i];
+        var el = ensureEligible(line);
+        el.bag = true;
+        el.dfo = false;
+        el.pax = false;
+        assignedIds[String(line.id)] = true;
+        got++;
       }
-      while (totalShort > 0) {
-        var cands = (api.state.lines || []).filter(function (l) {
-          if (!ensureEligible(l).dfo) return false;
-          if (lineRoleKey(l) !== role) return false;
-          if (!worksDay(l, d) || getDuty(l.id, d) === "BAG") return false;
-          var coversMinShort = false;
-          var coversUnderMax = false;
-          for (var i = 0; i < slots.length; i++) {
-            if (!lineCoversSlot(l, d, slots[i])) continue;
-            if (counts[i] < need) coversMinShort = true;
-            if (counts[i] < maxC) coversUnderMax = true;
-          }
-          if (!coversMinShort) return false;
-          if (!coversUnderMax) return false;
-          return true;
-        }).sort(function (a, b) {
-          var da = countFuncDays(a), db = countFuncDays(b);
-          if (da !== db) return da - db;
-          if (fc.bias === "male") { if (a.sex !== b.sex) return a.sex === "M" ? -1 : 1; }
-          else if (fc.bias === "female") { if (a.sex !== b.sex) return a.sex === "F" ? -1 : 1; }
-          return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
-        });
-        if (!cands.length) break;
-        var chosen = cands[0];
-        setDuty(chosen.id, d, "BAG");
-        bagFillCount[String(chosen.id)] = (bagFillCount[String(chosen.id)] || 0) + 1;
-        for (var i = 0; i < slots.length; i++) {
-          if (lineCoversSlot(chosen, d, slots[i])) {
-            if (counts[i] < maxC) {
-              counts[i]++;
-              if (slotShort[i] > 0) {
-                slotShort[i]--;
-                totalShort--;
-              }
-            }
-          }
-        }
-      }
+
+      var status = got < req.min ? "SHORT" : "OK";
+      var sh = api.getShift ? api.getShift(shiftId) : null;
+      diagnostics.push({
+        role: role,
+        shiftId: shiftId,
+        shiftLabel: shiftLabelOf(shiftId),
+        shiftStart: sh ? sh.start : null,
+        shiftEnd: sh ? sh.end : null,
+        missingShift: !sh,
+        eligible: eligible.length,
+        requiredMin: req.min,
+        requiredMax: req.max,
+        assigned: got,
+        status: status
+      });
     });
   });
+
+  // Configured (role, shift) is owned by the requirement: extra pool-tagged
+  // BAG people on that shift are demoted so max is honored. Unconfigured
+  // shifts keep pool tags (existing BAG/DFO/PAX rules).
+  (api.state.lines || []).forEach(function (l) {
+    if (!l || l.isExtra || l.extraPositionId) return;
+    var role = lineRoleKey(l);
+    if (!configured[role + "|" + l.shiftId]) return;
+    if (assignedIds[String(l.id)]) return;
+    var el = ensureEligible(l);
+    if (el.bag) el.bag = false;
+  });
+
+  return { diagnostics: diagnostics, assignedIds: assignedIds };
 }
 
 export function generateFunctionAssignments(opts) {
   opts = opts || {};
-  readFunctionBandsFromDom();
+  if (api.readFunctionBandsFromDom) api.readFunctionBandsFromDom();
   var fc = ensureFunctionCoverage();
   if (!api.state.issues) api.state.issues = [];
   capFunctionPoolsToFte(fc, api.state.issues);
@@ -258,13 +238,16 @@ export function generateFunctionAssignments(opts) {
     l.functionEligible = { dfo: false, bag: false, pax: false };
   });
   if (!api.state.lines || !api.state.lines.length) {
+    fc.lastDiagnostics = [];
     paintAfterAssign();
     if (!opts.fromGenerate && api.updateStatus) api.updateStatus("Generate lines first.");
     return;
   }
   var poolStats = buildCertifiedPools(fc);
+  var applied = applyShiftFunctionRequirements(fc);
+  fc.lastDiagnostics = applied.diagnostics || [];
   var days = (api.state.weekCount || 1) * 7;
-  var bagFillCount = {};
+
   (api.state.lines || []).forEach(function (l) {
     if (!ensureEligible(l).bag) return;
     l.function = "BAG";
@@ -274,7 +257,6 @@ export function generateFunctionAssignments(opts) {
     if (ensureEligible(l).bag) return;
     if (ensureEligible(l).dfo) l.function = "DFO";
   });
-  for (var d = 0; d < days; d++) fillBandShortfalls(d, fc, bagFillCount);
   (api.state.lines || []).forEach(function (l) {
     if (l.isExtra || l.extraPositionId) return;
     if (ensureEligible(l).bag) return;
@@ -289,28 +271,23 @@ export function generateFunctionAssignments(opts) {
     l.function = "PAX";
     for (var dj = 0; dj < days; dj++) if (worksDay(l, dj)) setDuty(l.id, dj, "PAX");
   });
+
   var shortfalls = [];
-  for (var d2 = 0; d2 < Math.min(7, days); d2++) {
-    (fc.bands || []).forEach(function (band) {
-      var miss = [];
-      [["STSO", band.stsoMin || 0], ["LTSO", band.ltsoMin || 0], ["TSO", band.tsoMin || 0]].forEach(function (pair) {
-        var role = pair[0], need = pair[1];
-        if (need <= 0) return;
-        var have = worstBagCoverage(d2, band, role);
-        if (have < need) miss.push(role + " " + have + "/" + need);
-      });
-      if (miss.length) shortfalls.push((api.DAYS[d2 % 7] || d2) + " " + band.start + "-" + band.end + ": " + miss.join(", "));
-    });
-  }
-  if (shortfalls.length) {
-    shortfalls.slice(0, 10).forEach(function (msg) { api.state.issues.push("Baggage band short: " + msg); });
-    if (api.renderIssues) api.renderIssues();
-  }
+  (applied.diagnostics || []).forEach(function (row) {
+    if (row.status !== "SHORT") return;
+    var label = row.shiftStart || row.shiftLabel || row.shiftId;
+    var msg = row.role + " " + label + " shift: " + row.assigned + " / " + row.requiredMin;
+    shortfalls.push(msg);
+    api.state.issues.push(msg);
+  });
+  if (shortfalls.length && api.renderIssues) api.renderIssues();
+
   paintAfterAssign();
   var msg = "BAG " + (poolStats.bag.stso.total + poolStats.bag.ltso.total + poolStats.bag.tso.total) +
     " \u00b7 DFO " + (poolStats.stso.total + poolStats.ltso.total + poolStats.tso.total) + " \u00b7 leftover PAX";
-  if (shortfalls.length) msg += " \u00b7 SHORT " + shortfalls.length + " day/band(s)";
-  var hint = api.$("cert-assign-hint"); if (hint) hint.textContent = msg;
+  if (shortfalls.length) msg += " \u00b7 SHORT " + shortfalls.length;
+  var hint = api.$ && api.$("cert-assign-hint"); if (hint) hint.textContent = msg;
   if (!opts.fromGenerate && api.updateStatus) api.updateStatus(msg);
-  if (!opts.fromGenerate) closeFunctionCoverageModal();
+  if (!opts.fromGenerate && api.closeFunctionCoverageModal) api.closeFunctionCoverageModal();
+  return { diagnostics: applied.diagnostics, shortfalls: shortfalls, poolStats: poolStats };
 }
