@@ -23,10 +23,14 @@
       overscan: 5,
       getItemKey: (index) => rows[index]?.id ?? index,
     });
+    if (rows.length > 0 && virtualizer && typeof virtualizer.measure === 'function') {
+      virtualizer.measure();
+    }
   });
 
   $: if (virtualizer && mode === 'svelte') {
     virtualizer.setOptions({ count: rows.length });
+    if (typeof virtualizer.measure === 'function') virtualizer.measure();
   }
 
   function shiftLabel(opt) {
@@ -165,7 +169,13 @@
 </div>
 
 <style>
-  .lines-table-root { width: 100%; overflow-x: auto; position: relative; }
+  .lines-table-root {
+    width: 100%;
+    min-height: min(70vh, 720px);
+    height: min(70vh, 720px);
+    overflow-x: auto;
+    position: relative;
+  }
   .lines-virtual-root { position: relative; overflow: auto; height: 100%; width: 100%; }
   .lines-virtual-root table { width: max-content; min-width: 1100px; border-collapse: collapse; font-size: 0.78rem; table-layout: fixed; position: relative; }
   .lines-virtual-root th { position: sticky; top: 0; background: var(--console-bg, #0c0c0c); color: var(--console-fg, #e8e8e8); font-weight: 600; text-align: left; padding: 0.35rem 0.5rem; border-bottom: 2px solid #333; white-space: nowrap; z-index: 1; }

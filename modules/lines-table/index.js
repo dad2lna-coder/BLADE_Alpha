@@ -79,8 +79,9 @@ export function initLinesTable(scheduler) {
 
   function applyProps(comp) {
     if (!comp || typeof comp.$set !== "function") return;
+    const nextRows = buildRows();
     comp.$set({
-      rows: buildRows(),
+      rows: Array.isArray(nextRows) ? nextRows : [],
       shiftOptions: shiftOptions(),
       teamOptions: teamOptions()
     });
@@ -166,10 +167,11 @@ export function initLinesTable(scheduler) {
       if (svelteComponent) {
         applyProps(svelteComponent);
       } else {
+        const nextRows = buildRows();
         root._linesTableApp = new LinesTable({
           target: root,
           props: {
-            rows: buildRows(),
+            rows: Array.isArray(nextRows) ? nextRows : [],
             shiftOptions: shiftOptions(),
             teamOptions: teamOptions(),
             onInlineEdit: writeInlineEdit,
