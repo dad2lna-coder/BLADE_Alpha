@@ -78,7 +78,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.getRowModels = function (lines, schedule, options) {
-    if (!Array.isArray(lines) || !schedule) return [];
+    if (!Array.isArray(lines) || !schedule || typeof schedule !== "object") return [];
     return lines.map(function (line) {
       return S.lineToRowModel(line, schedule, options);
     }).filter(Boolean);
@@ -86,7 +86,7 @@ window.Scheduler = window.Scheduler || {};
 
   S.getLineRowModels = function (options) {
     var lines = (S.state && Array.isArray(S.state.lines)) ? S.state.lines : [];
-    var schedule = (S.state && S.state.schedule) || [];
+    var schedule = (S.state && S.state.schedule) || {};
     var merged = Object.assign({}, options || {});
     if (!merged.teamResolver && typeof S.teamMetaForLine === "function") {
       merged.teamResolver = S.teamMetaForLine;
