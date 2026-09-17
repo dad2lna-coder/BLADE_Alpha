@@ -58,7 +58,7 @@
   }
 </script>
 
-<div class="lines-table-root">
+<div class="lines-table-root" style="min-height: min(70vh, 720px); height: min(70vh, 720px); width: 100%;">
   {#if mode === 'svelte'}
     <div
       class="lines-virtual-root"
@@ -160,8 +160,8 @@
             </tr>
           {/each}
         </tbody>
-        <div style="height: {(virtualizer?.getTotalSize() ?? 0)}px;"></div>
       </table>
+      <div style="height: {(virtualizer?.getTotalSize() ?? 0)}px;"></div>
     </div>
   {:else}
     <div class="muted">Classic Lines mode active</div>

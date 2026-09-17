@@ -24,7 +24,8 @@
   },
   "lines-table": {
     "entry": "modules/lines-table/dist/lines-table.js",
-    "init": "initLinesTable"
+    "init": "initLinesTable",
+    "css": ["modules/lines-table/dist/lines-table.css"]
   },
   "coverage": {
     "entry": "modules/coverage/index.js",
