@@ -63,7 +63,7 @@ async function ensurePanel() {
 function emptyMessage(S, vi) {
   var last = vi && vi.lastCapacity;
   if (!vi || !vi.flights || !vi.flights.length) {
-    return "Import a flight-list .xlsx (DAY_OF_WEEK, ETD, CAPACITY, PERCENT_ORIGINATING).";
+    return "Import a flight-list .xlsx (DAY_OF_WEEK, ETD, CAPACITY, LOAD_FACTOR, PERCENT_ORIGINATING).";
   }
   if (last && last.empty) {
     return "No bid lines yet. Generate a schedule, then Refresh. Capacity is PAX TSOs covering each slot × 18 pax / 30-min.";
