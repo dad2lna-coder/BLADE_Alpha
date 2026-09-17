@@ -39,6 +39,7 @@ export function ensureFunctionCoverage() {
   if (fc.phaseThresholdMin == null) fc.phaseThresholdMin = 15;
   if (fc.bias == null) fc.bias = "none";
   if (!Array.isArray(fc.bands) || !fc.bands.length) fc.bands = defaultBands();
+  fc.bands.forEach(normalizeBand);
   delete fc.stsoIsDfo; delete fc.poolDfo; delete fc.poolPax;
   if (!api.state.functionRotation) api.state.functionRotation = {};
   syncDerivedMode(fc);
@@ -198,11 +199,27 @@ export function buildCertifiedPools(fc) {
   };
 }
 
-// Default bands when none defined
+// Normalize a band to min/max keys; migrate legacy stso/ltso/tso.
+function normalizeBand(band) {
+  if (!band || typeof band !== "object") return band;
+  ["stso", "ltso", "tso"].forEach(function (role) {
+    var minKey = role + "Min";
+    var maxKey = role + "Max";
+    if (band[minKey] == null && band[role] != null) band[minKey] = band[role];
+    if (band[maxKey] == null) band[maxKey] = band[minKey] != null ? band[minKey] : 0;
+    band[minKey] = num0(band[minKey]);
+    band[maxKey] = num0(band[maxKey]);
+    if (band[maxKey] < band[minKey]) band[maxKey] = band[minKey];
+    delete band[role];
+  });
+  return band;
+}
+
+// Default bands when none defined (max = min until the user widens in UI)
 function defaultBands() {
   return [
-    { start: "03:30", end: "04:00", stso: 1, ltso: 1, tso: 2 },
-    { start: "04:00", end: "20:30", stso: 1, ltso: 1, tso: 6 },
-    { start: "20:30", end: "23:00", stso: 1, ltso: 1, tso: 3 }
+    { start: "03:30", end: "04:00", stsoMin: 1, stsoMax: 1, ltsoMin: 1, ltsoMax: 1, tsoMin: 2, tsoMax: 2 },
+    { start: "04:00", end: "20:30", stsoMin: 1, stsoMax: 1, ltsoMin: 1, ltsoMax: 1, tsoMin: 6, tsoMax: 6 },
+    { start: "20:30", end: "23:00", stsoMin: 1, stsoMax: 1, ltsoMin: 1, ltsoMax: 1, tsoMin: 2, tsoMax: 2 }
   ];
 }
