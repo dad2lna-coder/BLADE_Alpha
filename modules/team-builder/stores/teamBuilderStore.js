@@ -26,6 +26,27 @@ export function syncSchedulerBridge(S) {
     S.teams.teams = teams;
 }
 
+export function replaceAllTeams(list) {
+    teams.length = 0;
+    (list || []).forEach(function (raw) {
+        if (!raw || typeof raw !== "object") return;
+        teams.push({
+            id: raw.id,
+            name: raw.name,
+            members: Array.isArray(raw.members) ? raw.members.map(Number).filter(function (n) { return !isNaN(n); }) : [],
+            followMe: !!raw.followMe,
+            phase: raw.phase != null ? raw.phase : null,
+            modSetId: raw.modSetId != null ? raw.modSetId : null
+        });
+    });
+    var maxN = 0;
+    teams.forEach(function (t) {
+        var m = /^T(\d+)$/.exec(String(t.id || ""));
+        if (m) maxN = Math.max(maxN, Number(m[1]));
+    });
+    teamSeq = Math.max(teamSeq, maxN + 1);
+}
+
 export function createTeam(name) {
     const n = teamSeq++;
     const width = Math.max(2, String(teams.length + 1).length);
