@@ -208,20 +208,15 @@ export function fillBandShortfalls(d, fc, bagFillCount) {
           if (!ensureEligible(l).dfo) return false;
           if (lineRoleKey(l) !== role) return false;
           if (!worksDay(l, d) || getDuty(l.id, d) === "BAG") return false;
-          var coversShort = false;
-          var allCoveredShortAtMax = true;
-          var wouldExceedMax = false;
+          var coversMinShort = false;
+          var coversUnderMax = false;
           for (var i = 0; i < slots.length; i++) {
             if (!lineCoversSlot(l, d, slots[i])) continue;
-            if (counts[i] >= maxC) wouldExceedMax = true;
-            if (counts[i] < need) {
-              coversShort = true;
-              if (counts[i] < maxC) allCoveredShortAtMax = false;
-            }
+            if (counts[i] < need) coversMinShort = true;
+            if (counts[i] < maxC) coversUnderMax = true;
           }
-          if (!coversShort) return false;
-          if (wouldExceedMax) return false;
-          if (allCoveredShortAtMax) return false;
+          if (!coversMinShort) return false;
+          if (!coversUnderMax) return false;
           return true;
         }).sort(function (a, b) {
           var da = countFuncDays(a), db = countFuncDays(b);
@@ -236,10 +231,12 @@ export function fillBandShortfalls(d, fc, bagFillCount) {
         bagFillCount[String(chosen.id)] = (bagFillCount[String(chosen.id)] || 0) + 1;
         for (var i = 0; i < slots.length; i++) {
           if (lineCoversSlot(chosen, d, slots[i])) {
-            counts[i]++;
-            if (slotShort[i] > 0) {
-              slotShort[i]--;
-              totalShort--;
+            if (counts[i] < maxC) {
+              counts[i]++;
+              if (slotShort[i] > 0) {
+                slotShort[i]--;
+                totalShort--;
+              }
             }
           }
         }
@@ -250,7 +247,8 @@ export function fillBandShortfalls(d, fc, bagFillCount) {
 
 export function generateFunctionAssignments(opts) {
   opts = opts || {};
-  var fc = opts.fromGenerate ? ensureFunctionCoverage() : (readFunctionBandsFromDom() || ensureFunctionCoverage());
+  readFunctionBandsFromDom();
+  var fc = ensureFunctionCoverage();
   if (!api.state.issues) api.state.issues = [];
   capFunctionPoolsToFte(fc, api.state.issues);
   api.state.functionRotation = {};
