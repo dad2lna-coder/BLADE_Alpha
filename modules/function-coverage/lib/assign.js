@@ -45,6 +45,14 @@ function sortByBias(arr, fc) {
   });
 }
 
+function countBagDuties(lineId) {
+  var row = api.state.functionRotation && api.state.functionRotation[String(lineId)];
+  if (!row) return 0;
+  var n = 0;
+  for (var i = 0; i < row.length; i++) if (row[i] === "BAG") n++;
+  return n;
+}
+
 export function markBag(role, sex, n, fc) {
   if (!n || n <= 0) return { total: 0 };
   fc = fc || ensureFunctionCoverage();
@@ -143,56 +151,41 @@ function shiftLabelOf(shiftId) {
   return String(name).replace(":", "");
 }
 
+function sortRotateCandidates(arr, fc) {
+  return arr.slice().sort(function (a, b) {
+    var da = countBagDuties(a.id);
+    var db = countBagDuties(b.id);
+    if (da !== db) return da - db;
+    var biased = sortByBias([a, b], fc);
+    if (biased[0] !== a) return 1;
+    if (biased[0] !== b && a !== b) return -1;
+    return String(a.id).localeCompare(String(b.id));
+  });
+}
+
 /**
- * Assign BAG to generated lines per (role, shift) min/max.
- * min/max are line counts, not slot headcounts.
+ * Diagnostics only. Pool identity (BAG / DFO / PAX) stays with
+ * buildCertifiedPools / markBag / markDfo. Shift min/max is applied later
+ * as per-day BAG duties on DFO lines — never as a permanent BAG conversion.
  */
 export function applyShiftFunctionRequirements(fc) {
   fc = fc || ensureFunctionCoverage();
   var diagnostics = [];
-  var assignedIds = {};
-  var roles = ["STSO", "LTSO", "TSO"];
   var configured = {};
+  var roles = ["STSO", "LTSO", "TSO"];
 
   roles.forEach(function (role) {
     var recs = (fc.requirements && fc.requirements[role]) || {};
     Object.keys(recs).forEach(function (shiftId) {
       var req = getShiftRequirement(role, shiftId, fc);
       if (req.min <= 0 && req.max <= 0) return;
-      configured[role + "|" + shiftId] = true;
+      configured[role + "|" + shiftId] = { min: req.min, max: req.max };
       var eligible = getEligibleLinesForShift(role, shiftId);
-      var bagTagged = eligible.filter(function (l) { return ensureEligible(l).bag; });
-      var unusedLines = eligible.filter(function (l) {
+      var dfoEligible = eligible.filter(function (l) {
         var el = ensureEligible(l);
-        return !el.bag && !el.dfo;
+        return el.dfo && !el.bag;
       });
-      var dfoTagged = eligible.filter(function (l) { return ensureEligible(l).dfo; });
-      var ordered = sortByBias(bagTagged, fc)
-        .concat(sortByBias(unusedLines, fc), sortByBias(dfoTagged, fc));
-      var seen = {};
-      ordered = ordered.filter(function (l) {
-        var k = String(l.id);
-        if (seen[k]) return false;
-        seen[k] = true;
-        return true;
-      });
-
-      var want = req.min;
-      if (bagTagged.length > want) want = Math.min(req.max, bagTagged.length);
-      want = Math.min(want, req.max, ordered.length);
-
-      var got = 0;
-      for (var i = 0; i < ordered.length && got < want; i++) {
-        var line = ordered[i];
-        var el = ensureEligible(line);
-        el.bag = true;
-        el.dfo = false;
-        el.pax = false;
-        assignedIds[String(line.id)] = true;
-        got++;
-      }
-
-      var status = got < req.min ? "SHORT" : "OK";
+      var status = (eligible.length < req.min || dfoEligible.length < req.min) ? "SHORT" : "OK";
       var sh = api.getShift ? api.getShift(shiftId) : null;
       diagnostics.push({
         role: role,
@@ -204,25 +197,65 @@ export function applyShiftFunctionRequirements(fc) {
         eligible: eligible.length,
         requiredMin: req.min,
         requiredMax: req.max,
-        assigned: got,
+        assigned: Math.min(req.max, Math.max(req.min, 0), eligible.length),
         status: status
       });
     });
   });
 
-  // Configured (role, shift) is owned by the requirement: extra pool-tagged
-  // BAG people on that shift are demoted so max is honored. Unconfigured
-  // shifts keep pool tags (existing BAG/DFO/PAX rules).
-  (api.state.lines || []).forEach(function (l) {
-    if (!l || l.isExtra || l.extraPositionId) return;
-    var role = lineRoleKey(l);
-    if (!configured[role + "|" + l.shiftId]) return;
-    if (assignedIds[String(l.id)]) return;
-    var el = ensureEligible(l);
-    if (el.bag) el.bag = false;
-  });
+  return { diagnostics: diagnostics, configured: configured };
+}
 
-  return { diagnostics: diagnostics, assignedIds: assignedIds };
+/**
+ * Rotate BAG work days across DFO-eligible lines on each configured
+ * role×shift. Bag-block (eligible.bag) lines are left alone — they stay
+ * BAG every work day. DFO identity is not flipped to bag.
+ */
+export function rotateShiftBagDuties(fc, days) {
+  fc = fc || ensureFunctionCoverage();
+  days = days || 0;
+  var roles = ["STSO", "LTSO", "TSO"];
+  var diagnostics = [];
+
+  for (var d = 0; d < days; d++) {
+    for (var r = 0; r < roles.length; r++) {
+      var role = roles[r];
+      var recs = (fc.requirements && fc.requirements[role]) || {};
+      var shiftIds = Object.keys(recs);
+      for (var s = 0; s < shiftIds.length; s++) {
+        var shiftId = shiftIds[s];
+        var req = getShiftRequirement(role, shiftId, fc);
+        if (req.min <= 0 && req.max <= 0) continue;
+        var candidates = getEligibleLinesForShift(role, shiftId).filter(function (l) {
+          var el = ensureEligible(l);
+          return worksDay(l, d) && !el.bag && el.dfo;
+        });
+        candidates = sortRotateCandidates(candidates, fc);
+        var want = Math.min(req.max, Math.max(req.min, 0));
+        want = Math.min(want, candidates.length);
+        for (var i = 0; i < want; i++) setDuty(candidates[i].id, d, "BAG");
+        if (d === 0) {
+          var eligible = getEligibleLinesForShift(role, shiftId);
+          var dfoOnShift = eligible.filter(function (l) {
+            var el = ensureEligible(l);
+            return el.dfo && !el.bag;
+          });
+          var workingDfo = dfoOnShift.filter(function (l) { return worksDay(l, 0); });
+          var status = (dfoOnShift.length < req.min || workingDfo.length < req.min) ? "SHORT" : "OK";
+          diagnostics.push({
+            role: role,
+            shiftId: shiftId,
+            requiredMin: req.min,
+            requiredMax: req.max,
+            eligible: eligible.length,
+            assigned: want,
+            status: status
+          });
+        }
+      }
+    }
+  }
+  return diagnostics;
 }
 
 export function generateFunctionAssignments(opts) {
@@ -257,6 +290,18 @@ export function generateFunctionAssignments(opts) {
     if (ensureEligible(l).bag) return;
     if (ensureEligible(l).dfo) l.function = "DFO";
   });
+
+  var rotated = rotateShiftBagDuties(fc, days);
+  if (rotated && rotated.length) {
+    (applied.diagnostics || []).forEach(function (row) {
+      for (var i = 0; i < rotated.length; i++) {
+        if (rotated[i].role !== row.role || rotated[i].shiftId !== row.shiftId) continue;
+        row.assigned = rotated[i].assigned;
+        if (rotated[i].status === "SHORT") row.status = "SHORT";
+      }
+    });
+  }
+
   (api.state.lines || []).forEach(function (l) {
     if (l.isExtra || l.extraPositionId) return;
     if (ensureEligible(l).bag) return;
