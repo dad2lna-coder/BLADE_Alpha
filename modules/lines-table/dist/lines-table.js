@@ -1317,18 +1317,18 @@ function Cn(t) {
       e = E("div"), n = E("table"), s = E("thead"), s.innerHTML = '<tr><th class="svelte-vecfw4">Team</th> <th class="svelte-vecfw4">Line</th> <th class="svelte-vecfw4">Shift</th> <th class="svelte-vecfw4">Start</th> <th class="svelte-vecfw4">End</th> <th class="svelte-vecfw4">Position</th> <th class="svelte-vecfw4">Emp</th> <th class="svelte-vecfw4">Sex</th> <th class="svelte-vecfw4">Function</th> <th class="svelte-vecfw4">RDOs</th> <th class="svelte-vecfw4">Paid</th> <th class="svelte-vecfw4">Sun</th> <th class="svelte-vecfw4">Mon</th> <th class="svelte-vecfw4">Tue</th> <th class="svelte-vecfw4">Wed</th> <th class="svelte-vecfw4">Thu</th> <th class="svelte-vecfw4">Fri</th> <th class="svelte-vecfw4">Sat</th> <th class="svelte-vecfw4">Hours</th></tr>', i = F(), l = E("tbody");
       for (let h = 0; h < c.length; h += 1)
         c[h].c();
-      o = F(), r = E("div"), L(l, "position", "relative"), L(l, "height", "0"), L(
+      o = F(), r = E("div"), L(l, "position", "relative"), L(l, "height", "0"), S(n, "class", "data-table lines-editable svelte-vecfw4"), L(n, "width", "max-content"), L(n, "min-width", "1100px"), L(
         r,
         "height",
         /*virtualizer*/
         (t[4]?.getTotalSize() ?? 0) + "px"
-      ), S(n, "class", "data-table lines-editable svelte-vecfw4"), L(n, "width", "max-content"), L(n, "min-width", "1100px"), S(e, "class", "lines-virtual-root svelte-vecfw4"), L(e, "height", "100%"), L(e, "overflow", "auto"), L(e, "position", "relative");
+      ), S(e, "class", "lines-virtual-root svelte-vecfw4"), L(e, "height", "100%"), L(e, "overflow", "auto"), L(e, "position", "relative");
     },
     m(h, f) {
       te(h, e, f), m(e, n), m(n, s), m(n, i), m(n, l);
       for (let v = 0; v < c.length; v += 1)
         c[v] && c[v].m(l, null);
-      m(n, o), m(n, r), t[18](e);
+      m(e, o), m(e, r), t[18](e);
     },
     p(h, f) {
       if (f[0] & /*virtualizer, rows, emitDay, emitEdit, shiftOptions, teamOptions*/
@@ -1786,7 +1786,7 @@ function Mn(t) {
   let s = n(t), i = s(t);
   return {
     c() {
-      e = E("div"), i.c(), S(e, "class", "lines-table-root svelte-vecfw4");
+      e = E("div"), i.c(), S(e, "class", "lines-table-root svelte-vecfw4"), L(e, "min-height", "min(70vh, 720px)"), L(e, "height", "min(70vh, 720px)"), L(e, "width", "100%");
     },
     m(l, o) {
       te(l, e, o), i.m(e, null);
