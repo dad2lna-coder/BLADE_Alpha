@@ -43,11 +43,9 @@ window.Scheduler = window.Scheduler || {};
       poolBag: 0,
       amPmSplit: true,
       phaseThresholdMin: 15,
-      bands: [
-        { start: "03:30", end: "04:00", stso: 1, ltso: 1, tso: 2 },
-        { start: "04:00", end: "20:30", stso: 1, ltso: 1, tso: 6 },
-        { start: "20:30", end: "23:00", stso: 1, ltso: 1, tso: 3 }
-      ]
+      bias: "none",
+      requirements: { STSO: {}, LTSO: {}, TSO: {} },
+      requirementShiftIds: []
     },
     shifts: S.defaultShifts(),
     lines: [],
