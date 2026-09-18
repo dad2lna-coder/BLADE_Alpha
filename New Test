@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>RDO schedule optimizer</title>
+<style>
+:root{
+  --surface-2:#ffffff; --surface-1:#f4f3ee; --surface-0:#efeee7;
+  --text-primary:#1a1a18; --text-secondary:#5f5e5a; --text-muted:#888780;
+  --text-accent:#185fa5; --text-danger:#993c1d; --text-success:#3b6d11;
+  --border:#d3d1c7; --border-strong:#b4b2a9; --radius:8px;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --surface-2:#242422; --surface-1:#1c1c1a; --surface-0:#141412;
+    --text-primary:#f1efe8; --text-secondary:#b4b2a9; --text-muted:#888780;
+    --text-accent:#85b7eb; --text-danger:#f0997b; --text-success:#97c459;
+    --border:#444441; --border-strong:#5f5e5a;
+  }
+}
+*{box-sizing:border-box;}
+body{margin:0;padding:24px 16px 60px;background:var(--surface-0);color:var(--text-primary);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;max-width:560px;margin:0 auto;}
+h1{font-size:19px;font-weight:500;margin:0 0 4px;}
+h2{font-size:15px;font-weight:500;margin:28px 0 6px;}
+p.sub{font-size:13px;color:var(--text-secondary);margin:0 0 4px;line-height:1.5;}
+section{margin-top:8px;padding-top:16px;border-top:0.5px solid var(--border);}
+section:first-of-type{border-top:none;}
+textarea{width:100%;min-height:90px;font-family:monospace;font-size:11px;background:var(--surface-2);
+  color:var(--text-primary);border:0.5px solid var(--border-strong);border-radius:var(--radius);padding:8px;}
+input[type=file]{font-size:12px;margin:6px 0;}
+table{border-collapse:collapse;width:100%;table-layout:fixed;font-size:12px;margin-top:8px;}
+th,td{padding:3px;text-align:center;}
+th{font-weight:500;color:var(--text-secondary);}
+td.rowlabel{text-align:left;font-weight:500;font-size:12px;}
+.box{display:flex;flex-direction:column;align-items:center;border:0.5px solid var(--border);
+  border-radius:var(--radius);padding:2px 0;background:var(--surface-2);}
+.box button{width:100%;height:18px;padding:0;border:none;background:transparent;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-secondary);font-size:10px;}
+.box button:hover{background:var(--surface-1);}
+.num{font-size:14px;font-weight:500;padding:1px 0;font-variant-numeric:tabular-nums;}
+button.action{border:0.5px solid var(--border-strong);background:var(--surface-2);color:var(--text-primary);
+  border-radius:var(--radius);padding:7px 14px;font-size:13px;cursor:pointer;}
+button.action:hover{background:var(--surface-1);}
+button.action:disabled{opacity:0.5;cursor:default;}
+.row{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
+#status{font-size:12px;color:var(--text-muted);}
+.err{font-size:12px;color:var(--text-danger);margin-top:4px;}
+.ok{font-size:12px;color:var(--text-success);margin-top:4px;}
+#diff-table{max-height:280px;overflow-y:auto;border:0.5px solid var(--border);border-radius:var(--radius);
+  margin-top:8px;}
+#diff-table table{margin:0;}
+#diff-table th, #diff-table td{padding:5px 6px;text-align:left;font-size:11px;border-bottom:0.5px solid var(--border);}
+.metric{display:flex;gap:16px;margin-top:8px;}
+.metric div{background:var(--surface-1);border-radius:var(--radius);padding:8px 12px;font-size:12px;flex:1;}
+.metric span{display:block;font-size:18px;font-weight:500;margin-top:2px;}
+pre{display:none;margin-top:8px;background:var(--surface-1);border-radius:var(--radius);
+  padding:10px 12px;font-size:11px;white-space:pre-wrap;word-break:break-all;font-family:monospace;
+  max-height:220px;overflow-y:auto;}
+label{font-size:12px;color:var(--text-secondary);}
+input[type=range]{width:100%;}
+</style>
+</head>
+<body>
+<h1>RDO schedule optimizer</h1>
+<p class="sub">Upload your generated lines, set day-weight targets per shift, then run a local search that repositions RDO days only. Line count, shiftId, headcount category, and each line's own RDO-day count never change &mdash; every line keeps at least one consecutive RDO pair, so PT24/PT32 (3 or 4 RDOs/week) and FT-style (2 RDOs/week) lines are all respected as-is.</p>
+
+<section>
+<h2>1. Lines</h2>
+<p class="sub">Paste the <code>results.lines</code> array (or a full export containing it), or upload the JSON file.</p>
+<input type="file" id="file-input" accept=".json">
+<textarea id="lines-text" placeholder="Paste JSON here"></textarea>
+<div class="row">
+  <button class="action" id="load-btn">Load lines</button>
+  <span id="load-status"></span>
+</div>
+</section>
+
+<section>
+<h2>2. Day-weight targets</h2>
+<p class="sub">0-9 per shift/day. 4 = neutral. Below 4 = low need (RDOs should cluster here). Above 4 = high need (protect from RDOs). Assumes rdoDays 0=Sun...6=Sat &mdash; confirm this matches your data before trusting results.</p>
+<table id="grid"><thead><tr id="head-row"><th></th></tr></thead><tbody id="grid-body"></tbody></table>
+<div class="row">
+  <span id="weight-status" style="font-size:12px;color:var(--text-muted);"></span>
+  <button class="action" id="reset-weights-btn">Reset to 4</button>
+</div>
+</section>
+
+<section>
+<h2>3. Run optimizer</h2>
+<label for="intensity">Search intensity (iterations)</label>
+<input type="range" id="intensity" min="500" max="20000" step="500" value="4000">
+<div class="row"><span id="intensity-out">4000 iterations</span></div>
+<div class="row">
+  <button class="action" id="run-btn" disabled>Run optimizer</button>
+  <span id="run-status"></span>
+</div>
+<div class="metric" id="metrics" style="display:none;">
+  <div>Score before<span id="score-before">-</span></div>
+  <div>Score after<span id="score-after">-</span></div>
+  <div>Lines changed<span id="lines-changed">-</span></div>
+</div>
+</section>
+
+<section id="results-section" style="display:none;">
+<h2>4. Results</h2>
+<h2>Position/gender RDO % by day</h2>
+<div id="group-table" style="overflow-x:auto;"></div>
+<div id="diff-table"></div>
+<div class="row">
+  <button class="action" id="export-btn">Export result JSON</button>
+  <button class="action" id="download-btn">Download file</button>
+</div>
+<pre id="out"></pre>
+</section>
+
+<script>
+var shifts = [
+  {id:'S1', label:'0330-1200'},
+  {id:'S2', label:'0400-1230'},
+  {id:'S3', label:'1200-2030'},
+  {id:'S4', label:'1430-2300'}
+];
+var days = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+var WEIGHT_SEED = {"S1":[4,4,3,4,4,4,4],"S2":[4,4,4,3,4,4,4],"S3":[4,4,4,4,4,4,4],"S4":[4,4,4,4,4,4,2]};
+var weights = {};
+shifts.forEach(function(s){
+  weights[s.id] = (WEIGHT_SEED[s.id] && WEIGHT_SEED[s.id].length===7) ? WEIGHT_SEED[s.id].slice() : [4,4,4,4,4,4,4];
+});
+
+var lines = null;
+var originalLines = null;
+var artifactApi = null;
+
+// ---------- grid ----------
+var headRow = document.getElementById('head-row');
+days.forEach(function(d){ var th=document.createElement('th'); th.textContent=d; headRow.appendChild(th); });
+var gridBody = document.getElementById('grid-body');
+
+function cellColor(v){
+  if(v>4) return 'var(--text-accent)';
+  if(v<4) return 'var(--text-secondary)';
+  return 'var(--text-primary)';
+}
+
+function renderGrid(){
+  gridBody.innerHTML = '';
+  shifts.forEach(function(s){
+    var tr = document.createElement('tr');
+    var th = document.createElement('td');
+    th.textContent = s.label; th.className='rowlabel';
+    tr.appendChild(th);
+    weights[s.id].forEach(function(v, di){
+      var td = document.createElement('td');
+      var box = document.createElement('div'); box.className='box';
+      var up = document.createElement('button'); up.textContent='\u25B2'; up.setAttribute('aria-label','Increase');
+      var num = document.createElement('div'); num.className='num'; num.textContent=v; num.style.color=cellColor(v);
+      var down = document.createElement('button'); down.textContent='\u25BC'; down.setAttribute('aria-label','Decrease');
+      up.addEventListener('click', function(){ if(weights[s.id][di]<9){ weights[s.id][di]++; renderGrid(); scheduleSaveWeights(); }});
+      down.addEventListener('click', function(){ if(weights[s.id][di]>0){ weights[s.id][di]--; renderGrid(); scheduleSaveWeights(); }});
+      box.appendChild(up); box.appendChild(num); box.appendChild(down);
+      td.appendChild(box); tr.appendChild(td);
+    });
+    gridBody.appendChild(tr);
+  });
+}
+renderGrid();
+
+document.getElementById('reset-weights-btn').addEventListener('click', function(){
+  shifts.forEach(function(s){ weights[s.id] = [4,4,4,4,4,4,4]; });
+  renderGrid(); scheduleSaveWeights();
+});
+
+var saveTimer=null;
+function scheduleSaveWeights(){
+  document.getElementById('weight-status').textContent = 'Saving\u2026';
+  if(saveTimer) clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSaveWeights, 500);
+}
+function buildDoc(){
+  var headSnapshot = headRow.innerHTML;
+  var bodySnapshot = gridBody.innerHTML;
+  headRow.innerHTML = '<th></th>';
+  gridBody.innerHTML = '';
+  var html = document.documentElement.outerHTML;
+  headRow.innerHTML = headSnapshot;
+  gridBody.innerHTML = bodySnapshot;
+  html = html.replace(/var WEIGHT_SEED = [^;]*;/, 'var WEIGHT_SEED = ' + JSON.stringify(weights) + ';');
+  return '<!DOCTYPE html>\n' + html;
+}
+async function doSaveWeights(){
+  var statusEl = document.getElementById('weight-status');
+  if(!artifactApi){ statusEl.textContent = 'Not connected \u2014 local only'; return; }
+  try{ await artifactApi.publish(buildDoc()); statusEl.textContent = 'Saved'; }
+  catch(e){ statusEl.textContent = 'Save failed'; }
+}
+if(window.claude && window.claude.use){
+  window.claude.use('artifact').then(function(api){ artifactApi = api; }).catch(function(){});
+}
+
+// ---------- load lines ----------
+document.getElementById('file-input').addEventListener('change', function(e){
+  var f = e.target.files[0];
+  if(!f) return;
+  var reader = new FileReader();
+  reader.onload = function(){ document.getElementById('lines-text').value = reader.result; };
+  reader.readAsText(f);
+});
+
+function extractLines(parsed){
+  if(Array.isArray(parsed)) return parsed;
+  if(parsed && parsed.results && Array.isArray(parsed.results.lines)) return parsed.results.lines;
+  if(parsed && Array.isArray(parsed.lines)) return parsed.lines;
+  return null;
+}
+
+document.getElementById('load-btn').addEventListener('click', function(){
+  var statusEl = document.getElementById('load-status');
+  var txt = document.getElementById('lines-text').value.trim();
+  if(!txt){ statusEl.textContent = 'Paste or upload JSON first'; statusEl.className='err'; return; }
+  var parsed;
+  try{ parsed = JSON.parse(txt); }
+  catch(e){ statusEl.textContent = 'Invalid JSON'; statusEl.className='err'; return; }
+  var arr = extractLines(parsed);
+  if(!arr || !arr.length){ statusEl.textContent = 'No lines array found'; statusEl.className='err'; return; }
+  var bad = arr.some(function(l){ return !l.shiftId || !Array.isArray(l.rdoDays) || l.rdoDays.length<2; });
+  if(bad){ statusEl.textContent = 'Some lines missing shiftId or rdoDays \u2014 check the data'; statusEl.className='err'; return; }
+  lines = JSON.parse(JSON.stringify(arr));
+  originalLines = JSON.parse(JSON.stringify(arr));
+  statusEl.textContent = 'Loaded ' + arr.length + ' lines';
+  statusEl.className = 'ok';
+  document.getElementById('run-btn').disabled = false;
+});
+
+// ---------- intensity slider ----------
+var intensityEl = document.getElementById('intensity');
+var intensityOut = document.getElementById('intensity-out');
+intensityEl.addEventListener('input', function(){ intensityOut.textContent = intensityEl.value + ' iterations'; });
+
+// ---------- scoring ----------
+// A line's RDO set must include at least one pair of consecutive days
+// (wrapping Sat->Sun as consecutive). Count of RDO days per line is fixed
+// (derived from the line's own data) and never changes.
+function hasConsecutivePair(rdoDays){
+  var s = rdoDays.slice().sort(function(a,b){return a-b;});
+  for(var i=0;i<s.length;i++){
+    for(var j=i+1;j<s.length;j++){
+      var diff = Math.abs(s[i]-s[j]);
+      if(diff===1 || diff===6) return true;
+    }
+  }
+  return false;
+}
+
+function randomValidRdoSet(count){
+  // build a set of `count` unique days that includes one consecutive pair
+  for(var attempt=0; attempt<50; attempt++){
+    var start = randInt(7);
+    var pairDay = (start+1)%7;
+    var set = [start, pairDay];
+    while(set.length < count){
+      var d = randInt(7);
+      if(set.indexOf(d)<0) set.push(d);
+    }
+    if(set.length===count && hasConsecutivePair(set)) return set;
+  }
+  return null;
+}
+
+function lineScore(l){
+  var w = weights[l.shiftId];
+  if(!w) return 0;
+  return l.rdoDays.reduce(function(sum,d){ return sum + w[d]; }, 0);
+}
+function fairnessPenalty(arr){
+  var groups = {};
+  arr.forEach(function(l){
+    var key = l.shiftId + '|' + l.sex;
+    if(!groups[key]) groups[key] = {total:0, weekend:0};
+    groups[key].total++;
+    if(l.rdoDays.indexOf(0)>=0 || l.rdoDays.indexOf(6)>=0) groups[key].weekend++;
+  });
+  var bySh = {};
+  Object.keys(groups).forEach(function(k){
+    var parts = k.split('|'); var sh = parts[0]; var sex = parts[1];
+    if(!bySh[sh]) bySh[sh] = {};
+    bySh[sh][sex] = groups[k].weekend / groups[k].total;
+  });
+  var penalty = 0;
+  Object.keys(bySh).forEach(function(sh){
+    var rates = Object.keys(bySh[sh]).map(function(sx){ return bySh[sh][sx]; });
+    if(rates.length>1){
+      var max = Math.max.apply(null, rates), min = Math.min.apply(null, rates);
+      penalty += (max-min) * 20;
+    }
+  });
+  return penalty;
+}
+function totalScore(arr){
+  var coverage = arr.reduce(function(sum,l){ return sum + lineScore(l); }, 0);
+  var fairness = fairnessPenalty(arr);
+  return coverage + fairness;
+}
+
+// ---------- simulated annealing ----------
+function randInt(n){ return Math.floor(Math.random()*n); }
+
+function runSA(arr, iterations){
+  var current = JSON.parse(JSON.stringify(arr));
+  var currentScore = totalScore(current);
+  var best = JSON.parse(JSON.stringify(current));
+  var bestScore = currentScore;
+  var T = 10, coolRate = Math.pow(0.001/T, 1/iterations);
+  var movable = current.map(function(l,i){ return l.rdoHard ? null : i; }).filter(function(i){ return i!==null; });
+  if(movable.length===0) return current;
+
+  for(var iter=0; iter<iterations; iter++){
+    var idx = movable[randInt(movable.length)];
+    var line = current[idx];
+    var oldRdo = line.rdoDays.slice();
+    var proposed = randomValidRdoSet(oldRdo.length);
+    if(!proposed) continue;
+    var oldScore = lineScore(line);
+    line.rdoDays = proposed;
+    var newLineScore = lineScore(line);
+    var delta = (newLineScore - oldScore);
+    if(iter % 20 === 0){
+      line.rdoDays = oldRdo;
+      var oldFair = fairnessPenalty(current);
+      line.rdoDays = proposed;
+      var newFair = fairnessPenalty(current);
+      delta += (newFair - oldFair);
+    }
+    if(delta < 0 || Math.random() < Math.exp(-delta / T)){
+      currentScore += delta;
+      if(currentScore < bestScore){
+        bestScore = currentScore;
+        best = JSON.parse(JSON.stringify(current));
+      }
+    } else {
+      line.rdoDays = oldRdo;
+    }
+    T *= coolRate;
+  }
+  return best;
+}
+
+document.getElementById('run-btn').addEventListener('click', function(){
+  if(!lines) return;
+  var statusEl = document.getElementById('run-status');
+  statusEl.textContent = 'Running\u2026';
+  setTimeout(function(){
+    var before = totalScore(originalLines);
+    var iterations = parseInt(intensityEl.value, 10);
+    var optimized = runSA(originalLines, iterations);
+    var after = totalScore(optimized);
+    lines = optimized;
+
+    document.getElementById('metrics').style.display = 'flex';
+    document.getElementById('score-before').textContent = before.toFixed(1);
+    document.getElementById('score-after').textContent = after.toFixed(1);
+
+    function fmtRdo(arr){ return arr.slice().sort(function(x,y){return x-y;}).map(function(d){return days[d];}).join('/'); }
+    var diffs = [];
+    for(var i=0;i<optimized.length;i++){
+      var a = originalLines[i], b = optimized[i];
+      var aS = a.rdoDays.slice().sort(), bS = b.rdoDays.slice().sort();
+      if(JSON.stringify(aS)!==JSON.stringify(bS)){
+        diffs.push({id:a.id, lineCode:a.lineCode||a.id, shift:a.shiftLabel||a.shiftId, sex:a.sex,
+          before: fmtRdo(a.rdoDays), after: fmtRdo(b.rdoDays)});
+      }
+    }
+    document.getElementById('lines-changed').textContent = diffs.length;
+    statusEl.textContent = 'Done';
+
+    var dt = document.getElementById('diff-table');
+    if(diffs.length===0){
+      dt.innerHTML = '<p class="sub" style="padding:8px;">No changes \u2014 input was already at a local optimum for these targets.</p>';
+    } else {
+      var html = '<table><thead><tr><th>Line</th><th>Shift</th><th>Sex</th><th>Before</th><th>After</th></tr></thead><tbody>';
+      diffs.forEach(function(d){
+        html += '<tr><td>'+d.lineCode+'</td><td>'+d.shift+'</td><td>'+d.sex+'</td><td>'+d.before+'</td><td>'+d.after+'</td></tr>';
+      });
+      html += '</tbody></table>';
+      dt.innerHTML = html;
+    }
+
+    function computeGroupPct(arr){
+      var groups = {};
+      arr.forEach(function(l){
+        var key = (l.sex||'?') + ' ' + (l.empClass||'?');
+        if(!groups[key]) groups[key] = {total:0, days:[0,0,0,0,0,0,0]};
+        groups[key].total++;
+        l.rdoDays.forEach(function(d){ groups[key].days[d]++; });
+      });
+      var out = {};
+      Object.keys(groups).forEach(function(k){
+        var g = groups[k];
+        out[k] = {total:g.total, pct: g.days.map(function(c){ return g.total ? Math.round(100*c/g.total) : 0; })};
+      });
+      return out;
+    }
+    var beforeGroups = computeGroupPct(originalLines);
+    var afterGroups = computeGroupPct(optimized);
+    var allKeys = Object.keys(beforeGroups).sort();
+    var gt = '<table style="font-size:11px;"><thead><tr><th style="text-align:left;">Group</th><th></th>';
+    days.forEach(function(d){ gt += '<th>'+d+'</th>'; });
+    gt += '</tr></thead><tbody>';
+    allKeys.forEach(function(k){
+      var b = beforeGroups[k], a = afterGroups[k] || {pct:[0,0,0,0,0,0,0]};
+      gt += '<tr><td style="text-align:left;font-weight:500;" rowspan="2">'+k+' <span style="color:var(--text-muted);">(n='+b.total+')</span></td><td style="color:var(--text-muted);">before</td>';
+      b.pct.forEach(function(p){ gt += '<td>'+p+'%</td>'; });
+      gt += '</tr><tr><td style="color:var(--text-muted);">after</td>';
+      a.pct.forEach(function(p, i){
+        var diff = p - b.pct[i];
+        var color = diff>0 ? 'var(--text-accent)' : (diff<0 ? 'var(--text-secondary)' : 'var(--text-primary)');
+        gt += '<td style="color:'+color+';">'+p+'%</td>';
+      });
+      gt += '</tr>';
+    });
+    gt += '</tbody></table>';
+    document.getElementById('group-table').innerHTML = gt;
+
+    document.getElementById('results-section').style.display = 'block';
+  }, 30);
+});
+
+document.getElementById('export-btn').addEventListener('click', function(){
+  var out = document.getElementById('out');
+  out.style.display = 'block';
+  out.textContent = JSON.stringify(lines, null, 2);
+});
+
+document.getElementById('download-btn').addEventListener('click', async function(){
+  var statusEl = document.getElementById('run-status');
+  if(!(window.claude && window.claude.use)){ statusEl.textContent = 'Downloads unavailable here \u2014 use Export JSON'; return; }
+  try{
+    var dl = await window.claude.use('downloads');
+    if(!dl){ statusEl.textContent = 'Downloads unavailable here \u2014 use Export JSON'; return; }
+    await dl.save({filename:'optimized-lines.json', data: JSON.stringify(lines, null, 2)});
+  }catch(e){
+    statusEl.textContent = 'Download declined or failed \u2014 use Export JSON';
+  }
+});
+</script>
+</body>
+</html>
