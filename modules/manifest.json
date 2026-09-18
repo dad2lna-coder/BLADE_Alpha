@@ -1,0 +1,48 @@
+{
+  "team-builder": {
+    "entry": "modules/team-builder/index.js",
+    "init": "initTeamBuilder",
+    "css": [
+      "modules/team-builder/styles/team-builder.css"
+    ],
+    "panel": "modules/team-builder/panel.html",
+    "docks": "modules/team-builder/docks.html",
+    "mount": "#tab-teams"
+  },
+  "function-coverage": {
+    "entry": "modules/function-coverage/index.js",
+    "init": "initFunctionCoverage"
+  },
+  "setup-panel": {
+    "entry": "modules/setup-panel/index.js",
+    "init": "initSetupPanel",
+    "css": [
+      "modules/setup-panel/styles/setup-panel.css"
+    ],
+    "panel": "modules/setup-panel/panel.html",
+    "mount": "#tab-setup"
+  },
+  "lines-table": {
+    "entry": "modules/lines-table/dist/lines-table.js",
+    "init": "initLinesTable",
+    "css": ["modules/lines-table/dist/lines-table.css"]
+  },
+  "coverage": {
+    "entry": "modules/coverage/index.js",
+    "init": "initCoverage",
+    "css": [
+      "modules/coverage/styles/coverage.css"
+    ],
+    "panel": "modules/coverage/panel.html",
+    "mount": "#tab-coverage"
+  },
+  "demand-capacity": {
+    "entry": "modules/demand-capacity/index.js",
+    "init": "initDemandCapacity",
+    "css": [
+      "modules/demand-capacity/styles/demand-capacity.css"
+    ],
+    "panel": "modules/demand-capacity/panel.html",
+    "mount": "#tab-demand-capacity"
+  }
+}

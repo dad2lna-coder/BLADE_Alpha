@@ -1,0 +1,87 @@
+{
+  "configPath": "/root/.openclaw/openclaw.json",
+  "agentDir": "/root/.openclaw/agents/mark/agent",
+  "defaultModel": "openrouter/free",
+  "resolvedDefault": "openrouter/free",
+  "fallbacks": [],
+  "imageModel": null,
+  "imageFallbacks": [],
+  "utilityModel": {
+    "ref": null,
+    "source": "none"
+  },
+  "aliases": {
+    "GPT": "openai/gpt-5.6-sol",
+    "OpenRouter": "openrouter/auto"
+  },
+  "allowed": [],
+  "auth": {
+    "storePath": "/root/.openclaw/state/openclaw.sqlite",
+    "shellEnvFallback": {
+      "enabled": false,
+      "appliedKeys": []
+    },
+    "providersWithOAuth": [],
+    "missingProvidersInUse": [],
+    "modelRouteIssues": [],
+    "runtimeAuthRoutes": [],
+    "providers": [
+      {
+        "provider": "openrouter",
+        "effective": {
+          "kind": "profiles",
+          "detail": "~/.openclaw/state/openclaw.sqlite"
+        },
+        "profiles": {
+          "count": 1,
+          "oauth": 0,
+          "token": 0,
+          "apiKey": 1,
+          "labels": [
+            "openrouter:default=sk-or-v1...a3fdd2e9"
+          ]
+        }
+      }
+    ],
+    "unusableProfiles": [],
+    "oauth": {
+      "warnAfterMs": 86400000,
+      "profiles": [
+        {
+          "profileId": "openrouter:default",
+          "provider": "openrouter",
+          "type": "api_key",
+          "status": "static",
+          "source": "store",
+          "label": "openrouter:default"
+        }
+      ],
+      "providers": [
+        {
+          "provider": "openrouter",
+          "status": "static",
+          "profiles": [
+            {
+              "profileId": "openrouter:default",
+              "provider": "openrouter",
+              "type": "api_key",
+              "status": "static",
+              "source": "store",
+              "label": "openrouter:default"
+            }
+          ],
+          "effectiveProfiles": [
+            {
+              "profileId": "openrouter:default",
+              "provider": "openrouter",
+              "type": "api_key",
+              "status": "static",
+              "source": "store",
+              "label": "openrouter:default"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

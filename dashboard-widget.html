@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenClaw Usage Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1e1b4b 0%, #16284d 100%);
+      color: #e5e7eb;
+      min-height: 100vh;
+      padding: 20px;
+    }
+    .dashboard-grid { 
+      display: grid; 
+      gap: 16px; 
+      max-width: 1400px; 
+      margin: 0 auto; 
+    }
+    .card {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(10px);
+    }
+    .card h2 {
+      font-size: 14px;
+      font-weight: 500;
+      color: #a5b4fc;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .status-grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+      gap: 12px; 
+    }
+    .status-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(0,0,0,0.2);
+      border-radius: 8px;
+    }
+    .status-label { font-size: 12px; color: #9ca3af; }
+    .status-value { font-size: 18px; font-weight: 600; color: #ffffff; }
+    .status-value.good { color: #34d399; }
+    .status-value.warn { color: #fbbf24; }
+    .status-value.bad { color: #ef4444; }
+    
+    .model-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(99,102,241,0.3);
+      border: 1px solid rgba(167,139,250,0.4);
+      border-radius: 9999px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: #ddd;
+    }
+    .model-badge.provider { background: rgba(0,183,255,0.25); border-color: rgba(0,183,255,0.5); }
+    
+    .sessions-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .sessions-table th {
+      text-align: left;
+      color: #6b7280;
+      font-weight: 500;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .sessions-table td {
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(0,0,0,0.1);
+    }
+    .sessions-table tr:hover { background: rgba(255,255,255,0.03); }
+    
+    .token-bar {
+      width: 100%;
+      height: 6px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .token-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width 0.3s ease;
+    }
+    .token-fill.low { background: linear-gradient(90deg, #ef4444, #f87171); }
+    .token-fill.mid { background: linear-gradient(90deg, #fbbf24, #facc15); }
+    .token-fill.high { background: linear-gradient(90deg, #34d399, #22c55e); }
+    
+    .progress-text {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 2px;
+    }
+    
+    .section-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    @media (max-width: 900px) {
+      .section-grid { grid-template-columns: 1fr; }
+    }
+    
+    .timestamp { 
+      text-align: center; 
+      color: #4b5563; 
+      font-size: 12px;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-grid">
+    <!-- Overview Card -->
+    <div class="card" id="overview-card">
+      <h2>System Overview</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <div>
+            <div class="status-label">Runtime</div>
+            <div class="status-value" id="runtime-version">2026.9.4</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Gateway</div>
+            <div class="status-value" id="gateway-status">✓ Connected</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Agents</div>
+            <div class="status-value" id="agent-count">3</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Sessions</div>
+            <div class="status-value" id="session-count">34</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Active Tasks</div>
+            <div class="status-value" id="active-tasks">2</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Success Rate</div>
+            <div class="status-value good" id="success-rate">38%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Model & Provider Card -->
+    <div class="card" id="model-card">
+      <h2>Current Model & Provider</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <div>
+            <div class="status-label">Model</div>
+            <div class="status-value">
+              <span class="model-badge" id="current-model">openrouter/free</span>
+            </div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Provider</div>
+            <div class="status-value">
+              <span class="model-badge provider" id="provider-name">openrouter</span>
+            </div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Context Tokens</div>
+            <div class="status-value" id="context-tokens">200K</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Default Context</div>
+            <div class="status-value good" id="default-model">openrouter/openrouter/free</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Sessions Card -->
+    <div class="card" id="sessions-card">
+      <h2>Recent Sessions (Past 24h)</h2>
+      <table class="sessions-table">
+        <thead>
+          <tr>
+            <th>Session</th>
+            <th>Role</th>
+            <th>Tokens</th>
+            <th>Usage</th>
+            <th>Remaining</th>
+          </tr>
+        </thead>
+        <tbody id="sessions-body">
+          <tr>
+            <td colspan="5" style="text-align: center; color: #6b7280;">Loading...</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Tasks & Health Card -->
+    <div class="card" id="tasks-card">
+      <h2>Task Distribution</h2>
+      <div class="status-grid">
+        <div class="status-item">
+          <div>
+            <div class="status-label">Total Tasks</div>
+            <div class="status-value" id="total-tasks">133</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Running</div>
+            <div class="status-value" id="running-tasks">2</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Succeeded</div>
+            <div class="status-value good" id="succeeded-tasks">52</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Failed</div>
+            <div class="status-value bad" id="failed-tasks">70</div>
+          </div>
+        </div>
+      </div>
+      
+      <h2 style="margin-top: 20px; font-size: 14px; color: #a5b4fc;">Runtime Breakdown</h2>
+      <div class="status-grid" style="margin-top: 12px;">
+        <div class="status-item">
+          <div>
+            <div class="status-label">Subagent</div>
+            <div class="status-value" id="subagent-count">12</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">CLI</div>
+            <div class="status-value" id="cli-count">31</div>
+          </div>
+        </div>
+        <div class="status-item">
+          <div>
+            <div class="status-label">Cron</div>
+            <div class="status-value" id="cron-count">90</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="timestamp" id="data-timestamp">Last updated: --</div>
+  </div>
+
+  <script>
+    // Dashboard data source - relative to widget
+    const DATA_PATH = 'data/usage-data.json';
+    
+    async function loadDashboardData() {
+      try {
+        const response = await fetch(DATA_PATH);
+        if (!response.ok) throw new Error('Data fetch failed');
+        return await response.json();
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        return null;
+      }
+    }
+    
+    function formatNumber(n) {
+      if (n == null || n === 0) return '-';
+      if (n >= 1000000) return (n / 1000000).toFixed(1) + 'M';
+      if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+      return n.toString();
+    }
+    
+    function getUsageClass(percent) {
+      if (percent == null) return '';
+      if (percent < 30) return 'high';
+      if (percent < 70) return 'mid';
+      return 'low';
+    }
+    
+    function updateUserInterface(data) {
+      if (!data) {
+        document.getElementById('sessions-body').innerHTML = 
+          '<tr><td colspan="5" style="text-align: center; color: #6b7280;">No data available</td></tr>';
+        return;
+      }
+      
+      const sys = data.system || {};
+      const recent = sys.sessions?.recent || [];
+      
+      // Overview metrics
+      document.getElementById('runtime-version').textContent = sys.runtimeVersion || '—';
+      document.getElementById('agent-count').textContent = sys.agents?.agents?.length || 0;
+      document.getElementById('session-count').textContent = sys.sessions?.count || 0;
+      document.getElementById('active-tasks').textContent = sys.tasks?.active || 0;
+      
+      const totalTasks = sys.tasks?.total || 1;
+      const successRate = ((sys.tasks?.succeeded || 0) / totalTasks * 100).toFixed(0);
+      document.getElementById('success-rate').textContent = successRate + '%';
+      document.getElementById('success-rate').className = 'status-value ' + (successRate > 50 ? 'good' : 'warn');
+      
+      // Gateway status
+      const gateway = sys.gateway || {};
+      const gatewayEl = document.getElementById('gateway-status');
+      if (gateway.reachable) {
+        gatewayEl.textContent = '✓ Connected';
+        gatewayEl.className = 'status-value good';
+      } else {
+        gatewayEl.textContent = '✗ Disconnected';
+        gatewayEl.className = 'status-value bad';
+      }
+      
+      // Model info
+      const model = sys.sessions?.defaults || {};
+      if (data.models?.defaultModel) {
+        document.getElementById('current-model').textContent = data.models.defaultModel;
+      }
+      if (data.models) {
+        document.getElementById('provider-name').textContent = (data.models.defaultModel || '').split('/')[0] || 'openrouter';
+      }
+      document.getElementById('context-tokens').textContent = model.contextTokens ? 
+        (model.contextTokens / 1000).toFixed(0) + 'K' : '—';
+      document.getElementById('default-model').textContent = data.models?.resolvedDefault || '—';
+      
+      // Task counts
+      const tasks = sys.tasks || {};
+      document.getElementById('total-tasks').textContent = formatNumber(tasks.total);
+      document.getElementById('running-tasks').textContent = tasks.active;
+      document.getElementById('succeeded-tasks').textContent = formatNumber(tasks.succeeded);
+      document.getElementById('failed-tasks').textContent = formatNumber(tasks.failures);
+      
+      // Runtime breakdown
+      const byRuntime = tasks.byRuntime || {};
+      document.getElementById('subagent-count').textContent = byRuntime.subagent || 0;
+      document.getElementById('cli-count').textContent = byRuntime.cli || 0;
+      document.getElementById('cron-count').textContent = byRuntime.cron || 0;
+      
+      // Recent sessions table
+      const tbody = document.getElementById('sessions-body');
+      const recentTwentyFourH = recent.filter(s => s.age <= 86400000);
+      
+      if (recentTwentyFourH.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #6b7280;">No recent sessions</td></tr>';
+      } else {
+        tbody.innerHTML = recentTwentyFourH.slice(0, 8).map(session => {
+          const totalTokens = session.totalTokens || session.inputTokens || 0;
+          const inputTokens = session.inputTokens || 0;
+          const outputTokens = session.outputTokens || 0;
+          const remaining = session.remainingTokens || 0;
+          const percentUsed = session.percentUsed || 0;
+          
+          return `
+            <tr>
+              <td style="max-width: 150px; overflow: hidden; text-overflow: ellipsis; font-family: monospace; font-size: 12px;">
+                ${session.sessionId?.slice(0,8) || '-'}
+              </td>
+              <td style="color: #9ca3af; font-size: 11px;">${session.kind || '-'}</td>
+              <td style="text-align: right;">
+                I:${formatNumber(inputTokens)} O:${formatNumber(outputTokens)}
+              </td>
+              <td>
+                <div class="token-bar">
+                  <div class="token-fill ${getUsageClass(percentUsed)}" style="width: ${Math.min(percentUsed || 0, 100)}%"></div>
+                </div>
+                <div class="progress-text">
+                  <span>${formatNumber(totalTokens)}</span>
+                  <span>${formatNumber(remaining)}</span>
+                </div>
+              </td>
+              <td style="text-align: right; font-size: 11px; color: #9ca3af;">
+                ${percentUsed ? (percentUsed + '%') : '-'}
+              </td>
+            </tr>
+          `;
+        }).join('');
+      }
+      
+      // Timestamp
+      document.getElementById('data-timestamp').textContent = 
+        'Last updated: ' + (data.timestamp ? new Date(data.timestamp).toLocaleString() : '—');
+    }
+    
+    // Initial load
+    loadDashboardData().then(updateUserInterface);
+    
+    // Refresh every 30 seconds
+    setInterval(() => {
+      loadDashboardData().then(updateUserInterface);
+    }, 30000);
+  </script>
+</body>
+</html>

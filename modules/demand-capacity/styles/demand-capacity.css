@@ -1,0 +1,198 @@
+/* Demand tab — stacked full-width Sun→Sat charts */
+
+#tab-demand-capacity {
+  max-width: none;
+}
+
+.dc-toolbar {
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.dc-toolbar label {
+  min-width: 8rem;
+}
+
+.dc-file-label input[type="file"] {
+  max-width: min(100%, 18rem);
+  padding: 0.3rem 0;
+  color: var(--text);
+}
+
+#dc-capacity-multiplier {
+  width: 5.5rem;
+}
+
+.dc-weights {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.35rem 0.5rem;
+}
+
+.dc-weights-label {
+  font-size: 0.75rem;
+  color: var(--muted, #9aa);
+  align-self: center;
+}
+
+.dc-weights label {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.7rem;
+}
+
+.dc-weights input[type="number"] {
+  width: 3.4rem;
+}
+
+.dc-role-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1rem;
+  align-items: center;
+  padding: 0.15rem 0;
+}
+
+.dc-role-toggle .follow-me-label {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text);
+}
+
+#dc-status {
+  align-self: center;
+  max-width: 48rem;
+}
+
+.dc-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.85rem 1.25rem;
+  align-items: center;
+  margin: 0.85rem 0 0.4rem;
+  font-size: 0.8rem;
+}
+
+.dc-swatch {
+  display: inline-block;
+  width: 1.15rem;
+  height: 0.45rem;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+  border-radius: 2px;
+}
+
+.dc-swatch-vol {
+  background: rgba(240, 165, 0, 0.85);
+  box-shadow: 0 0 0 1px #f0a500;
+}
+
+.dc-swatch-cap {
+  background: transparent;
+  border-top: 2px dashed var(--green);
+  height: 0;
+  border-radius: 0;
+}
+
+.dc-empty {
+  margin: 0.6rem 0 0;
+}
+
+.dc-charts {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  margin-top: 0.85rem;
+}
+
+.dc-day {
+  margin: 0;
+  width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.7rem 0.4rem;
+}
+
+.dc-day-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  letter-spacing: 0.02em;
+  margin: 0 0.2rem 0.35rem;
+}
+
+.dc-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 240px;
+}
+
+.dc-grid {
+  stroke: var(--border);
+  stroke-width: 1;
+  stroke-opacity: 0.65;
+}
+
+.dc-axis {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.dc-ytick,
+.dc-xtick {
+  fill: var(--muted);
+  font-size: 11px;
+  font-family: var(--mono);
+}
+
+.dc-vol-fill {
+  fill: rgba(240, 165, 0, 0.28);
+  stroke: none;
+}
+
+.dc-vol-line {
+  fill: none;
+  stroke: var(--amber);
+  stroke-width: 2.2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dc-cap-line {
+  fill: none;
+  stroke: var(--green);
+  stroke-width: 2.4;
+  stroke-dasharray: 6 4;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.dc-hit {
+  fill: transparent;
+  cursor: crosshair;
+}
+
+@media (max-width: 640px) {
+  .dc-svg {
+    min-height: 220px;
+  }
+  .dc-file-label input[type="file"] {
+    max-width: 100%;
+  }
+  #dc-status {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dc-vol-line,
+  .dc-cap-line {
+    stroke-linejoin: miter;
+  }
+}

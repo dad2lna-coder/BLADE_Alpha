@@ -41,8 +41,10 @@ window.Scheduler = window.Scheduler || {};
   }
   function paintLinesTable() {
     var tbody = document.getElementById("lines-tbody");
-    if (!tbody) return;
-    tbody.querySelectorAll("td.cell-toggle").forEach(function (cell) {
+    var scope = tbody || document.querySelector(".lines-virtual-root");
+    if (!scope) return;
+    if (!tbody) return; // Svelte paints duty colors in-row; keep this a safe no-op.
+    scope.querySelectorAll("td.cell-toggle").forEach(function (cell) {
       var line = S.findLineById ? S.findLineById(cell.getAttribute("data-line-id")) : null;
       var day = +cell.getAttribute("data-day");
       if (!line || isNaN(day)) return;
@@ -72,6 +74,7 @@ window.Scheduler = window.Scheduler || {};
     var orig = S[name];
     if (typeof orig !== "function" || orig._lineColorsWrapped) return;
     var wrapped = function () {
+      if (S.__USE_SVELTE_LINES) return orig.apply(this, arguments);
       var result = orig.apply(this, arguments);
       setTimeout(paintLinesTable, 0);
       return result;

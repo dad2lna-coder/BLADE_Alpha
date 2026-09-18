@@ -26,6 +26,27 @@ export function syncSchedulerBridge(S) {
     S.teams.teams = teams;
 }
 
+export function replaceAllTeams(list) {
+    teams.length = 0;
+    (list || []).forEach(function (raw) {
+        if (!raw || typeof raw !== "object") return;
+        teams.push({
+            id: raw.id,
+            name: raw.name,
+            members: Array.isArray(raw.members) ? raw.members.map(Number).filter(function (n) { return !isNaN(n); }) : [],
+            followMe: !!raw.followMe,
+            phase: raw.phase != null ? raw.phase : null,
+            modSetId: raw.modSetId != null ? raw.modSetId : null
+        });
+    });
+    var maxN = 0;
+    teams.forEach(function (t) {
+        var m = /^T(\d+)$/.exec(String(t.id || ""));
+        if (m) maxN = Math.max(maxN, Number(m[1]));
+    });
+    teamSeq = Math.max(teamSeq, maxN + 1);
+}
+
 export function createTeam(name) {
     const n = teamSeq++;
     const width = Math.max(2, String(teams.length + 1).length);
@@ -93,10 +114,20 @@ export function assignSelectedToTeam(targetTeamId) {
     if (!targetTeamId) return;
     const ids = getSelectedIds();
     if (!ids.length) return;
+    const team = getTeamById(targetTeamId);
+    if (!team) return;
 
-    let n = 0;
-    ids.forEach(id => {
-        if (addMemberToTeam(targetTeamId, id)) n++;
+    const want = new Set(ids.map(Number));
+    teams.forEach(t => {
+        if (t.id === targetTeamId) return;
+        t.members = (t.members || []).filter(m => !want.has(+m));
+    });
+    const have = new Set((team.members || []).map(Number));
+    want.forEach(id => {
+        if (!have.has(id)) {
+            team.members.push(id);
+            have.add(id);
+        }
     });
     clearSelection();
 }

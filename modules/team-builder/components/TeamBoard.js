@@ -1,6 +1,10 @@
-﻿import { memberLine } from '../utils/pool.js';
+import { memberLine } from '../utils/pool.js';
+import { getTeamById } from '../stores/teamBuilderStore.js';
 import { teamMemberCounts } from '../utils/team.js';
 import { lineCardHtml } from './LineCard.js';
+
+/** Team ids whose member lists are currently painted. Compact-by-default. */
+export const expandedTeamIds = new Set();
 
 function teamCountsHeaderHtml(team) {
     const c = teamMemberCounts(team);
@@ -18,21 +22,57 @@ function teamCountsHeaderHtml(team) {
     return `<span class="team-counts-header" title="Assigned by role and sex"><span class="team-count-total">${c.total}</span> <span class="team-count-chip">F% ${overallF}</span> ${bit("STSO")}${bit("LTSO")}${bit("TSO")}</span>`;
 }
 
-export function teamBoardHtml(t) {
-    const membersHtml = t.members.map(mid => {
-        const p = memberLine(mid);
-        return p ? lineCardHtml(p, { removable: true, teamId: t.id }) : "";
-    }).join("");
+function compactHintHtml(team) {
+    const n = (team.members && team.members.length) || 0;
+    return `<div class="team-board-compact muted">${n} member${n === 1 ? "" : "s"} — expand</div>`;
+}
 
-    return `<div class="team-board card" data-team-id="${t.id}">
-        <div class="team-board-head section-title">
-            <input type="text" class="team-name-input" value="${String(t.name || "").replace(/"/g, "&quot;")}" data-team-id="${t.id}">
+function membersHtmlFor(team) {
+    const html = (team.members || []).map(mid => {
+        const p = memberLine(mid);
+        return p ? lineCardHtml(p, { removable: true, teamId: team.id }) : "";
+    }).join("");
+    return html || '<div class="team-board-empty muted">Drag lines here</div>';
+}
+
+export function paintTeamMembers(teamId) {
+    const team = getTeamById(teamId);
+    const list = document.querySelector('.team-board-list[data-team-id="' + teamId + '"]');
+    if (!team || !list) return;
+    expandedTeamIds.add(String(teamId));
+    list.setAttribute("data-members-painted", "1");
+    list.innerHTML = membersHtmlFor(team);
+}
+
+export function collapseTeamMembers(teamId) {
+    const team = getTeamById(teamId);
+    const list = document.querySelector('.team-board-list[data-team-id="' + teamId + '"]');
+    expandedTeamIds.delete(String(teamId));
+    if (!list) return;
+    list.removeAttribute("data-members-painted");
+    list.innerHTML = team ? compactHintHtml(team) : "";
+}
+
+export function restoreExpandedBoards() {
+    expandedTeamIds.forEach(function (id) {
+        const details = document.querySelector('.team-board[data-team-id="' + id + '"]');
+        if (details) details.open = true;
+        paintTeamMembers(id);
+    });
+}
+
+export function teamBoardHtml(t) {
+    const expanded = expandedTeamIds.has(String(t.id));
+    const body = expanded ? membersHtmlFor(t) : compactHintHtml(t);
+    return `<details class="team-board card" data-team-id="${t.id}"${expanded ? " open" : ""}>
+        <summary class="team-board-head section-title">
+            <input type="text" class="team-name-input" value="${String(t.name || "").replace(/"/g, "&quot;")}" data-team-id="${t.id}" onclick="event.stopPropagation()">
             ${teamCountsHeaderHtml(t)}
             <div class="team-board-actions">
-                <label class="follow-me-label" title="Follow Me (dock this team on screen)"><input type="checkbox" data-team-follow="${t.id}" ${t.followMe ? "checked" : ""}> Follow</label>
+                <label class="follow-me-label" title="Follow Me (dock this team on screen)" onclick="event.stopPropagation()"><input type="checkbox" data-team-follow="${t.id}" ${t.followMe ? "checked" : ""}> Follow</label>
                 <button type="button" class="btn btn-red" data-remove-team="${t.id}">✕</button>
             </div>
-        </div>
-        <div class="team-board-list" data-team-id="${t.id}">${membersHtml || '<div class="team-board-empty muted">Drag lines here</div>'}</div>
-    </div>`;
+        </summary>
+        <div class="team-board-list" data-team-id="${t.id}"${expanded ? " data-members-painted=\"1\"" : ""}>${body}</div>
+    </details>`;
 }

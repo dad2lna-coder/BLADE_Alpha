@@ -46,7 +46,7 @@ export function autoFormTeams() {
     collectTeamPool();
     if (!pool.length) return;
 
-    const S = window.Scheduler; // Bridge for UI elements
+    const S = window.Scheduler;
     const stsoPer = Math.max(0, +(S.$("arch-stso") && S.$("arch-stso").value) || 1);
     const ltsoPer = Math.max(0, +(S.$("arch-ltso") && S.$("arch-ltso").value) || 0);
     const tsoPer = Math.max(0, +(S.$("arch-tso") && S.$("arch-tso").value) || 0);
@@ -59,16 +59,16 @@ export function autoFormTeams() {
     const nTeams = byRole.STSO.length;
     if (!nTeams) return;
 
-    teams.length = 0; // Clear existing teams (in place)
+    teams.length = 0;
     for (let i = 0; i < nTeams; i++) createTeam();
 
-    const used = {};
+    const used = new Set();
     byRole.STSO.sort((a, b) => (startMins(a) ?? 0) - (startMins(b) ?? 0) || String(a.rdo || "").localeCompare(String(b.rdo || "")));
     byRole.STSO.forEach((p, idx) => {
         const team = teams[idx];
         if (!team) return;
         team.members.push(p.id);
-        used[p.id] = true;
+        used.add(p.id);
     });
 
     renumberTeamsByStart();
@@ -84,7 +84,7 @@ export function autoFormTeams() {
             const need = Math.max(0, target - have);
             if (need === 0) return;
 
-            const candidates = byRole[role].filter(p => !used[p.id]);
+            const candidates = byRole[role].filter(p => !used.has(p.id));
             const scored = candidates.map(p => {
                 let q = 0;
                 if (startsClose(p, anchor, windowMin)) {
@@ -97,12 +97,11 @@ export function autoFormTeams() {
             scored.sort((a, b) => b.q - a.q || b.opp - a.opp || a.teamSex - b.teamSex || a.roleSex - b.roleSex);
             scored.slice(0, need).forEach(item => {
                 team.members.push(item.p.id);
-                used[item.p.id] = true;
+                used.add(item.p.id);
             });
         });
     });
 
     if (S) syncSchedulerBridge(S);
-    if (S && typeof S.renderLines === "function") S.renderLines();
     if (S && typeof S.updateStatus === "function") S.updateStatus("Teams auto-formed");
 }

@@ -8,14 +8,6 @@ window.Scheduler = window.Scheduler || {};
   var imported = false;
   var dirty = false;
 
-  function loadSetupUi() {
-    if (document.querySelector('script[src*="js/setup-ui.js"]')) return;
-    var s = document.createElement("script");
-    s.src = "js/setup-ui.js?v=20260905g";
-    document.body.appendChild(s);
-  }
-  loadSetupUi();
-
   function defaultConfig() {
     return {
       startTime: "03:30",
@@ -46,16 +38,32 @@ window.Scheduler = window.Scheduler || {};
     if (S.readFunctionBandsFromDom) { try { S.readFunctionBandsFromDom(); } catch (e) {} }
     var fc = S.ensureFunctionCoverage ? S.ensureFunctionCoverage() : (S.state && S.state.functionCoverage);
     if (!fc) return null;
-    return {
+    var snap = {
+      mode: fc.mode,
+      poolStsoDfoM: fc.poolStsoDfoM || 0,
+      poolStsoDfoF: fc.poolStsoDfoF || 0,
+      poolLtsoDfoM: fc.poolLtsoDfoM || 0,
+      poolLtsoDfoF: fc.poolLtsoDfoF || 0,
+      poolTsoDfoM: fc.poolTsoDfoM || 0,
+      poolTsoDfoF: fc.poolTsoDfoF || 0,
+      poolStsoBagM: fc.poolStsoBagM || 0,
+      poolStsoBagF: fc.poolStsoBagF || 0,
+      poolLtsoBagM: fc.poolLtsoBagM || 0,
+      poolLtsoBagF: fc.poolLtsoBagF || 0,
+      poolTsoBagM: fc.poolTsoBagM || 0,
+      poolTsoBagF: fc.poolTsoBagF || 0,
       poolStsoDfo: fc.poolStsoDfo || 0,
       poolLtsoDfo: fc.poolLtsoDfo || 0,
       poolTsoDfo: fc.poolTsoDfo || 0,
+      poolBag: fc.poolBag || 0,
       amPmSplit: fc.amPmSplit !== false,
       phaseThresholdMin: fc.phaseThresholdMin != null ? fc.phaseThresholdMin : 15,
-      bands: (fc.bands || []).map(function (b) {
-        return { start: b.start, end: b.end, stso: +b.stso || 0, ltso: +b.ltso || 0, tso: +b.tso || 0 };
-      })
+      bias: fc.bias || "none",
+      requirements: fc.requirements || { STSO: {}, LTSO: {}, TSO: {} },
+      requirementShiftIds: Array.isArray(fc.requirementShiftIds) ? fc.requirementShiftIds.slice() : []
     };
+    if (Array.isArray(fc.bands) && fc.bands.length) snap.bands = fc.bands.slice();
+    return snap;
   }
 
   function applyFunctionCoverage(fc) {
@@ -63,15 +71,15 @@ window.Scheduler = window.Scheduler || {};
     if (!S.state) S.state = {};
     if (!S.state.functionCoverage) S.state.functionCoverage = {};
     var d = S.state.functionCoverage;
-    if (fc.poolStsoDfo != null) d.poolStsoDfo = +fc.poolStsoDfo || 0;
-    if (fc.poolLtsoDfo != null) d.poolLtsoDfo = +fc.poolLtsoDfo || 0;
-    if (fc.poolTsoDfo != null) d.poolTsoDfo = +fc.poolTsoDfo || 0;
-    if (fc.amPmSplit != null) d.amPmSplit = !!fc.amPmSplit;
-    if (fc.phaseThresholdMin != null) d.phaseThresholdMin = +fc.phaseThresholdMin || 0;
-    if (Array.isArray(fc.bands)) d.bands = fc.bands.slice();
+    Object.keys(fc).forEach(function (k) {
+      if (k === "_bandMigrationAttempted") return;
+      d[k] = fc[k];
+    });
+    d._bandMigrationAttempted = false;
     if (S.ensureFunctionCoverage) S.ensureFunctionCoverage();
     if (S.fillFunctionCoverageForm) S.fillFunctionCoverageForm();
-    if (S.renderFunctionBandsTable) S.renderFunctionBandsTable();
+    if (S.renderFunctionShiftsTable) S.renderFunctionShiftsTable();
+    else if (S.renderFunctionBandsTable) S.renderFunctionBandsTable();
     if (S.updateFunctionCoveragePreview) S.updateFunctionCoveragePreview();
   }
 

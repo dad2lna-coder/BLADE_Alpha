@@ -1,6 +1,6 @@
-﻿import { teams } from '../stores/teamBuilderStore.js';
+import { teams } from '../stores/teamBuilderStore.js';
 import { teamPhaseInfo } from '../utils/phase.js';
-import { teamBoardHtml } from './TeamBoard.js';
+import { teamBoardHtml, restoreExpandedBoards } from './TeamBoard.js';
 
 function teamBoardsHtml(teamsList) {
     if (!teamsList || !teamsList.length) return '<p class="muted" style="padding: 0 1rem 1rem;">No teams in this group.</p>';
@@ -23,4 +23,5 @@ export function renderTeamBoards() {
 
     if (amContainer) amContainer.innerHTML = teamBoardsHtml(amTeams);
     if (pmContainer) pmContainer.innerHTML = teamBoardsHtml(pmTeams);
+    restoreExpandedBoards();
 }

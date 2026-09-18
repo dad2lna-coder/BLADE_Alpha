@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Workforce Team Balancer & Pairer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    .drag-over { border: 2px dashed #3b82f6 !important; background-color: #eff6ff !important; }
+    .member-item:active { cursor: grabbing; }
+    [draggable="true"] { cursor: grab; }
+    .nav-btn.active { background-color: #2563eb; color: white; border-color: #2563eb; }
+    .nav-btn { background-color: #f3f4f6; color: #374151; border-color: #d1d5db; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans h-screen flex flex-col overflow-hidden">
+
+  <header class="bg-white shadow z-10">
+    <div class="max-w-[95%] mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3">
+        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+        <h1 class="text-xl font-bold text-gray-900 truncate">Team Balance & Pair Tool</h1>
+      </div>
+      
+      <div class="flex items-center space-x-2 border-r border-gray-300 pr-4 hidden" id="viewToggles">
+        <button id="btnViewPair" class="nav-btn active text-sm font-medium px-3 py-1.5 rounded-l border shadow-sm transition">Summary by Pair</button>
+        <button id="btnViewAll" class="nav-btn text-sm font-medium px-3 py-1.5 rounded-r border-y border-r shadow-sm transition">All Teams Grid</button>
+      </div>
+
+      <div class="flex items-center space-x-3">
+        <input type="file" id="fileInput" accept=".json" class="hidden">
+        <label for="fileInput" class="cursor-pointer text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 border border-gray-300 px-4 py-2 rounded shadow-sm transition">
+          1. Load JSON
+        </label>
+        <button id="btnAutoBalance" disabled class="disabled:opacity-50 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded shadow-sm transition">
+          2. Auto-Balance
+        </button>
+        <button id="btnExport" disabled class="disabled:opacity-50 text-sm font-medium text-white bg-green-600 hover:bg-green-700 px-4 py-2 rounded shadow-sm transition">
+          3. Export JSON
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <div id="metricsBar" class="bg-gray-800 text-white text-sm px-4 py-2 hidden shadow-inner flex flex-wrap justify-between items-center z-10">
+    <div class="flex space-x-6">
+      <div><strong>Total Lines:</strong> <span id="valTotalLines">-</span></div>
+      <div><strong>Target/Team:</strong> <span id="valTargetSize">-</span></div>
+      <div><strong>Avg Cohesion:</strong> <span id="valGlobalCohesion">-</span></div>
+      <div><strong>≥75% Cohesion:</strong> <span id="valSuccessRate" class="font-bold">-</span></div>
+    </div>
+    <div id="statusAlert" class="text-yellow-300 font-medium"></div>
+  </div>
+  
+  <div id="warningsBar" class="bg-orange-100 text-orange-800 text-xs px-4 py-2 hidden shadow-inner border-b border-orange-200 z-10">
+    <div class="flex items-start">
+      <svg class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+      <div id="warningsList" class="flex flex-wrap gap-2"></div>
+    </div>
+  </div>
+
+  <main class="flex-1 overflow-auto p-4 md:p-6" id="mainWorkspace">
+    <div id="emptyState" class="h-full flex flex-col items-center justify-center text-gray-400">
+      <svg class="w-16 h-16 mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+      <p class="text-lg">Load a Scheduler JSON export to begin</p>
+    </div>
+    
+    <!-- View 1: Summary By Pair -->
+    <div id="viewPairContainer" class="hidden space-y-6 max-w-[95%] mx-auto pb-12">
+      <div id="pairedTeamsList" class="space-y-6"></div>
+      
+      <div class="pt-6 border-t border-gray-300 mt-6" id="unpairedSection">
+        <h2 class="text-lg font-bold text-gray-700 mb-4">Unpaired Teams</h2>
+        <div id="unpairedTeamsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"></div>
+      </div>
+    </div>
+
+    <!-- View 2: All Teams Grid -->
+    <div id="viewAllContainer" class="hidden grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 max-w-[95%] mx-auto pb-12">
+      <!-- Teams populated dynamically -->
+    </div>
+  </main>
+
+  <script>
+    let appData = null;
+    let linesMap = {};
+    let shiftsMap = {};
+    const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    let seed = 12345;
+    let currentView = 'pair'; // 'pair' or 'all'
+    let draggedLineId = null;
+    let openPairs = new Set();
+    
+    function rand() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+
+    const DOM = {
+      fileInput: document.getElementById('fileInput'),
+      btnAutoBalance: document.getElementById('btnAutoBalance'),
+      btnExport: document.getElementById('btnExport'),
+      btnViewPair: document.getElementById('btnViewPair'),
+      btnViewAll: document.getElementById('btnViewAll'),
+      viewToggles: document.getElementById('viewToggles'),
+      emptyState: document.getElementById('emptyState'),
+      metricsBar: document.getElementById('metricsBar'),
+      warningsBar: document.getElementById('warningsBar'),
+      warningsList: document.getElementById('warningsList'),
+      viewPairContainer: document.getElementById('viewPairContainer'),
+      pairedTeamsList: document.getElementById('pairedTeamsList'),
+      unpairedSection: document.getElementById('unpairedSection'),
+      unpairedTeamsGrid: document.getElementById('unpairedTeamsGrid'),
+      viewAllContainer: document.getElementById('viewAllContainer')
+    };
+
+    DOM.fileInput.addEventListener('change', handleFile);
+    DOM.btnAutoBalance.addEventListener('click', runAutoBalance);
+    DOM.btnExport.addEventListener('click', exportJSON);
+    
+    DOM.btnViewPair.addEventListener('click', () => setView('pair'));
+    DOM.btnViewAll.addEventListener('click', () => setView('all'));
+
+    function setView(mode) {
+      currentView = mode;
+      DOM.btnViewPair.classList.toggle('active', mode === 'pair');
+      DOM.btnViewAll.classList.toggle('active', mode === 'all');
+      render();
+    }
+
+    function showMessage(msg) {
+        // Simplified generic message handler if needed
+        alert(msg);
+    }
+
+    function handleFile(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (evt) => {
+        try {
+          appData = JSON.parse(evt.target.result);
+          initData();
+          render();
+        } catch (err) {
+          showMessage("Invalid JSON file. Ensure it is a valid scheduler export.");
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function initData() {
+      linesMap = {};
+      shiftsMap = {};
+      
+      if (appData.config && appData.config.shifts) {
+        appData.config.shifts.forEach(s => shiftsMap[s.id] = s);
+      }
+      
+      (appData.results?.lines || []).forEach(line => {
+        if (!line.role) {
+          let code = (line.lineCode || '').toUpperCase();
+          line.role = code.includes('STSO') ? 'STSO' : (code.includes('LTSO') ? 'LTSO' : 'TSO');
+        }
+        linesMap[line.id] = line;
+      });
+
+      if (!appData.results.teams || appData.results.teams.length === 0) {
+        const numTeams = Math.max(1, Math.floor(appData.results.lines.length / 8));
+        appData.results.teams = Array.from({length: numTeams}, (_, i) => ({
+          id: `Team_${i+1}`,
+          name: `Team ${i+1}`,
+          members: []
+        }));
+        
+        appData.results.lines.forEach(l => {
+          let t = appData.results.teams[Math.floor(rand() * numTeams)];
+          t.members.push(l.id);
+        });
+      }
+
+      DOM.emptyState.classList.add('hidden');
+      DOM.viewToggles.classList.remove('hidden');
+      DOM.metricsBar.classList.remove('hidden');
+      DOM.btnAutoBalance.disabled = false;
+      DOM.btnExport.disabled = false;
+    }
+
+    function getMinutes(timeStr) {
+      if (!timeStr) return 0;
+      const [h, m] = timeStr.split(':').map(Number);
+      return h * 60 + m;
+    }
+
+    function getShiftDurationHours(shift) {
+        if (!shift || !shift.start || !shift.end) return 0;
+        let s = getMinutes(shift.start);
+        let e = getMinutes(shift.end);
+        if (e <= s) e += 1440; // overnight
+        return (e - s) / 60;
+    }
+
+    function getShiftOverlapHours(s1, s2) {
+      if (!s1 || !s2) return 0;
+      let start1 = getMinutes(s1.start), end1 = getMinutes(s1.end);
+      let start2 = getMinutes(s2.start), end2 = getMinutes(s2.end);
+      if (end1 <= start1) end1 += 1440;
+      if (end2 <= start2) end2 += 1440;
+      
+      let oStart = Math.max(start1, start2);
+      let oEnd = Math.min(end1, end2);
+      let overlap = Math.max(0, oEnd - oStart);
+      return overlap / 60;
+    }
+
+    function isWorkDay(line, dayIndex) {
+      if (appData.results.schedule && appData.results.schedule[line.id]) {
+         let sched = appData.results.schedule[line.id];
+         if (Array.isArray(sched)) return sched[dayIndex] === 'WORK';
+         if (typeof sched === 'object') return sched[Object.keys(sched)[dayIndex]] === 'WORK';
+      }
+      return !(line.rdoDays || []).includes(dayIndex);
+    }
+
+    function getSide(line) {
+       if (!line) return 'AM';
+       let shift = shiftsMap[line.shiftId];
+       if (!shift) return 'AM';
+       let st = getMinutes(shift.start);
+       return st < 11 * 60 ? 'AM' : 'PM';
+    }
+
+    function calculateTeamStats(team) {
+      let mIds = team.members || [];
+      let lines = mIds.map(id => linesMap[id]).filter(Boolean);
+      
+      let stats = { 
+        size: lines.length, 
+        M: 0, F: 0, 
+        STSO: 0, STSO_M: 0, STSO_F: 0,
+        LTSO: 0, LTSO_M: 0, LTSO_F: 0,
+        TSO: 0, TSO_M: 0, TSO_F: 0,
+        cohesion: null, anchor: null, side: 'AM', warnings: [],
+        memberCohesions: {}
+      };
+      
+      if (!stats.size) return stats;
+
+      lines.forEach(l => {
+        let isM = l.sex === 'M';
+        if (isM) stats.M++; else if (l.sex === 'F') stats.F++;
+        
+        if (l.role === 'STSO') {
+            stats.STSO++;
+            isM ? stats.STSO_M++ : stats.STSO_F++;
+        }
+        else if (l.role === 'LTSO') {
+            stats.LTSO++;
+            isM ? stats.LTSO_M++ : stats.LTSO_F++;
+        }
+        else {
+            stats.TSO++;
+            isM ? stats.TSO_M++ : stats.TSO_F++;
+        }
+      });
+
+      stats.anchor = lines.find(l => l.role === 'STSO') || lines[0];
+      stats.side = getSide(stats.anchor);
+
+      // Revised Cohesion Math preventing > 100%
+      let anchorShift = shiftsMap[stats.anchor.shiftId];
+      let ratios = [];
+      lines.forEach(l => {
+        if (l.id === stats.anchor.id) {
+           stats.memberCohesions[l.id] = 100;
+           return;
+        }
+        let lShift = shiftsMap[l.shiftId];
+        
+        // 1. Establish max theoretical day hours
+        let dayHours = 8;
+        if (lShift) {
+            dayHours = getShiftDurationHours(lShift);
+        } else if (l.paid) {
+            dayHours = l.paid;
+        }
+        
+        let ownHrs = 0;
+        let overlapHrs = 0;
+        let dailyOverlap = getShiftOverlapHours(anchorShift, lShift);
+        
+        // 2. Tally WORK days
+        for (let d = 0; d < 7; d++) {
+           if (isWorkDay(l, d)) {
+             ownHrs += dayHours;
+             if (isWorkDay(stats.anchor, d)) {
+               // Cap overlap at the max daily hours to prevent >1 ratio
+               overlapHrs += Math.min(dailyOverlap, dayHours); 
+             }
+           }
+        }
+        
+        // 3. Ratio clamped 0..1
+        let rawRatio = ownHrs > 0 ? (overlapHrs / ownHrs) : 0;
+        if (rawRatio > 1) {
+            console.warn(`BUG CAUGHT: Line ${l.id} cohesion raw ratio > 1 (${rawRatio}). Clamped.`);
+        }
+        let finalRatio = Math.max(0, Math.min(rawRatio, 1));
+        ratios.push(finalRatio);
+        stats.memberCohesions[l.id] = finalRatio * 100;
+        
+        // --- NEW: check side purity ---
+        if (getSide(l) !== stats.side) {
+            stats.warnings.push(`Wrong side: ${l.lineCode||l.id} (${getSide(l)})`);
+        }
+      });
+
+      if (ratios.length > 0) {
+        stats.cohesion = (ratios.reduce((a,b)=>a+b,0) / ratios.length) * 100;
+      }
+
+      // Pair warnings
+      if (team.pairedTeamId) {
+         let pTeam = appData.results.teams.find(t => t.id === team.pairedTeamId);
+         if (pTeam) {
+            let pLines = (pTeam.members||[]).map(id => linesMap[id]).filter(Boolean);
+            let pAnchor = pLines.find(l => l.role === 'STSO') || pLines[0];
+            if (pAnchor) {
+              if (getSide(pAnchor) !== stats.side) stats.warnings.push("Side mismatch with Pair");
+              
+              let myRdos = stats.anchor.rdoDays || [];
+              let pRdos = pAnchor.rdoDays || [];
+              let overlap = myRdos.filter(d => pRdos.includes(d)).length;
+              if (overlap > 1) stats.warnings.push("Pair RDO overlap ≥ 2 days");
+            }
+         }
+      }
+      return stats;
+    }
+
+    function calculatePairCohesion(nodeA, nodeB) {
+        let anchorA = nodeA.stats.anchor;
+        let anchorB = nodeB.stats.anchor;
+        if (!anchorA && !anchorB) return 0;
+
+        let nonAnchors = [];
+        (nodeA.team.members||[]).forEach(id => { if (!anchorA || id !== anchorA.id) nonAnchors.push({id, home: anchorA, partner: anchorB}); });
+        (nodeB.team.members||[]).forEach(id => { if (!anchorB || id !== anchorB.id) nonAnchors.push({id, home: anchorB, partner: anchorA}); });
+
+        if (nonAnchors.length === 0) return 100;
+
+        let ratios = [];
+        nonAnchors.forEach(memberData => {
+            let l = linesMap[memberData.id];
+            let lShift = shiftsMap[l.shiftId];
+
+            let dayHours = 8;
+            if (lShift) dayHours = getShiftDurationHours(lShift);
+            else if (l.paid) dayHours = l.paid;
+
+            let ownHrs = 0;
+            let overlapHrs = 0;
+
+            for(let d=0; d<7; d++) {
+                if (isWorkDay(l, d)) {
+                    ownHrs += dayHours;
+                    
+                    let homeWork = memberData.home && isWorkDay(memberData.home, d);
+                    let partnerWork = memberData.partner && isWorkDay(memberData.partner, d);
+                    
+                    let homeOverlap = 0;
+                    if (memberData.home) homeOverlap = getShiftOverlapHours(shiftsMap[memberData.home.shiftId], lShift);
+                    
+                    let partnerOverlap = 0;
+                    if (memberData.partner) partnerOverlap = getShiftOverlapHours(shiftsMap[memberData.partner.shiftId], lShift);
+
+                    // Prioritize home STSO, fallback to partner STSO
+                    if (homeWork) {
+                        overlapHrs += Math.min(homeOverlap, dayHours);
+                    } else if (partnerWork) {
+                        overlapHrs += Math.min(partnerOverlap, dayHours);
+                    }
+                }
+            }
+            
+            let rawRatio = ownHrs > 0 ? (overlapHrs / ownHrs) : 0;
+            ratios.push(Math.max(0, Math.min(rawRatio, 1)));
+        });
+
+        return (ratios.reduce((a,b)=>a+b,0) / ratios.length) * 100;
+    }
+
+    function trimTeamSize(teamId) {
+        if (!appData) return;
+        let sourceTeam = appData.results.teams.find(t => t.id === teamId);
+        if (!sourceTeam) return;
+
+        let sourceStats = calculateTeamStats(sourceTeam);
+        let side = sourceStats.side;
+        
+        let sideTeams = appData.results.teams.filter(t => {
+           if (t.members.length === 0) return false;
+           return calculateTeamStats(t).side === side;
+        });
+        if (sideTeams.length === 0) sideTeams = [sourceTeam];
+        
+        let totalSideLines = sideTeams.reduce((sum, t) => sum + t.members.length, 0);
+        let targetSize = Math.ceil(totalSideLines / sideTeams.length);
+
+        let excess = sourceTeam.members.length - targetSize;
+        if (excess <= 0) {
+            alert(`Team ${sourceTeam.name} is already at or below target size (${targetSize}) for the ${side} side.`);
+            return;
+        }
+
+        let candidates = sourceTeam.members.filter(id => id !== sourceStats.anchor?.id);
+        
+        // Sort: TSOs first, then lowest cohesion first
+        candidates.sort((aId, bId) => {
+            let aLine = linesMap[aId];
+            let bLine = linesMap[bId];
+            if (aLine.role === 'TSO' && bLine.role !== 'TSO') return -1;
+            if (bLine.role === 'TSO' && aLine.role !== 'TSO') return 1;
+            
+            let aCoh = sourceStats.memberCohesions[aId] || 0;
+            let bCoh = sourceStats.memberCohesions[bId] || 0;
+            return aCoh - bCoh;
+        });
+
+        let movedCount = 0;
+        let movesLog = [];
+
+        for (let i = 0; i < candidates.length && excess > 0; i++) {
+            let cId = candidates[i];
+            let cLine = linesMap[cId];
+
+            let currentLTSOs = sourceTeam.members.filter(mId => linesMap[mId]?.role === 'LTSO').length;
+            if (cLine.role === 'LTSO' && currentLTSOs <= 1) continue;
+
+            let bestDest = null;
+            let bestScore = -9999;
+
+            sideTeams.forEach(destT => {
+                if (destT.id === sourceTeam.id) return;
+                if (destT.members.length >= targetSize) return; // Strict capacity check
+
+                let destStats = calculateTeamStats(destT);
+                if (cLine.role === 'LTSO' && destStats.LTSO >= 1) return; // Maintain roles
+                if (cLine.role === 'STSO' && destStats.STSO >= 1) return;
+
+                let capacityRemaining = targetSize - destT.members.length;
+                let score = capacityRemaining * 10;
+                
+                destT.members.push(cId);
+                let newStats = calculateTeamStats(destT);
+                destT.members.pop();
+                
+                score += (newStats.memberCohesions[cId] || 0);
+
+                if (score > bestScore) {
+                    bestScore = score;
+                    bestDest = destT;
+                }
+            });
+
+            if (bestDest) {
+                sourceTeam.members = sourceTeam.members.filter(id => id !== cId);
+                bestDest.members.push(cId);
+                movedCount++;
+                excess--;
+                movesLog.push(`• ${cLine.lineCode||cId} ➜ ${bestDest.name}`);
+            }
+        }
+
+        if (movedCount > 0) {
+            alert(`Trim successful! Moved ${movedCount} members:\n${movesLog.join('\n')}`);
+            render();
+        } else {
+            alert(`Could not find valid same-side destinations with space for excess members.\nTarget size for ${side} is ${targetSize}.`);
+        }
+    }
+
+    function handleDragStart(e, lineId) {
+      draggedLineId = lineId;
+      e.dataTransfer.setData('text/plain', lineId);
+      e.target.style.opacity = '0.5';
+    }
+
+    function handleDragEnd(e) {
+      e.target.style.opacity = '1';
+      draggedLineId = null;
+      document.querySelectorAll('.team-dropzone').forEach(el => el.classList.remove('drag-over'));
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.currentTarget.classList.add('drag-over');
+    }
+
+    function handleDragLeave(e) {
+      e.currentTarget.classList.remove('drag-over');
+    }
+
+    function handleDrop(e, targetTeamId) {
+      e.preventDefault();
+      e.currentTarget.classList.remove('drag-over');
+      const lineId = e.dataTransfer.getData('text/plain') || draggedLineId;
+      if (!lineId) return;
+
+      appData.results.teams.forEach(t => {
+        t.members = (t.members || []).filter(id => String(id) !== String(lineId));
+      });
+
+      let t = appData.results.teams.find(t => t.id === targetTeamId);
+      if (t) t.members.push(Number(lineId) || lineId);
+      
+      render();
+    }
+
+    function updatePair(teamId, newPairId) {
+      let t1 = appData.results.teams.find(t => t.id === teamId);
+      if (t1.pairedTeamId) {
+        let oldP = appData.results.teams.find(t => t.id === t1.pairedTeamId);
+        if (oldP) oldP.pairedTeamId = null;
+      }
+      
+      if (newPairId && newPairId !== "none") {
+        let t2 = appData.results.teams.find(t => t.id === newPairId);
+        if (t2.pairedTeamId) {
+           let oldP2 = appData.results.teams.find(t => t.id === t2.pairedTeamId);
+           if (oldP2) oldP2.pairedTeamId = null;
+        }
+        t1.pairedTeamId = t2.id;
+        t2.pairedTeamId = t1.id;
+      } else {
+        t1.pairedTeamId = null;
+      }
+      render();
+    }
+
+    function getTeamCardHTML(team, stats) {
+        let cohString = stats.cohesion === null ? '—' : `${stats.cohesion.toFixed(1)}%`;
+        let cohColor = stats.cohesion >= 75 ? 'text-green-600' : (stats.cohesion !== null ? 'text-orange-600 font-bold' : 'text-gray-500');
+        let rdoStr = stats.anchor && stats.anchor.rdoDays ? stats.anchor.rdoDays.map(d=>DAYS[d]).join(', ') : 'None';
+        let sideBadge = stats.side === 'AM' ? 'bg-amber-100 text-amber-800' : 'bg-indigo-100 text-indigo-800';
+
+        let pairOptions = `<option value="none">-- Unpaired --</option>`;
+        appData.results.teams.forEach(optT => {
+          if (optT.id === team.id) return;
+          let sel = optT.id === team.pairedTeamId ? 'selected' : '';
+          pairOptions += `<option value="${optT.id}" ${sel}>${optT.name}</option>`;
+        });
+
+        let warningsHtml = stats.warnings.map(w => `<span class="bg-red-100 text-red-700 text-[10px] px-1.5 py-0.5 rounded mr-1">${w}</span>`).join('');
+        
+        let html = `
+          <div class="bg-white rounded-lg shadow-sm border ${stats.cohesion !== null && stats.cohesion < 75 ? 'border-orange-300' : 'border-gray-200'} flex flex-col h-full">
+              <div class="p-3 border-b bg-gray-50 rounded-t-lg flex justify-between items-start">
+                <div>
+                  <h3 class="font-bold text-gray-800">${team.name}</h3>
+                  <div class="text-[10px] text-gray-500 mt-1 uppercase tracking-wider">Anchor RDO: <span class="font-bold text-gray-700">${rdoStr}</span></div>
+                </div>
+                <div class="text-right flex flex-col items-end gap-1">
+                  <div class="flex items-center space-x-2">
+                      <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase tracking-wider ${sideBadge}">${stats.side}</span>
+                      <button onclick="trimTeamSize('${team.id}')" class="text-[10px] px-2 py-1 rounded bg-slate-200 text-slate-700 hover:bg-slate-300 border border-slate-300 shadow-sm transition active:scale-95 font-semibold" title="Trim excess members (moves to same-side teams)">Trim Size</button>
+                  </div>
+                  <div class="text-base mt-1 ${cohColor}" title="Team Cohesion (Home STSO Only)">${cohString}</div>
+                </div>
+              </div>
+              <div class="p-3 text-sm flex-1 flex flex-col">
+                <div class="grid grid-cols-2 gap-1 mb-3 text-xs text-gray-600 bg-slate-50 p-2 rounded border border-slate-100">
+                  <div class="col-span-2 flex justify-between border-b pb-1 mb-1 border-slate-200">
+                     <span class="font-semibold text-slate-700">Size: ${stats.size}</span>
+                     <span class="text-slate-500">M:${stats.M} F:${stats.F}</span>
+                  </div>
+                  <div class="text-[10px]"><strong>S:</strong> ${stats.STSO} <span class="text-gray-400">(${stats.STSO_M}M/${stats.STSO_F}F)</span></div>
+                  <div class="text-[10px]"><strong>L:</strong> ${stats.LTSO} <span class="text-gray-400">(${stats.LTSO_M}M/${stats.LTSO_F}F)</span></div>
+                  <div class="text-[10px] col-span-2"><strong>T:</strong> ${stats.TSO} <span class="text-gray-400">(${stats.TSO_M}M/${stats.TSO_F}F)</span></div>
+                </div>
+                
+                <div class="mb-2">
+                  <label class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider block mb-1">Pair With</label>
+                  <select onchange="updatePair('${team.id}', this.value)" class="w-full bg-white border border-gray-300 rounded text-xs px-2 py-1 focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    ${pairOptions}
+                  </select>
+                </div>
+                ${warningsHtml ? `<div class="mb-2">${warningsHtml}</div>` : ''}
+                
+                <div class="flex-1 team-dropzone border-2 border-transparent rounded bg-white min-h-[120px] max-h-[300px] overflow-y-auto mt-1" 
+                     ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, '${team.id}')">
+                  <ul class="space-y-1 pb-2">
+        `;
+
+        (team.members || []).forEach(mId => {
+          let line = linesMap[mId];
+          if (!line) return;
+          let roleColor = line.role === 'STSO' ? 'text-purple-800 bg-purple-50 border-purple-200' : 
+                          (line.role === 'LTSO' ? 'text-blue-800 bg-blue-50 border-blue-200' : 'text-gray-700 bg-gray-50 border-gray-100');
+          let rdoMin = (line.rdoDays||[]).map(d=>DAYS[d].substring(0,1)).join('');
+          
+          let indvCoh = stats.memberCohesions && stats.memberCohesions[mId] !== undefined ? Math.round(stats.memberCohesions[mId]) : null;
+          let isAnchor = stats.anchor && stats.anchor.id === mId;
+          
+          let cohBadge = '';
+          if (isAnchor) {
+             cohBadge = `<span class="text-[9px] bg-purple-200 text-purple-800 px-1.5 py-0.5 rounded ml-1 font-semibold border border-purple-300">Anchor</span>`;
+          } else if (indvCoh !== null) {
+             let cColor = indvCoh >= 75 ? 'text-green-700 bg-green-100 border-green-200' : 'text-orange-700 bg-orange-100 border-orange-200';
+             cohBadge = `<span class="text-[10px] font-bold ml-1 px-1.5 py-0.5 rounded border ${cColor}">${indvCoh}%</span>`;
+          }
+          
+          html += `
+            <li class="member-item flex justify-between items-center px-2 py-1.5 rounded border ${roleColor} text-xs cursor-grab hover:shadow-md transition-shadow" 
+                draggable="true" ondragstart="handleDragStart(event, '${line.id}')" ondragend="handleDragEnd(event)">
+              <div class="flex items-center">
+                <span class="font-bold">${line.lineCode||line.id}</span>
+                ${cohBadge}
+              </div>
+              <span class="text-[10px] opacity-80 whitespace-nowrap ml-2">${line.role} • ${line.sex} • ${rdoMin}</span>
+            </li>
+          `;
+        });
+
+        html += `</ul></div></div></div>`;
+        return html;
+    }
+
+    function render() {
+      if (!appData) return;
+      
+      DOM.pairedTeamsList.innerHTML = '';
+      DOM.unpairedTeamsGrid.innerHTML = '';
+      DOM.viewAllContainer.innerHTML = '';
+      DOM.warningsList.innerHTML = '';
+
+      let totalCohesion = 0;
+      let cohesionCount = 0;
+      let successCount = 0;
+      let totalLines = appData.results.lines.length;
+      let numTeams = appData.results.teams.length;
+      let targetSize = Math.ceil(totalLines / numTeams);
+
+      let processedPairs = new Set();
+      let unpairedTeams = [];
+      
+      let allLTSO = appData.results.lines.filter(l => l.role === 'LTSO').length;
+      let globalLTSORatio = allLTSO / numTeams;
+      let roleWarnings = [];
+      let sideMismatchCount = 0;
+
+      // Calculate stats for all teams and build elements
+      let teamNodes = appData.results.teams.map(team => {
+        let stats = calculateTeamStats(team);
+        
+        if (stats.cohesion !== null) {
+           totalCohesion += stats.cohesion;
+           cohesionCount++;
+           if (stats.cohesion >= 75) successCount++;
+        }
+        
+        // Strict Role balance warnings
+        if (stats.LTSO === 0 && globalLTSORatio >= 0.8) {
+            roleWarnings.push(`<span class="bg-red-200 px-2 py-1 rounded"><strong>${team.name}</strong>: 0 LTSO</span>`);
+        } else if (stats.LTSO > 1 && globalLTSORatio < 1.5) {
+            roleWarnings.push(`<span class="bg-orange-200 px-2 py-1 rounded"><strong>${team.name}</strong>: ${stats.LTSO} LTSOs</span>`);
+        }
+        if (stats.STSO === 0) {
+            roleWarnings.push(`<span class="bg-red-200 px-2 py-1 rounded"><strong>${team.name}</strong>: No STSO</span>`);
+        } else if (stats.STSO > 1) {
+            roleWarnings.push(`<span class="bg-orange-200 px-2 py-1 rounded"><strong>${team.name}</strong>: ${stats.STSO} STSOs</span>`);
+        }
+
+        // Catch side purity mismatches
+        let mismatches = stats.warnings.filter(w => w.startsWith('Wrong side'));
+        sideMismatchCount += mismatches.length;
+        mismatches.forEach(w => {
+            roleWarnings.push(`<span class="bg-red-500 text-white px-2 py-1 rounded shadow-sm"><strong>${team.name}</strong> (Team ${stats.side}): ${w}</span>`);
+        });
+
+        return { team, stats, html: getTeamCardHTML(team, stats) };
+      });
+
+      // Disable export if side mismatches exist
+      DOM.btnExport.disabled = (sideMismatchCount > 0);
+      if (sideMismatchCount > 0) {
+         DOM.btnExport.title = "Fix Side Mismatches to Export";
+      } else {
+         DOM.btnExport.title = "";
+      }
+
+      // Handle Warnings UI
+      if (roleWarnings.length > 0) {
+          DOM.warningsList.innerHTML = `<strong>Role Alerts:</strong> ${roleWarnings.join('')}`;
+          DOM.warningsBar.classList.remove('hidden');
+      } else {
+          DOM.warningsBar.classList.add('hidden');
+      }
+
+      // Populate views
+      teamNodes.forEach(node => {
+          // Render to All Teams view always
+          let allWrapper = document.createElement('div');
+          allWrapper.innerHTML = node.html;
+          DOM.viewAllContainer.appendChild(allWrapper.firstElementChild);
+
+          // Pair View Logic
+          if (node.team.pairedTeamId && !processedPairs.has(node.team.id)) {
+             let partnerNode = teamNodes.find(n => n.team.id === node.team.pairedTeamId);
+             if (partnerNode) {
+                 processedPairs.add(node.team.id);
+                 processedPairs.add(partnerNode.team.id);
+                 
+                 let pairCohesion = calculatePairCohesion(node, partnerNode);
+                 let stso_m = node.stats.STSO_M + partnerNode.stats.STSO_M;
+                 let stso_f = node.stats.STSO_F + partnerNode.stats.STSO_F;
+                 let ltso_m = node.stats.LTSO_M + partnerNode.stats.LTSO_M;
+                 let ltso_f = node.stats.LTSO_F + partnerNode.stats.LTSO_F;
+                 let tso_m  = node.stats.TSO_M + partnerNode.stats.TSO_M;
+                 let tso_f  = node.stats.TSO_F + partnerNode.stats.TSO_F;
+                 let total_size = node.stats.size + partnerNode.stats.size;
+                 let pairColor = pairCohesion >= 75 ? 'text-green-700 bg-green-50' : 'text-orange-700 bg-orange-50';
+
+                 let pairId = `pair-${node.team.id}-${partnerNode.team.id}`;
+                 let isOpen = openPairs.has(pairId);
+
+                 let pairHtml = `
+                    <div class="bg-gray-100 border-2 border-gray-200 rounded-xl overflow-hidden shadow-sm mb-4">
+                        <div class="px-4 py-3 bg-gray-200 border-b border-gray-300 flex flex-wrap justify-between items-center gap-4 cursor-pointer hover:bg-gray-300 transition-colors" onclick="togglePair('${pairId}')">
+                            <div class="flex items-center space-x-3">
+                                <svg id="icon-${pairId}" class="w-5 h-5 text-gray-500 transform transition-transform ${isOpen ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                <h2 class="text-base font-bold text-gray-800">Pairing Summary: <span class="text-blue-600">${node.team.name} & ${partnerNode.team.name}</span></h2>
+                                <span class="px-3 py-1 rounded-full text-sm font-bold ${pairColor}" title="Amalgam Group Cohesion (evaluates both STSOs)">Group Cohesion: ${pairCohesion.toFixed(1)}%</span>
+                            </div>
+                            <div class="flex space-x-3 text-[11px] font-medium text-gray-600 bg-white px-3 py-1.5 rounded-lg shadow-inner">
+                                <span>Size: <b class="text-gray-800">${total_size}</b></span>
+                                <span class="border-l border-gray-300 pl-3 hidden sm:inline">STSO: <b class="text-gray-800">${stso_m+stso_f}</b> (${stso_m}M/${stso_f}F)</span>
+                                <span class="border-l border-gray-300 pl-3 hidden md:inline">LTSO: <b class="text-gray-800">${ltso_m+ltso_f}</b></span>
+                                <span class="border-l border-gray-300 pl-3 hidden md:inline">TSO: <b class="text-gray-800">${tso_m+tso_f}</b></span>
+                            </div>
+                        </div>
+                        <div id="${pairId}" class="p-4 grid grid-cols-1 xl:grid-cols-2 gap-4 ${isOpen ? '' : 'hidden'}">
+                            ${node.html}
+                            ${partnerNode.html}
+                        </div>
+                    </div>
+                 `;
+                 let pairEl = document.createElement('div');
+                 pairEl.innerHTML = pairHtml;
+                 DOM.pairedTeamsList.appendChild(pairEl.firstElementChild);
+             } else {
+                 // Partner not found, fallback
+                 unpairedTeams.push(node);
+             }
+          } else if (!node.team.pairedTeamId) {
+             unpairedTeams.push(node);
+          }
+      });
+
+      // Render Unpaired
+      if (unpairedTeams.length > 0) {
+          DOM.unpairedSection.classList.remove('hidden');
+          unpairedTeams.forEach(node => {
+              let div = document.createElement('div');
+              div.innerHTML = node.html;
+              DOM.unpairedTeamsGrid.appendChild(div.firstElementChild);
+          });
+      } else {
+          DOM.unpairedSection.classList.add('hidden');
+      }
+
+      // Visibility based on state
+      DOM.viewPairContainer.classList.toggle('hidden', currentView !== 'pair');
+      DOM.viewAllContainer.classList.toggle('hidden', currentView !== 'all');
+
+      // Update Global Metrics
+      DOM.metricsBar.querySelector('#valTotalLines').innerText = totalLines;
+      DOM.metricsBar.querySelector('#valTargetSize').innerText = targetSize;
+      
+      let overall = cohesionCount > 0 ? (totalCohesion/cohesionCount).toFixed(1) : 0;
+      DOM.metricsBar.querySelector('#valGlobalCohesion').innerText = `${overall}%`;
+      DOM.metricsBar.querySelector('#valSuccessRate').innerText = `${successCount} / ${numTeams}`;
+
+      DOM.metricsBar.querySelector('#statusAlert').innerText = (overall >= 75 && roleWarnings.length === 0 && sideMismatchCount === 0) ? "Optimal Balance Achieved" : "";
+    }
+
+    function togglePair(id) {
+        let el = document.getElementById(id);
+        let icon = document.getElementById(`icon-${id}`);
+        if (el) {
+            el.classList.toggle('hidden');
+            if (icon) {
+                icon.classList.toggle('rotate-90');
+            }
+            // Save state so it stays open when dragging/re-rendering
+            if (el.classList.contains('hidden')) {
+                openPairs.delete(id);
+            } else {
+                openPairs.add(id);
+            }
+        }
+    }
+
+    function runAutoBalance() {
+      if (!appData) return;
+      DOM.btnAutoBalance.innerText = "Balancing...";
+      DOM.btnAutoBalance.disabled = true;
+
+      setTimeout(() => {
+        const teams = appData.results.teams;
+        let lines = [...appData.results.lines];
+        
+        // 1. Clear assignments
+        teams.forEach(t => { t.members = []; t.pairedTeamId = null; });
+        
+        // 2. Partition lines by side
+        let amLines = lines.filter(l => getSide(l) === 'AM');
+        let pmLines = lines.filter(l => getSide(l) === 'PM');
+        
+        // Calculate proportional teams per side
+        let numAmTeams = Math.round(teams.length * (amLines.length / lines.length));
+        if (amLines.length > 0 && numAmTeams === 0) numAmTeams = 1; // Need at least 1 if lines exist
+        if (pmLines.length > 0 && numAmTeams === teams.length) numAmTeams = teams.length - 1;
+        
+        let amTeams = teams.slice(0, numAmTeams);
+        let pmTeams = teams.slice(numAmTeams);
+
+        function processSide(sideLines, sideTeams, sideName) {
+            if (sideTeams.length === 0) return;
+            
+            let stso = sideLines.filter(l => l.role === 'STSO').sort((a,b)=>a.id - b.id);
+            let ltso = sideLines.filter(l => l.role === 'LTSO');
+            let tso  = sideLines.filter(l => l.role === 'TSO');
+
+            // 3. Place STSOs (aim for 1 per team)
+            let tIndex = 0;
+            stso.forEach(s => {
+                sideTeams[tIndex % sideTeams.length].members.push(s.id);
+                tIndex++;
+            });
+
+            // 4. Spread LTSOs within side
+            ltso.forEach(l => {
+                let sortedTeams = [...sideTeams].sort((a, b) => {
+                    let aLTSO = a.members.filter(m => linesMap[m].role === 'LTSO').length;
+                    let bLTSO = b.members.filter(m => linesMap[m].role === 'LTSO').length;
+                    return aLTSO - bLTSO;
+                });
+                sortedTeams[0].members.push(l.id);
+            });
+
+            // 5. Pair teams by complementary STSO RDOs (minimize overlap)
+            let available = [...sideTeams];
+            while (available.length >= 2) {
+                let t1 = available.shift();
+                let bestT2 = null;
+                let bestScore = -999;
+                let bestIdx = -1;
+                
+                let rdo1 = linesMap[t1.members[0]]?.rdoDays || [];
+                
+                for (let i = 0; i < available.length; i++) {
+                    let rdo2 = linesMap[available[i].members[0]]?.rdoDays || [];
+                    let overlap = rdo1.filter(d => rdo2.includes(d)).length;
+                    let score = overlap === 0 ? 100 : (overlap === 1 ? 50 : -50); 
+                    
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestT2 = available[i];
+                        bestIdx = i;
+                    }
+                }
+                
+                t1.pairedTeamId = bestT2.id;
+                bestT2.pairedTeamId = t1.id;
+                available.splice(bestIdx, 1);
+            }
+
+            // 6. Fill TSOs using soft constraints (ONLY same-side)
+            let targetSize = Math.ceil(sideLines.length / sideTeams.length);
+            let maleRatio = sideLines.filter(l => l.sex === 'M').length / (sideLines.length || 1);
+
+            tso.forEach(line => {
+                let bestTeam = null;
+                let bestScore = -9999;
+                
+                sideTeams.forEach(t => {
+                    t.members.push(line.id);
+                    let stats = calculateTeamStats(t);
+                    
+                    let score = 0;
+                    if (t.pairedTeamId) {
+                        let partnerTeam = sideTeams.find(pt => pt.id === t.pairedTeamId);
+                        if (partnerTeam) {
+                           let n1 = { team: t, stats: stats };
+                           let n2 = { team: partnerTeam, stats: calculateTeamStats(partnerTeam) };
+                           score = calculatePairCohesion(n1, n2); // Optimize for Group Cohesion
+                        } else {
+                           score = stats.cohesion || 0;
+                        }
+                    } else {
+                        score = stats.cohesion || 0;
+                    }
+                    
+                    t.members.pop(); 
+                    
+                    if (stats.size >= targetSize) score -= 150; 
+                    
+                    let newMaleRatio = (stats.M + (line.sex==='M'?1:0)) / (stats.size + 1);
+                    let diff = Math.abs(newMaleRatio - maleRatio);
+                    score -= (diff * 20);
+
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestTeam = t;
+                    }
+                });
+                
+                if (bestTeam) bestTeam.members.push(line.id);
+            });
+        }
+
+        // Execute processing securely locked inside their boundaries
+        processSide(amLines, amTeams, 'AM');
+        processSide(pmLines, pmTeams, 'PM');
+
+        appData.meta = appData.meta || {};
+        appData.meta.toolReport = {
+           ranAt: new Date().toISOString(),
+           teamsProcessed: teams.length,
+           note: "Strict Side-Purity (AM/PM) enforced across assignment and pairings. UI grid updated."
+        };
+
+        render();
+        DOM.btnAutoBalance.innerText = "2. Auto-Balance";
+        DOM.btnAutoBalance.disabled = false;
+      }, 50); 
+    }
+
+    function exportJSON() {
+      if (!appData) return;
+      const jsonString = JSON.stringify(appData, null, 2);
+      const blob = new Blob([jsonString], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `balanced_teams_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+  </script>
+</body>
+</html>
