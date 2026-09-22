@@ -53,6 +53,13 @@ function countBagDuties(lineId) {
   return n;
 }
 
+function shiftStartMin(shiftId) {
+  var sh = api.getShift ? api.getShift(shiftId) : null;
+  if (!sh) return 1e9;
+  if (api.timeToMin && sh.start != null) return api.timeToMin(sh.start);
+  return 1e9;
+}
+
 export function markBag(role, sex, n, fc) {
   if (!n || n <= 0) return { total: 0 };
   fc = fc || ensureFunctionCoverage();
@@ -74,48 +81,130 @@ export function markDfo(role, sex, n, fc) {
   var anchors = computeShiftAnchors();
   var thr = fc.phaseThresholdMin || 15;
   var pool = unused(role, sex, fc).slice();
-  pool.sort(function (a, b) {
-    return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
+  var targets = [];
+  var seen = {};
+  var fromReqs = false;
+  var recs = (fc.requirements && fc.requirements[role]) || {};
+  Object.keys(recs).forEach(function (id) {
+    var req = getShiftRequirement(role, id, fc);
+    if (req.min <= 0 && req.max <= 0) return;
+    if (typeof api.getShift === "function" && !api.getShift(id)) return;
+    var key = String(id);
+    if (seen[key]) return;
+    seen[key] = true;
+    targets.push(key);
+    fromReqs = true;
   });
-  var amSide = pool.filter(function (l) { return isAmSide(lineStartMin(l), anchors, thr); });
-  var pmSide = pool.filter(function (l) { return !isAmSide(lineStartMin(l), anchors, thr); });
-  var oc = openingAndClosingShifts();
-  amSide.sort(function (a, b) {
-    var aOpen = lineOnShift(a, oc.open) ? 0 : 1;
-    var bOpen = lineOnShift(b, oc.open) ? 0 : 1;
-    if (aOpen !== bOpen) return aOpen - bOpen;
-    return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
-  });
-  pmSide.sort(function (a, b) {
-    var aClose = lineOnShift(a, oc.close) ? 0 : 1;
-    var bClose = lineOnShift(b, oc.close) ? 0 : 1;
-    if (aClose !== bClose) return aClose - bClose;
-    return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
-  });
-  var needAm = fc.amPmSplit ? Math.ceil(n / 2) : n;
-  var needPm = fc.amPmSplit ? Math.floor(n / 2) : 0;
-  if (amSide.length < needAm) { needPm += needAm - amSide.length; needAm = amSide.length; }
-  if (pmSide.length < needPm) { needAm = Math.min(amSide.length, needAm + (needPm - pmSide.length)); needPm = pmSide.length; }
-  while (needAm + needPm > n) {
-    if (needPm >= needAm && needPm > 0) needPm--;
-    else if (needAm > 0) needAm--;
-    else break;
+  if (!targets.length) {
+    pool.forEach(function (l) {
+      if (!l || l.shiftId == null || l.shiftId === "") return;
+      var key = String(l.shiftId);
+      if (seen[key]) return;
+      seen[key] = true;
+      targets.push(key);
+    });
   }
-  function take(arr, count) {
-    var taken = 0;
-    for (var i = 0; i < arr.length && taken < count; i++) {
-      var el = ensureEligible(arr[i]);
+  targets.sort(function (a, b) {
+    var d = shiftStartMin(a) - shiftStartMin(b);
+    if (d) return d;
+    return String(a).localeCompare(String(b));
+  });
+
+  var buckets = {};
+  targets.forEach(function (id) { buckets[id] = []; });
+  pool.forEach(function (l) {
+    var key = l.shiftId != null ? String(l.shiftId) : "";
+    if (buckets[key]) buckets[key].push(l);
+  });
+  function sortLines(arr) {
+    arr.sort(function (a, b) {
+      return lineStartMin(a) - lineStartMin(b) || String(a.id).localeCompare(String(b.id));
+    });
+  }
+  targets.forEach(function (id) { sortLines(buckets[id]); });
+
+  var nAlloc = Math.min(n, pool.length);
+  var weights = targets.map(function (id) {
+    if (!fromReqs) return 1;
+    return Math.max(getShiftRequirement(role, id, fc).min, 1);
+  });
+  var sumW = 0;
+  weights.forEach(function (w) { sumW += w; });
+  if (!sumW) sumW = 1;
+
+  var quotas = [];
+  var fracs = [];
+  var assigned = 0;
+  targets.forEach(function (id, i) {
+    var raw = nAlloc * weights[i] / sumW;
+    var q = Math.floor(raw);
+    quotas[i] = q;
+    assigned += q;
+    fracs.push({ i: i, frac: raw - q });
+  });
+  fracs.sort(function (a, b) {
+    if (b.frac !== a.frac) return b.frac - a.frac;
+    return a.i - b.i;
+  });
+  var leftover = nAlloc - assigned;
+  for (var fi = 0; fi < fracs.length && leftover > 0; fi++) {
+    quotas[fracs[fi].i]++;
+    leftover--;
+  }
+
+  leftover = 0;
+  targets.forEach(function (id, i) {
+    var cap = buckets[id].length;
+    if (quotas[i] > cap) {
+      leftover += quotas[i] - cap;
+      quotas[i] = cap;
+    }
+  });
+  while (leftover > 0) {
+    var best = -1;
+    var bestRem = -1;
+    for (var si = 0; si < targets.length; si++) {
+      var rem = buckets[targets[si]].length - quotas[si];
+      if (rem <= 0) continue;
+      if (rem > bestRem) {
+        bestRem = rem;
+        best = si;
+      }
+    }
+    if (best < 0) break;
+    quotas[best]++;
+    leftover--;
+  }
+
+  var tagged = [];
+  targets.forEach(function (id, i) {
+    var arr = buckets[id];
+    var want = quotas[i];
+    for (var j = 0; j < arr.length && tagged.length < n && want > 0; j++) {
+      var el = ensureEligible(arr[j]);
       if (el.bag || el.dfo) continue;
       el.dfo = true;
-      taken++;
+      tagged.push(arr[j]);
+      want--;
     }
-    return taken;
+  });
+  if (tagged.length < n) {
+    var rest = unused(role, sex, fc).slice();
+    sortLines(rest);
+    for (var k = 0; k < rest.length && tagged.length < n; k++) {
+      var el2 = ensureEligible(rest[k]);
+      if (el2.bag || el2.dfo) continue;
+      el2.dfo = true;
+      tagged.push(rest[k]);
+    }
   }
-  var gotAm = take(amSide, needAm);
-  var gotPm = take(pmSide, needPm);
-  var short = n - gotAm - gotPm;
-  if (short > 0) gotPm += take(unused(role, sex, fc), short);
-  return { am: gotAm, pm: gotPm, total: gotAm + gotPm };
+
+  var gotAm = 0, gotPm = 0;
+  tagged.forEach(function (l) {
+    if (isAmSide(lineStartMin(l), anchors, thr)) gotAm++;
+    else gotPm++;
+  });
+  return { am: gotAm, pm: gotPm, total: tagged.length };
 }
 
 function paintAfterAssign() {
