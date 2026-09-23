@@ -5,11 +5,13 @@ import { snapshotFte, applyFte, collectSetupInputs, exportStaffingConfig } from 
 import { attachShiftsTable } from "./shiftsTable.js";
 import { attachExtraPositions } from "../utils/extraPositions.js";
 import { attachGenerate } from "./generate.js";
+import { attachAllocation } from "./allocation.js";
 
 export function bridgeScheduler(S) {
   if (!S) return;
   attachShiftsTable(S);
   attachExtraPositions(S);
+  attachAllocation(S);
   attachGenerate(S);
 
   S.rebuildSetupTab = function () {
