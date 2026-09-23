@@ -80,8 +80,12 @@ window.Scheduler = window.Scheduler || {};
       });
     }
 
-    if (S.$("btn-generate")) S.$("btn-generate").addEventListener("click", S.generate);
-    if (S.$("btn-export")) S.$("btn-export").addEventListener("click", S.exportJson);
+    if (S.$("btn-generate")) S.$("btn-generate").addEventListener("click", function () {
+      if (S.generate) S.generate();
+    });
+    if (S.$("btn-export")) S.$("btn-export").addEventListener("click", function () {
+      if (S.exportJson) S.exportJson();
+    });
     if (S.$("btn-import")) {
       S.$("btn-import").addEventListener("click", function () {
         var fileInput = S.$("file-import");
@@ -94,10 +98,12 @@ window.Scheduler = window.Scheduler || {};
     if (S.$("file-import")) {
       S.$("file-import").addEventListener("change", function (event) {
         var file = event.target.files && event.target.files[0];
-        S.importJsonFile(file);
+        if (S.importJsonFile) S.importJsonFile(file);
       });
     }
-    if (S.$("btn-clear")) S.$("btn-clear").addEventListener("click", S.clearAll);
+    if (S.$("btn-clear")) S.$("btn-clear").addEventListener("click", function () {
+      if (S.clearAll) S.clearAll();
+    });
     if (S.$("btn-clear-certs")) {
       S.$("btn-clear-certs").addEventListener("click", function () {
         if (S.clearLineFunctions) S.clearLineFunctions();
@@ -112,29 +118,18 @@ window.Scheduler = window.Scheduler || {};
         if (S.exportLinesExcel) S.exportLinesExcel();
       });
     }
-    safeInit("airport", S.initAirportConfig);
-    // safeInit("teams", S.initTeams); // Commented out - initialization is handled cleanly by our module on Teams tab switch
     safeInit("shiftDayTimes", S.initShiftDayTimes);
     safeInit("functionCoverage", S.initFunctionCoverage);
     safeInit("reports", S.initReports);
     safeInit("linesUI", function () {
-  // Svelte Lines table is default-on. Override to classic via:
-  //   localStorage.setItem('blade:lines:svelte', '0')
-  //   ?lines=classic
-  // Re-enable with '1' or 'svelte'.
-  var flag = localStorage.getItem('blade:lines:svelte');
-  if (flag === '0' || flag === 'classic') S.__USE_SVELTE_LINES = false;
-  else if (flag === '1' || flag === 'svelte') S.__USE_SVELTE_LINES = true;
-  else if (location.search.indexOf('lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
-  else if (location.search.indexOf('lines=classic') !== -1) S.__USE_SVELTE_LINES = false;
-  else S.__USE_SVELTE_LINES = true; // default-on
-  if (S.__USE_SVELTE_LINES) {
-    console.log('BLADE: Svelte Lines table enabled (default-on)');
-  } else {
-    console.log('BLADE: Classic Lines table active (flag override)');
-  }
-  S.bindLinesUI();
-});
+      var flag = localStorage.getItem('blade:lines:svelte');
+      if (flag === '0' || flag === 'classic') S.__USE_SVELTE_LINES = false;
+      else if (flag === '1' || flag === 'svelte') S.__USE_SVELTE_LINES = true;
+      else if (location.search.indexOf('lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
+      else if (location.search.indexOf('lines=classic') !== -1) S.__USE_SVELTE_LINES = false;
+      else S.__USE_SVELTE_LINES = true;
+      if (S.bindLinesUI) S.bindLinesUI();
+    });
     safeInit("capacity", S.initCapacity);
 
     function onNewTeam(e) {
@@ -154,7 +149,7 @@ window.Scheduler = window.Scheduler || {};
       if (btn) btn.addEventListener("click", onNewTeam);
     });
 
-    S.updateStatus("BLADE Alpha Build — boot 20260904f");
+    S.updateStatus("BLADE Alpha Build — boot 20260923a");
     if (S.renderAll) S.renderAll();
   }
 

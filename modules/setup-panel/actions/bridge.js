@@ -6,13 +6,17 @@ import { attachShiftsTable } from "./shiftsTable.js";
 import { attachExtraPositions } from "../utils/extraPositions.js";
 import { attachGenerate } from "./generate.js";
 import { attachAllocation } from "./allocation.js";
+import { attachShiftMath } from "../utils/shiftMath.js";
+import { attachAirportStub } from "../utils/airportStub.js";
 
 export function bridgeScheduler(S) {
   if (!S) return;
+  attachShiftMath(S);
   attachShiftsTable(S);
   attachExtraPositions(S);
   attachAllocation(S);
   attachGenerate(S);
+  attachAirportStub(S);
 
   S.rebuildSetupTab = function () {
     syncHoursFromAirfield(S);
