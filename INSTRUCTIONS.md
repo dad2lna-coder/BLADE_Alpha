@@ -1,233 +1,134 @@
 # BLADE Alpha — Schedule Builder Instructions
 
 ## Overview
-BLADE Alpha is an offline HTML/JS application designed to generate airport staffing schedules for TSO (Transportation Security Officer), LTSO (Lead TSO), and STSO (Supervisory TSO) positions. This guide walks you through the complete workflow from setup to team assignment and final export.
+BLADE Alpha is a browser staffing scheduler for TSO, LTSO, and STSO bid lines. It runs from this repo (or the GitHub Pages build). Schedule data stays in the page until you Export.
+
+Use a local web server or the live demo. Opening `index.html` as a `file://` page loads the classic scripts, but tab modules (Setup, Coverage, Demand, Teams) need `fetch` and will not mount.
+
+Nav keys shown in the chrome: **[F1] SETUP**, **[F2] COVERAGE**, **[F7] DEMAND**, **[F3] LINES**, **[F4] TEAMS**, **[F5] REPORTS**, **[F6] CAPACITY**.
 
 ---
 
 ## Step 1: Setup Tab
 
-### 1.1 Configure Operating Hours
-- Open the **Setup Tab**
-- Set your facility's **open time** and **close time**
-- These times define your operational window for the schedule
+### 1.1 Schedule period
+- Set **Schedule start** and **Weeks** (1–8). Default is **1 week** (7 days).
+- Operating open/close default to **03:30–23:00**. Those fields are hidden on Setup; change airport hours in **[CFG] AIRFIELD**.
 
-### 1.2 Select Start Date
-- Choose your **start date** for schedule generation
-- Default schedule generation period is **7 days**
-- You can modify this for longer scheduling periods as needed
+### 1.2 Staffing (FTE)
+Open the **FTE** fold and set headcount by sex:
+- **FT TSO** / **PT TSO** — operational officers
+- **LTSO** / **STSO** — lead and supervisory pools
+- Optional **+ Add position** for extra non-TSO jobs
+- **Save staffing** writes FTE + function-coverage pools only. It does **not** build lines.
 
-### 1.3 Set Staffing Levels by Position and Sex
-Configure the following positions by sex:
-- **TSO** (Transportation Security Officer)
-- **LTSO** (Lead TSO)
-- **STSO** (Supervisory TSO)
+### 1.3 Function coverage
+Open the **Function coverage** fold.
+- **BAG pool** and **DFO pool** both run. Each is Male/Female × STSO/LTSO/TSO, carved from FTE.
+- Leftover operational lines become **PAX**.
+- BAG-pool lines stay BAG on every WORK day.
+- DFO-pool lines mix DFO identity with PAX; shift min/max can place BAG duties on some DFO work days.
+- Min/max on the bands table are **counts of generated lines per role and shift**, not 30-minute headcount.
+- Optional: phase threshold, 50/50 AM–PM split, shortfall bias, **+ Add shift** rows.
 
-Each position should have staffing requirements specified by sex to ensure proper coverage across your facility.
+There is no separate “Generate Function Assignments” control. **[GEN] GENERATE** builds lines and then assigns functions in the same pass.
 
-### 1.4 Add Shift Times
-- Define your **shift times** (e.g., 0600-1400, 1400-2200, etc.)
-- **Alpha Build Note:** This is a required feature in the alpha version
-- **Beta Note:** Optional schedule creation features will be added in the beta version
+### 1.4 Shifts
+- **+ Add shift** and set name, start, end, paid hours, TSO / LTSO / STSO force, hard RDOs (Sun–Sat), and per-day time overrides.
 
-### 1.5 Generate Initial Schedule
-- Click the **Generate** button
-- The system will create the base schedule based on your parameters
-
----
-
-## Step 2: Function Coverage Configuration
-
-After the initial schedule is generated:
-
-### 2.1 Assign Function Coverage
-Select coverage requirements for each function:
-- **Pax** (Passenger)
-- **Bag** (Baggage)
-- **DFO** (Dual Function Officer)
-
-**Note:** Bag and DFO are interchangeable in your staffing model.
-
-### 2.2 Set Pool Size
-- Define the **pool size** for each function
-- This determines how many personnel are allocated to that function
-
-### 2.3 Configure Shift Requirements
-- Add existing shifts and set **min/max number of generated lines** per role
-- Min/max are shift counts, not instantaneous headcount
-- Start/end times come from the shift definition
-- 30-minute coverage on the Coverage tab is derived after assignment
+### 1.5 Generate
+- Click **[GEN] GENERATE** in the top bar.
+- Review any notes under the Setup issues list, then open Coverage and Lines.
 
 ---
 
-## Step 3: Generate Function Assignments
+## Step 2: Coverage Tab
 
-### 3.1 Generate Assignments
-- Click the **Generate Function Assignments** button at the bottom of the modal
-- The system will distribute staff across functions based on your configuration
-
-### 3.2 Review Coverage
-After generation, you can:
-- **View coverage metrics** to verify your staffing levels meet requirements
-- Ensure each function has adequate coverage across all shifts
+- 30-minute matrix by day of week (Sun–Sat).
+- Filters: STSO / LTSO / TSO and All / DFO / Baggage / PAX.
+- **Coverage cuts** drop a percent of matching lines on selected weekdays (whole shift; no mid-day split). Generate again after adding cuts.
+- Typical-day bars and a shift-mix table.
 
 ---
 
-## Step 4: Teams Tab - Building Your Teams
+## Step 3: Demand Tab
 
-### 4.1 Set Maximum Staffing Per Position
-- Navigate to the **Teams Tab**
-- Set the **max count** for each position:
-  - **STSO** (Supervisory TSO)
-  - **LTSO** (Lead TSO)
-  - **TSO** (Transportation Security Officer)
+Optional passenger-volume check. Does not rewrite lines.
 
-### 4.2 Auto-Form Teams
-- Click the **Auto Form Teams** button
-- The system will automatically create teams that:
-  - Match RDO (Regular Day Off) patterns across staff
-  - Leave unmatched personnel in a **pick list** for manual assignment
+1. Import a flight-list `.xlsx` with columns **DAY_OF_WEEK**, **ETD**, **CAPACITY**, **PERCENT_ORIGINATING**.
+2. Generate lines first.
+3. Click **Refresh**.
 
-### 4.3 Work with the Pick List
-The pick list contains staff that don't fit standard RDO patterns:
-- **Drag and drop** personnel to assign them to teams
-- **Checkbox and dropdown** options available for assignment
-- Assign remaining staff as needed to balance your teams
+Volume is spread from ETD − 120 through ETD − 30. Capacity is qualifying **PAX** people on the slot × 18 pax / 30 min (TSOs; optionally LTSOs). BAG, DFO, and STSO do not count.
 
 ---
 
-## Step 5: Team Builder Modal
+## Step 4: Teams Tab
 
-### 5.1 Open the Build Modal
-- Click the **Build** button in the Teams Tab
-
-### 5.2 Add Teams to the Builder
-- Click a **team from the assignment modal** to add it to the Team Builder Modal
-- You can add **more than one team at a time** for batch operations
-
-### 5.3 Filter and Organize Unassigned Staff
-- Use the **filter options** to narrow down unassigned personnel
-- **Drag and drop** staff between teams for flexible assignment
-- Review and reorganize as needed
-
-### 5.4 Remove Teams from Builder
-- To remove a team from the builder, **click the team in the assignment modal** to close it
-- **Known Limitation (Fix Coming Soon):** You must remove all teams from the builder modal before editing a different set of teams
-
-### 5.5 Edit Teams
-- Click the **Edit button** in the Teams Container to modify team composition
-- All changes update in **real time**
-- Adjust team members and positions as needed
+1. Set architecture counts: STSO / LTSO / TSO per team (defaults 1 / 1 / 6).
+2. Click **Auto-form teams**. Matching RDO patterns are grouped; leftovers stay in **Unassigned pool**.
+3. Expand the pool (collapsed by default) and drag cards onto AM/PM team boards.
+4. Boards are compact until expanded. **+ New team** and **Build** are for extra teams and the follow-me / build docks.
 
 ---
 
-## Step 6: Lines Tab - Schedule Export
+## Step 5: Lines Tab
 
-### 6.1 View Staff Lines (Published Schedules)
-- Navigate to the **Lines Tab**
-- View detailed information for each staff member:
-  - **RDO (Regular Days Off)** patterns
-  - **Schedules** for assigned workdays
-  - **Baggage days** - any days scheduled in baggage screening
+- Virtualized table (Svelte by default) of each bid line: role, shift, team, RDOs, duties.
+- Filters: role, shift, sex, team.
+- Click cells to tweak when the table is in edit mode.
+- **Export Excel (.xlsx)** downloads the published lines.
 
-### 6.2 Export to Excel
-- Click the **Export to Excel** button
-- Your complete schedule exports with all assignments and RDO patterns
-- **Future Enhancement:** Final formats will include SMART Schedule Upload generation capabilities
+To force the older DOM table: `?lines=classic` or `localStorage.setItem('blade:lines:svelte','0')`.
 
 ---
 
-## Step 7: Lines Tab Details
+## Step 6: Reports and Capacity
 
-### 7.1 Understanding Your Lines
-Each line displays:
-- **Employee identifier**
-- **RDO pattern** (days off per week/schedule period)
-- **Work schedule** across the planning period
-- **Functional assignments** (Pax, Bag, DFO) Cells will be color coded for BAG or DFO
-- **Shift times** for each scheduled day
-
-### 7.2 Verify Before Export
-Before exporting:
-- Review all personnel schedules for accuracy
-- Confirm RDO patterns are honored
-- Check that function coverage meets requirements
-- Verify no scheduling conflicts exist
+- **Reports** — passenger / baggage-DFO / total / DFO-pool views, gender mix, team cohesion.
+- **Capacity** — checkpoint lane math from Airfield config (TSO per program, lanes, supervisor seats). Open **[CFG] AIRFIELD** first.
 
 ---
 
-## Complete Workflow Summary
+## Import / Export
+
+- **[EXP] EXPORT** / **[IMP] IMPORT** — full config + lines as JSON.
+- Lines tab **Export Excel** — spreadsheet only.
+- **[CLR] CLEAR** wipes the current session.
+
+On the Windows/Tauri work install, files go under the shared Schedule Builder folder. See **TEAM-SETUP.md**. GitHub Pages is the web preview, not the official work copy.
+
+---
+
+## Complete workflow
 
 ```
-Setup Tab
-  ↓
-1. Set operating hours (open/close times)
-2. Select start date (default 7 days, adjustable)
-3. Configure TSO/LTSO/STSO staffing by sex
-4. Add shift times
-5. Click Generate
-  ↓
-Function Coverage Configuration
-  ↓
-6. Assign function coverage (Pax/Bag/DFO)
-7. Set pool size
-8. Configure min/max generated lines per shift and role
-9. Click "Generate Function Assignments"
-  ↓
-Teams Tab - Team Formation
-  ↓
-10. Set max count for STSO/LTSO/TSO
-11. Click "Auto Form Teams"
-12. Assign remaining staff from pick list
-  ↓
-Team Builder Modal (Optional - For Fine-Tuning)
-  ↓
-13. Click "Build" to open Team Builder
-14. Add teams from assignment modal
-15. Filter and drag/drop to customize teams
-16. Edit team composition as needed
-  ↓
-Lines Tab - Final Review & Export
-  ↓
-17. Review all staff lines (RDOs, schedules, baggage days)
-18. Verify schedule accuracy and coverage
-19. Click "Export to Excel"
-  ↓
-Schedule Complete
+Setup
+  1. Start date + weeks
+  2. FTE by role and sex
+  3. BAG + DFO pools and shift min/max
+  4. Shifts and forces
+  5. [GEN] GENERATE  (lines + function duties)
+       ↓
+Coverage — heatmap, cuts, shift mix
+Demand — optional volume xlsx vs PAX capacity
+Teams — architecture, Auto-form, drag from Unassigned pool
+Lines — review, edit, Export Excel
+Reports / Capacity — management views
+Export JSON if you need to reload later
 ```
 
 ---
 
-## Tips & Tricks
+## Tips
 
-### Workflow Optimization
-- **Default Parameters:** The system provides sensible defaults; modify them to match your facility's specific needs
-- **Schedule Length:** While the default is 7 days, you can extend this for longer operational planning
-- **Interchangeable Functions:** Bag and DFO roles can be used interchangeably based on your staffing strategy
-- **Batch Team Building:** Add multiple teams to the builder at once to make adjustments across several teams simultaneously
-
-### Troubleshooting
-- **Real-time Updates:** All changes are reflected immediately - watch for coverage or conflict indicators
-- **Teams in Builder:** Remember to remove all teams from the builder before moving to a new set of edits
-- **Export Format:** Excel export includes all schedule details needed for roster publication
-
-### Best Practices
-1. Always review coverage metrics after initial generation
-2. Use Auto Form Teams as your starting point for consistency
-3. Fine-tune pick list assignments individually
-4. Review the Lines Tab before export to catch any issues
-5. Verify RDO patterns are honored for staff work-life balance
-
----
-
-## Known Limitations & Future Enhancements
-
-- **Builder Modal Cleanup:** Currently, you must remove all teams from the builder modal before working with a different team set. This will be improved in a future release.
-- **Excel Export:** Future versions will include smart upload capabilities for direct integration with scheduling systems.
-- **Alpha to Beta:** Optional schedule creation features are planned for the beta release.
+- Generate after changing FTE, shifts, pools, or coverage cuts.
+- BAG and DFO pools are carved from the same FTE; leftover ops lines are PAX.
+- Unassigned pool cards are not built until you expand that section.
+- Compact team boards do not paint member cards until expanded; that is intentional.
 
 ---
 
 ## Support
 
-For additional questions or issues, please refer to the repository's issue tracker or submit a GitHub issue.
+GitHub issues: https://github.com/dad2lna-coder/BLADE_Alpha/issues
