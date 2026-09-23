@@ -1,10 +1,11 @@
-/** Bid-lines Excel export — original cell formatting restored. */
+/** Bid-lines Excel export. Duty colors come from S.state.exportStyle. */
+import { getExportStyle, hexToArgb } from "./exportStyle.js";
+
 function loadExcel(cb) {
   if (typeof ExcelJS !== "undefined") { cb(); return; }
   var s = document.createElement("script");
   s.src = "lib/exceljs.min.js";
   s.onload = cb;
-  s.onerror = function () {};
   document.head.appendChild(s);
 }
 
@@ -141,6 +142,12 @@ function generateAndDownloadXlsx(S) {
   }
   if (S.collectTeamPool) S.collectTeamPool();
   lines = sortLinesForExcel(S, lines);
+  var style = getExportStyle(S);
+  var headerFill = hexToArgb(style.header) || "FF1F4E79";
+  var rdoFill = hexToArgb(style.rdo) || "FF000000";
+  var bagFill = hexToArgb(style.bag) || "FFF4B4B4";
+  var dfoFill = hexToArgb(style.dfo) || "FFFFF3A8";
+  var paxFill = hexToArgb(style.pax);
   var msMap = modSetColorMap(S);
   var tmMap = teamColorMap(S, lines);
   var days = 7;
@@ -165,11 +172,12 @@ function generateAndDownloadXlsx(S) {
       var duty = isWork ? dayDutyForExport(S, line, i) : null;
       var isBag = isWork && (duty === "BAG" || duty === "BAGS");
       var isDfo = isWork && duty === "DFO";
+      var isPax = isWork && duty === "PAX";
       if (isWork) hours += line.paid || 0;
       dayValues.push(isWork ? workText : "RDO");
       var msId = lineModSetId(S, line);
-      var modFill = (isWork && !isBag && msId != null && msMap[String(msId)]) ? msMap[String(msId)].argb : null;
-      dayFlags.push({ isRdo: !isWork, isBag: isBag, isDfo: isDfo, modFill: modFill });
+      var modFill = (isWork && !isBag && !isDfo && !isPax && msId != null && msMap[String(msId)]) ? msMap[String(msId)].argb : null;
+      dayFlags.push({ isRdo: !isWork, isBag: isBag, isDfo: isDfo, isPax: isPax, modFill: modFill });
     }
     tableRows.push([
       teamName, line.lineCode || "", line.shiftName || (sh && sh.name) || "",
@@ -181,8 +189,7 @@ function generateAndDownloadXlsx(S) {
   sheet.addRow(headers);
   tableRows.forEach(function (r) { sheet.addRow(r); });
   var lastCol = headers.length, lastRow = tableRows.length + 1;
-  var headerFill = "FF1F4E79", zebraLight = "FFFFFFFF", zebraGrey = "FFEDEDED";
-  var rdoFill = "FF000000", bagFill = "FFF4B4B4", dfoFill = "FFFFF3A8";
+  var zebraLight = "FFFFFFFF", zebraGrey = "FFEDEDED";
   var headerRow = sheet.getRow(1);
   headerRow.height = 22;
   for (var c = 1; c <= lastCol; c++) {
@@ -200,14 +207,21 @@ function generateAndDownloadXlsx(S) {
       var cell = row.getCell(col);
       var dayOffset = col - (metaHeaders.length + 1);
       var isDayCol = dayOffset >= 0 && dayOffset < days;
-      if (isDayCol && flags[dayOffset] && flags[dayOffset].isRdo) {
+      var f = isDayCol ? flags[dayOffset] : null;
+      if (f && f.isRdo) {
         applyBaseCell(cell, rdoFill, "FFFFFFFF");
         cell.font.bold = true;
-      } else if (isDayCol && flags[dayOffset] && flags[dayOffset].isBag) {
+      } else if (f && f.isBag) {
         applyBaseCell(cell, bagFill, "FF000000");
         cell.font.bold = true;
-      } else if (isDayCol && flags[dayOffset] && !flags[dayOffset].isRdo) {
-        applyBaseCell(cell, flags[dayOffset].modFill || (flags[dayOffset].isDfo ? dfoFill : stripe), "FF000000");
+      } else if (f && f.isDfo) {
+        applyBaseCell(cell, dfoFill, "FF000000");
+        cell.font.bold = true;
+      } else if (f && f.isPax && paxFill) {
+        applyBaseCell(cell, paxFill, "FF000000");
+        cell.font.bold = true;
+      } else if (f && !f.isRdo) {
+        applyBaseCell(cell, f.modFill || stripe, "FF000000");
         cell.font.bold = true;
       } else if (col === 1 && meta.teamFill) {
         applyBaseCell(cell, meta.teamFill, "FF000000");
