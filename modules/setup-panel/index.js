@@ -1,7 +1,4 @@
-/** Setup Panel — thin orchestrator.
- * Bridges the legacy window.Scheduler setup helpers so the panel can be
- * loaded as a module (like team-builder) instead of a global script.
- */
+/** Setup Panel — owns Setup-tab inputs, shifts table, extra positions, staffing export. */
 import { ensureStyles } from "./utils/sync.js";
 import { bridgeScheduler } from "./actions/bridge.js";
 import { renderAll, bindSetupActions } from "./actions/render.js";
@@ -27,9 +24,8 @@ export function initSetupPanel(scheduler) {
   });
 
   bindSetupActions(S);
+  if (S.initShiftDayTimes) S.initShiftDayTimes();
 
-  // Classic initFunctionCoverage may have run before panel.html existed.
-  // Re-run once if add-band was not bound; otherwise just refresh the form.
   if (typeof S.initFunctionCoverage === "function") {
     var addBtn = document.getElementById("fc-add-band");
     if (!S._funcCoverageBound || (addBtn && !addBtn._fcBound)) {

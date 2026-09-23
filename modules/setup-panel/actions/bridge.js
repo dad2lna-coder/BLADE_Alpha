@@ -2,31 +2,19 @@
 import { syncHoursFromAirfield } from "../utils/sync.js";
 import { paintFunctionCoverage } from "./paint.js";
 import { snapshotFte, applyFte, collectSetupInputs, exportStaffingConfig } from "../utils/fte.js";
+import { attachShiftsTable } from "./shiftsTable.js";
+import { attachExtraPositions } from "../utils/extraPositions.js";
 
 export function bridgeScheduler(S) {
   if (!S) return;
+  attachShiftsTable(S);
+  attachExtraPositions(S);
+
   S.rebuildSetupTab = function () {
     syncHoursFromAirfield(S);
     paintFunctionCoverage(S);
     if (S.renderShiftsTable) S.renderShiftsTable();
     if (S.renderExtraPositions) S.renderExtraPositions();
-  };
-  S.addShift = function () {
-    if (!S.readShiftsFromDom || !S.state || !S.state.shifts || !S.renderShiftsTable) return;
-    S.readShiftsFromDom();
-    var id = "S" + S.shiftSeq++;
-    S.state.shifts.push({
-      id: id,
-      name: "Shift",
-      start: "08:00",
-      end: "16:30",
-      paid: 8,
-      force: 0,
-      ltsoForce: 0,
-      stsoForce: 0,
-      rdoHard: []
-    });
-    S.renderShiftsTable();
   };
   S.snapshotFte = function () { return snapshotFte(S); };
   S.applyFte = function (fte) { applyFte(S, fte); };
