@@ -1,8 +1,10 @@
 # BLADE Alpha — Architecture & Dependency Map
 
-This document details the boot flow, component dependencies, DOM contracts, and module system lifecycle of the **BLADE Alpha** workforce allocation platform.
+This document details the boot flow, component dependencies, DOM contracts, and module system lifecycle of **BLADE Alpha** on **bright-garden**.
 
 Classic scripts load first (`js/render.js`, allocation, schedule, io, …), then `index.html` fetches `modules/manifest.json` and mounts each module panel + `init*(Scheduler)`.
+
+Verified against tree SHA `805a40af` (2026-09-23).
 
 ---
 
@@ -15,8 +17,8 @@ Boot: classic scripts keep `coverageSlots` / `computeHourlyByDow` / `S.coverageV
 | `modules/coverage/index.js` | render + bind + cuts | `initCoverage(S)` | Assigns `S.renderCoverageBars`, `S.renderShiftSummary`, `S.applyCoverageCutsToLines` |
 | `modules/coverage/panel.html` | host `#tab-coverage` | matrix / filters / bars / shift mix / cuts card | Same IDs as classic |
 | `modules/coverage/actions/render.js` | `S.computeHourlyByDow`, `S.slotLabel` | matrix + bars + shift mix | Sole Coverage UI paint; classic `js/render.js` body/handlers removed |
-| `modules/coverage/actions/bind.js` | `S.coverageView` | STSO/LTSO/TSO + bag/pax filters | Removed from `bindLinesUI` |
-| `modules/coverage/components/cuts.js` | generate / renderShifts wrap | cuts list + extra RDOs | `js/coverage-cuts.js` is a stub and is not loaded |
+| `modules/coverage/actions/bind.js` | `S.coverageView` | STSO/LTSO/TSO + bag/pax/dfo filters | Removed from `bindLinesUI` |
+| `modules/coverage/components/cuts.js` | generate / renderShifts wrap | cuts list + extra RDOs | `js/coverage-cuts.js` is an unused stub and is **not** in `index.html` |
 
 `js/render.js` keeps `coverageSlots` / `computeHourlyByDow` only (stub `renderCoverageBars` until `attachRender`). Filter handlers live only in `actions/bind.js`. `switchTab("coverage")`, Generate, and Lines edits still *call* `S.renderCoverageBars`. Tauri `scripts/copy-frontend.js` copies `modules/`.
 
@@ -38,13 +40,12 @@ Capacity series is qualifying PAX people covering each slot × 18 (36 pax/hour).
 
 ### Module: `lines-table` (Svelte island in Lines tab)
 
-
 | File | Depends On | Provides | Notes |
 |------|-----------|----------|-------|
 | `modules/lines-table/index.js` | `LinesTable.svelte` (bundled by Vite) | `initLinesTable()` | Bootloader imports `modules/lines-table/dist/lines-table.js` |
 | `modules/lines-table/LinesTable.svelte` | row-model keys; `teamOptions`/`shiftOptions` | Virtualized editable table | Binds row-model keys; edits via `onInlineEdit`/`onDayToggle` into index writers |
 
-Edits dispatch `lines:request-render`. Team Builder uses that event when `S.__USE_SVELTE_LINES` is set.
+Edits dispatch `lines:request-render`. Team Builder uses that event when `S.__USE_SVELTE_LINES` is set. Default-on in `js/main.js`; override with `?lines=classic` or `localStorage blade:lines:svelte=0`.
 
 ### Module: `team-builder`
 
@@ -54,34 +55,40 @@ Unassigned pool (`#team-pool-section` / `UnassignedPool.js`) is collapsed-by-def
 
 Team boards are compact-by-default (`TeamBoard.js`): header/counts only; LineCards and Sortable paint when that team is expanded and are destroyed/cleared on collapse. `syncTeamsFromDom` only reads painted lists so compact boards do not wipe Auto-form membership.
 
+`js/team-core.js` still exists in the tree but is **not** loaded (`index.html` comments it out). There is no `js/team-build.js` and no `css/team-build.css`. Styles live in `modules/team-builder/styles/team-builder.css`.
+
 ### Module: `setup-panel`
 
 Thin bridge over classic setup helpers. Panel markup lives in `modules/setup-panel/panel.html`, mounted on `#tab-setup`.
 
-Function coverage mode is still exclusive at runtime (`#fc-mode-dfo` / `#fc-mode-bag` / neither), stored as `S.state.functionCoverage.mode` = `"none"` | `"dfo"` | `"bag"`. **`modules/function-coverage/` is the SoT for FC.** Classic `js/functions.js` was deleted in E7; runtime relies on the module bridge only.
+**Function coverage UI:** BAG and DFO pools are both present (Male/Female × STSO/LTSO/TSO). Copy on the panel: pools run together; leftover ops lines are PAX. `S.state.functionCoverage.mode` may still be `"none"` | `"dfo"` | `"bag"` from older saves; runtime assignment is `modules/function-coverage/lib/assign.js`.
 
-**One-shot Generate:** `S.generate` builds lines + schedules, then if mode ≠ none calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. Function duties only via main Schedule Generate — no separate coverage generate control.
-
-DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on every WORK day (no PAX). Bands apply to DFO minimums and are hidden in BAG mode. Six `#fc-pool-*-m/f` inputs feed DFO or BAG pools for the active mode.
+**One-shot Generate:** `S.generate` (`js/schedule.js`) builds lines + schedules, then calls `S.generateFunctionAssignments({ fromGenerate: true })` in the same pass. There is no separate “Generate Function Assignments” button on Setup.
 
 ---
 
-## Project File Inventory (verified 2026-09-15)
+## Project File Inventory (verified 2026-09-23)
 
 ### Boot sequence
 
-1. `index.html` loads `lib/*.min.js`, then `js/constants.js` → `js/state.js` → `js/utils.js` → `js/shifts.js` → `js/allocation.js` → `js/lines-row-model.js` → `js/render.js` → `js/line-colors.js` → `js/reports.js` → `js/schedule.js` → `js/io.js` → `js/airport.js` → `js/capacity.js` → `js/modset-board.js` → `js/export-board.js` → `js/instructions.js` → `js/main.js` → `js/console-chrome.js` → `js/airfield-boot.js` → `js/intro.js`. (E7: `js/functions.js` removed from classic chain; FC now bootstrapped via `modules/function-coverage/` in the module loader.)
-2. After `window.Scheduler` is ready, `index.html`'s inline `<script type="module">` fetches `modules/manifest.json` and loads each module entry (panel HTML, CSS, init).
+1. `index.html` loads `lib/*.min.js`, then `js/constants.js` → `js/state.js` → `js/utils.js` → `js/shifts.js` → `js/allocation.js` → `js/lines-row-model.js` → `js/render.js` → `js/line-colors.js` → `js/reports.js` → `js/schedule.js` → `js/io.js` → `js/airport.js` → `js/capacity.js` → `js/modset-board.js` → `js/export-board.js` → `js/instructions.js` → `js/main.js` → `js/console-chrome.js` → `js/airfield-boot.js` → `js/intro.js`.
+2. `js/functions.js` is gone. FC bootstraps via `modules/function-coverage/` in the module loader. `js/coverage-cuts.js`, `js/team-core.js`, `js/ops-meta.js`, and `js/rotation-join.js` exist on disk and are **not** in the `index.html` script list.
+3. After `window.Scheduler` is ready, `index.html`'s inline `<script type="module">` fetches `modules/manifest.json` and loads each module entry (panel HTML, CSS, init).
 
 ### Top-level files
 
 | File | Role |
 |------|------|
 | `index.html` | Single-page shell; mount points for all tabs |
+| `INSTRUCTIONS.md` | User guide; keep in sync with `js/instructions.js` |
+| `TEAM-SETUP.md` | Windows installer + OneDrive work paths |
 | `vite.lines-table.config.mjs` | Vite build for Svelte lines-table island |
-| `package.json` / `package-lock.json` | npm deps + scripts (`build:lines-table`, `copy-frontend`) |
+| `vite.function-coverage.config.mjs` | Optional Vite bundle for FC |
+| `package.json` / `package-lock.json` | npm deps + scripts (`build:lines-table`, `copy-frontend`, tests) |
 | `scripts/copy-frontend.js` | Copies web assets to `dist-frontend/` |
 | `test-task1.js` | Node verification of `getLineRowModels` / row-model APIs |
+| `test-function-coverage.mjs` | FC assignment tests |
+| `test-demand-capacity.mjs` | Demand parser / staffing tests |
 
 ### `js/` — Classic scripts (IIFE onto `window.Scheduler`)
 
@@ -91,28 +98,29 @@ DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on
 | `state.js` | Central state object |
 | `utils.js` | Time / number / DOM helpers |
 | `shifts.js` | Shift CRUD & validation |
-| `allocation.js` | Schedule generation algorithm |
-| `functions.js` | **Removed in E7** — FC logic moved to `modules/function-coverage/` |
+| `allocation.js` | Headcount allocation + line builders |
+| `functions.js` | **Removed** — FC logic is `modules/function-coverage/` |
 | `lines-row-model.js` | Row-model mapper (`lineToRowModel`, `getRowModels`, `getLineRowModels`) |
 | `render.js` | DOM rendering + UI updates + `renderLines`, `renderAll` |
 | `line-colors.js` | Line color painting (RDO/BAG/DFO) |
 | `reports.js` | Dashboard reports |
-| `schedule.js` | Schedule state & queries |
+| `schedule.js` | `S.generate` + WORK/RDO calendars |
 | `io.js` | Import/Export JSON & Excel |
 | `airport.js` | Airport config modal |
-| `capacity.js` | Checkpoint capacity |
+| `capacity.js` | Checkpoint capacity tab |
 | `modset-board.js` | Module set board |
 | `export-board.js` | Export board |
-| `instructions.js` | In-app instructions loader |
-| `main.js` | App init, feature-flag parsing |
+| `instructions.js` | Embedded INSTRUCTIONS.md for Help modal |
+| `main.js` | App init, Svelte-lines flag, button wiring |
 | `console-chrome.js` | Console chrome UI |
-| `airfield-boot.js` | Airfield boot |
+| `airfield-boot.js` | Airfield boot / intro airport code |
 | `intro.js` | Intro screen |
-| `coverage-cuts.js` | Coverage cuts (kept for backward compat; module owns the real logic) |
-| `team-core.js` | Removed — handled by `modules/team-builder/` |
-| `team-build.js` | Removed — handled by `modules/team-builder/` |
+| `coverage-cuts.js` | Unused stub; module owns cuts |
+| `team-core.js` | Present, not loaded — `modules/team-builder/` owns Teams |
+| `ops-meta.js` | Present, not loaded |
+| `rotation-join.js` | Present, not loaded (`css/rotation-join.css` also unused by `index.html`) |
 
-### `modules/` — ES module islands
+### `modules/` — ES module islands (`modules/manifest.json`)
 
 | Module | Entry | Init |
 |--------|-------|------|
@@ -121,17 +129,21 @@ DFO: pooled lines mix DFO and PAX across WORK days. BAG: pooled lines are BAG on
 | `lines-table` | `modules/lines-table/dist/lines-table.js` | `initLinesTable` |
 | `team-builder` | `modules/team-builder/index.js` | `initTeamBuilder` |
 | `setup-panel` | `modules/setup-panel/index.js` | `initSetupPanel` |
-| `function-coverage` | `modules/function-coverage/dist/function-coverage.js` | `initFunctionCoverage` |
+| `function-coverage` | `modules/function-coverage/index.js` | `initFunctionCoverage` |
+
+`modules/function-coverage/dist/function-coverage.js` exists as a built artifact; Pages and `index.html` load the ESM `index.js` entry from the manifest.
 
 ### `lib/` — Bundled vendors
 
 `dayjs.min.js`, `Sortable.min.js`, `luxon.min.js`, `exceljs.min.js`
 
-### `css/`
+### `css/` loaded by `index.html`
 
-`styles.css`, `team-build.css`, `line-print.css`, `rotation-join.css`, `console.css`, `intro.css`
+`styles.css`, `line-print.css`, `intro.css`, `console.css`
 
-### Build artifacts
+Not linked from the shell: `rotation-join.css`. Team styles load from the team-builder module CSS.
 
-- `dist/` — empty (no longer used by Tauri pipeline on this branch)
-- `dist-frontend/` — copied web assets (index.html, INSTRUCTIONS.md, css/, js/, lib/, modules/)
+### Pages / Tauri copy sets
+
+- GitHub Pages (`.github/workflows/pages.yml`): `index.html`, `css/`, `js/`, `lib/`, `modules/`, `airport/`
+- `dist-frontend/` via `scripts/copy-frontend.js`: web assets for the desktop wrapper (`dist/` is unused on this branch)
