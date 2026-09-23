@@ -1,9 +1,11 @@
 import { parseStartDate, addDays, weekdaySun0 } from "../utils/dates.js";
 import { dayLabel } from "../utils/dayLabel.js";
 import { attachExcelExport } from "./excel.js";
+import { attachExportStyle } from "./exportStyle.js";
 
 export function attachLineHelpers(S) {
   if (!S) return;
+  attachExportStyle(S);
   attachExcelExport(S);
   S.dayLabel = function (offset) { return dayLabel(S, offset); };
   S.linesView = S.linesView || {
@@ -143,6 +145,7 @@ export function attachLineHelpers(S) {
   S.bindLinesUI = function () {
     if (S._linesUIBound) return;
     S._linesUIBound = true;
+    attachExportStyle(S);
     document.addEventListener("change", function (e) {
       var t = e.target;
       if (!t) return;
