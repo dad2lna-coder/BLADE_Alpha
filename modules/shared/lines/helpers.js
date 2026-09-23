@@ -1,8 +1,10 @@
 import { parseStartDate, addDays, weekdaySun0 } from "../utils/dates.js";
 import { dayLabel } from "../utils/dayLabel.js";
+import { attachExcelExport } from "./excel.js";
 
 export function attachLineHelpers(S) {
   if (!S) return;
+  attachExcelExport(S);
   S.dayLabel = function (offset) { return dayLabel(S, offset); };
   S.linesView = S.linesView || {
     groupBy: "team", sortBy: "role", sortDir: "asc",
