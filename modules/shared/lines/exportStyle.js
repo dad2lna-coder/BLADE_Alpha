@@ -28,31 +28,40 @@ export function getExportStyle(S) {
   };
 }
 
+function ensureToolbar() {
+  var bar = document.getElementById("lines-toolbar");
+  if (!bar || document.getElementById("export-style-row")) return;
+  var wrap = document.createElement("span");
+  wrap.id = "export-style-row";
+  wrap.style.marginLeft = "0.75rem";
+  wrap.innerHTML =
+    '<label class="muted">Export colors</label> ' +
+    'RDO <input type="color" id="export-color-rdo" /> ' +
+    'BAG <input type="color" id="export-color-bag" /> ' +
+    'DFO <input type="color" id="export-color-dfo" /> ' +
+    'PAX <input type="color" id="export-color-pax" /> ' +
+    'Hdr <input type="color" id="export-color-header" />';
+  bar.appendChild(wrap);
+}
+
 export function attachExportStyle(S) {
   if (!S) return;
   if (!S.state) S.state = {};
   if (!S.state.exportStyle) S.state.exportStyle = defaultExportStyle();
   S.getExportStyle = function () { return getExportStyle(S); };
-
-  function paint() {
-    var st = getExportStyle(S);
-    ["rdo", "bag", "dfo", "pax", "header"].forEach(function (key) {
-      var el = document.getElementById("export-color-" + key);
-      if (el) el.value = st[key] || "#ffffff";
-    });
-  }
-
-  if (S._exportStyleBound) {
-    paint();
-    return;
-  }
+  ensureToolbar();
+  var st = getExportStyle(S);
+  ["rdo", "bag", "dfo", "pax", "header"].forEach(function (key) {
+    var el = document.getElementById("export-color-" + key);
+    if (el) el.value = st[key] || "#ffffff";
+  });
+  if (S._exportStyleBound) return;
   S._exportStyleBound = true;
   document.addEventListener("input", function (e) {
     var t = e.target;
     if (!t || !t.id || t.id.indexOf("export-color-") !== 0) return;
     var key = t.id.replace("export-color-", "");
     if (!S.state.exportStyle) S.state.exportStyle = defaultExportStyle();
-    S.state.exportStyle[key] = t.value === "#ffffff" && key === "pax" ? "" : t.value;
+    S.state.exportStyle[key] = (key === "pax" && t.value === "#ffffff") ? "" : t.value;
   });
-  paint();
 }
