@@ -33,8 +33,7 @@ window.Scheduler = window.Scheduler || {};
     return arr.slice(0, days);
   };
 
-  S.generate = function () {
-    S.state.issues = [];
+  function readSetupFallback() {
     S.state.open = (S.$("cfg-open") && S.$("cfg-open").value) || "03:30";
     S.state.close = (S.$("cfg-close") && S.$("cfg-close").value) || "23:00";
     S.state.weekCount = Math.max(1, Math.min(8, +(S.$("cfg-weeks") && S.$("cfg-weeks").value) || 1));
@@ -46,9 +45,14 @@ window.Scheduler = window.Scheduler || {};
     S.state.ltsoF = Math.max(0, +(S.$("cfg-ltso-f") && S.$("cfg-ltso-f").value) || 0);
     S.state.stsoM = Math.max(0, +(S.$("cfg-stso-m") && S.$("cfg-stso-m").value) || 0);
     S.state.stsoF = Math.max(0, +(S.$("cfg-stso-f") && S.$("cfg-stso-f").value) || 0);
-
     var startVal = S.$("cfg-start") && S.$("cfg-start").value;
     S.state.startDate = S.parseStartDate(startVal || null);
+  }
+
+  S.generate = function () {
+    S.state.issues = [];
+    if (S.collectSetupInputs) S.collectSetupInputs();
+    else readSetupFallback();
     S.readShiftsFromDom();
 
     if (!S.state.shifts.length) {
