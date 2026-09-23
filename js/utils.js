@@ -1,4 +1,4 @@
-/** Classic attach for scripts that load before ESM. Source of truth: modules/shared/utils/ */
+/** Classic attach for scripts that load before ESM. Dates are Luxon. */
 window.Scheduler = window.Scheduler || {};
 (function (S) {
   "use strict";
@@ -12,6 +12,11 @@ window.Scheduler = window.Scheduler || {};
     functionCoverage: { mode: "none" }
   };
   S.shiftSeq = S.shiftSeq || 1;
+
+  function DT() {
+    if (!window.luxon || !window.luxon.DateTime) throw new Error("luxon is not loaded");
+    return window.luxon.DateTime;
+  }
 
   S.$ = function (id) {
     return document.getElementById(id);
@@ -52,18 +57,37 @@ window.Scheduler = window.Scheduler || {};
     if (el) el.textContent = msg;
   };
 
-  S.dj = function () {
-    if (typeof dayjs !== "function") throw new Error("dayjs is not loaded");
-    return dayjs.apply(null, arguments);
-  };
-
   S.parseStartDate = function (val) {
-    if (!val) return S.dj().startOf("day");
-    if (typeof val === "string") return S.dj(val.slice(0, 10)).startOf("day");
-    return S.dj(val).startOf("day");
+    var Lux = DT();
+    if (!val) return Lux.now().startOf("day");
+    if (typeof val === "string") {
+      var iso = Lux.fromISO(val.slice(0, 10));
+      if (iso.isValid) return iso.startOf("day");
+    }
+    if (val && typeof val.toJSDate === "function") return Lux.fromJSDate(val.toJSDate()).startOf("day");
+    if (val instanceof Date) return Lux.fromJSDate(val).startOf("day");
+    if (val && val.isValid && val.toISODate) return val.startOf ? val.startOf("day") : val;
+    return Lux.now().startOf("day");
   };
 
   S.toDateInputValue = function (d) {
-    return S.dj(d).format("YYYY-MM-DD");
+    return S.parseStartDate(d).toFormat("yyyy-MM-dd");
+  };
+
+  S.dj = function (val) {
+    var dt = S.parseStartDate(val);
+    return {
+      startOf: function () { return S.dj(dt.toISODate()); },
+      format: function (fmt) {
+        var map = { "YYYY-MM-DD": "yyyy-MM-dd" };
+        return dt.toFormat(map[fmt] || fmt);
+      },
+      add: function (n) {
+        return S.dj(dt.plus({ days: n }).toISODate());
+      },
+      day: function () { return dt.weekday % 7; },
+      toISODate: function () { return dt.toISODate(); },
+      toJSDate: function () { return dt.toJSDate(); }
+    };
   };
 })(window.Scheduler);
