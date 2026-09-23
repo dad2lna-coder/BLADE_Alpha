@@ -4,11 +4,13 @@ import { paintFunctionCoverage } from "./paint.js";
 import { snapshotFte, applyFte, collectSetupInputs, exportStaffingConfig } from "../utils/fte.js";
 import { attachShiftsTable } from "./shiftsTable.js";
 import { attachExtraPositions } from "../utils/extraPositions.js";
+import { attachGenerate } from "./generate.js";
 
 export function bridgeScheduler(S) {
   if (!S) return;
   attachShiftsTable(S);
   attachExtraPositions(S);
+  attachGenerate(S);
 
   S.rebuildSetupTab = function () {
     syncHoursFromAirfield(S);
