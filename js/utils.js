@@ -1,4 +1,4 @@
-/** Utility helpers — classic script (uses global dayjs when present) */
+/** Classic attach for scripts that load before ESM. Source of truth: modules/shared/utils/ */
 window.Scheduler = window.Scheduler || {};
 (function (S) {
   "use strict";

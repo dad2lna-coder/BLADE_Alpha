@@ -1,4 +1,8 @@
 {
+  "shared-utils": {
+    "entry": "modules/shared/utils/index.js",
+    "init": "initSharedUtils"
+  },
   "team-builder": {
     "entry": "modules/team-builder/index.js",
     "init": "initTeamBuilder",
