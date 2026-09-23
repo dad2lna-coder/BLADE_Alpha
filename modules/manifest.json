@@ -3,6 +3,14 @@
     "entry": "modules/shared/utils/index.js",
     "init": "initSharedUtils"
   },
+  "shared-chrome": {
+    "entry": "modules/shared/chrome.js",
+    "init": "initSharedChrome"
+  },
+  "shared-lines": {
+    "entry": "modules/shared/lines/helpers.js",
+    "init": "initLineHelpers"
+  },
   "team-builder": {
     "entry": "modules/team-builder/index.js",
     "init": "initTeamBuilder",
