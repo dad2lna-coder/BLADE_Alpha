@@ -5,14 +5,26 @@ import { renderAll, bindSetupActions } from "./actions/render.js";
 
 let _boundDomContentLoaded = false;
 
+function seedStartDate(S) {
+  var el = document.getElementById("cfg-start");
+  if (!el) return;
+  if (!el.value && S.parseStartDate && S.toDateInputValue) {
+    var d = S.parseStartDate(null);
+    el.value = S.toDateInputValue(d);
+    if (S.state) S.state.startDate = d;
+  }
+}
+
 export function initSetupPanel(scheduler) {
   const S = scheduler || window.Scheduler;
   ensureStyles();
   bridgeScheduler(S);
+  seedStartDate(S);
 
   if (!_boundDomContentLoaded) {
     _boundDomContentLoaded = true;
     document.addEventListener("DOMContentLoaded", function () {
+      seedStartDate(S);
       renderAll(S);
       setTimeout(function () { renderAll(S); }, 400);
     });

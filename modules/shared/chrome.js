@@ -31,10 +31,16 @@ export function attachChrome(S) {
     if (name === "lines" && S.renderLines) S.renderLines();
     if (name === "coverage" && S.renderCoverageBars) S.renderCoverageBars();
     if (name === "reports" && S.renderReports) S.renderReports();
+    if (name === "capacity" && S.renderCapacity) S.renderCapacity();
     window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "tab-switch" } }));
   };
 }
 
 export function initSharedChrome(scheduler) {
-  attachChrome(scheduler || window.Scheduler);
+  var S = scheduler || window.Scheduler;
+  attachChrome(S);
+  if (S.initReports) S.initReports();
+  if (S.initCapacity) S.initCapacity();
+  if (S.bindLinesUI) S.bindLinesUI();
+  S.__USE_SVELTE_LINES = true;
 }
