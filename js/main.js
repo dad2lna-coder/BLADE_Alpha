@@ -4,6 +4,18 @@ window.Scheduler = window.Scheduler || {};
 (function (S) {
   "use strict";
 
+  if (!S.switchTab) {
+    S.switchTab = function (name) {
+      document.querySelectorAll(".tab-btn").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.tab === name);
+      });
+      document.querySelectorAll(".panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === "tab-" + name);
+      });
+    };
+  }
+  if (!S.renderAll) S.renderAll = function () {};
+
   function safeInit(name, fn) {
     if (typeof fn !== "function") return;
     try {
@@ -23,7 +35,7 @@ window.Scheduler = window.Scheduler || {};
 
     document.querySelectorAll(".tab-btn").forEach(function (btn) {
       btn.addEventListener("click", function () {
-        S.switchTab(btn.dataset.tab);
+        if (S.switchTab) S.switchTab(btn.dataset.tab);
       });
     });
 
@@ -34,9 +46,9 @@ window.Scheduler = window.Scheduler || {};
     if (instructionsBtn && instructionsModal && instructionsCloseBtn && instructionsContent) {
       function escapeHtml(str) {
         return String(str)
-          .replace(/&/g, "&amp;")
-          .replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;");
+          .replace(/&/g, "&")
+          .replace(/</g, "<")
+          .replace(/>/g, ">");
       }
       function renderInstructions(text) {
         instructionsContent.innerHTML = "<pre>" + escapeHtml(text) + "</pre>";
@@ -104,15 +116,6 @@ window.Scheduler = window.Scheduler || {};
     if (S.$("btn-clear")) S.$("btn-clear").addEventListener("click", function () {
       if (S.clearAll) S.clearAll();
     });
-    if (S.$("btn-clear-certs")) {
-      S.$("btn-clear-certs").addEventListener("click", function () {
-        if (S.clearLineFunctions) S.clearLineFunctions();
-        if (S.renderLines) S.renderLines();
-        if (S.updateStatus) S.updateStatus("Cleared all line functions.");
-        var hint = S.$("cert-assign-hint");
-        if (hint) hint.textContent = "Functions cleared.";
-      });
-    }
     if (S.$("btn-export-lines-excel")) {
       S.$("btn-export-lines-excel").addEventListener("click", function () {
         if (S.exportLinesExcel) S.exportLinesExcel();
@@ -121,15 +124,8 @@ window.Scheduler = window.Scheduler || {};
     safeInit("shiftDayTimes", S.initShiftDayTimes);
     safeInit("functionCoverage", S.initFunctionCoverage);
     safeInit("reports", S.initReports);
-    safeInit("linesUI", function () {
-      var flag = localStorage.getItem('blade:lines:svelte');
-      if (flag === '0' || flag === 'classic') S.__USE_SVELTE_LINES = false;
-      else if (flag === '1' || flag === 'svelte') S.__USE_SVELTE_LINES = true;
-      else if (location.search.indexOf('lines=svelte') !== -1) S.__USE_SVELTE_LINES = true;
-      else if (location.search.indexOf('lines=classic') !== -1) S.__USE_SVELTE_LINES = false;
-      else S.__USE_SVELTE_LINES = true;
-      if (S.bindLinesUI) S.bindLinesUI();
-    });
+    S.__USE_SVELTE_LINES = true;
+    if (S.bindLinesUI) S.bindLinesUI();
     safeInit("capacity", S.initCapacity);
 
     function onNewTeam(e) {
@@ -149,7 +145,7 @@ window.Scheduler = window.Scheduler || {};
       if (btn) btn.addEventListener("click", onNewTeam);
     });
 
-    S.updateStatus("BLADE Alpha Build — boot 20260923a");
+    S.updateStatus("BLADE Alpha Build — boot 20260923d");
     if (S.renderAll) S.renderAll();
   }
 
