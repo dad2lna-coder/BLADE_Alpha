@@ -8,9 +8,11 @@ import { attachGenerate } from "./generate.js";
 import { attachAllocation } from "./allocation.js";
 import { attachShiftMath } from "../utils/shiftMath.js";
 import { attachAirportStub } from "../utils/airportStub.js";
+import { attachSetupState } from "../stores/setupStore.js";
 
 export function bridgeScheduler(S) {
   if (!S) return;
+  attachSetupState(S);
   attachShiftMath(S);
   attachShiftsTable(S);
   attachExtraPositions(S);
