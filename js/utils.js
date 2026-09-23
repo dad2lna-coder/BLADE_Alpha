@@ -3,6 +3,16 @@ window.Scheduler = window.Scheduler || {};
 (function (S) {
   "use strict";
 
+  S.state = S.state || {
+    lines: [],
+    schedule: {},
+    extraPositions: [],
+    issues: [],
+    shifts: [],
+    functionCoverage: { mode: "none" }
+  };
+  S.shiftSeq = S.shiftSeq || 1;
+
   S.$ = function (id) {
     return document.getElementById(id);
   };
@@ -42,7 +52,6 @@ window.Scheduler = window.Scheduler || {};
     if (el) el.textContent = msg;
   };
 
-  /** dayjs global from lib/dayjs.min.js */
   S.dj = function () {
     if (typeof dayjs !== "function") throw new Error("dayjs is not loaded");
     return dayjs.apply(null, arguments);
