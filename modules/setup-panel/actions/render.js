@@ -6,6 +6,7 @@ export function renderAll(S) {
   syncHoursFromAirfield(S);
   paintFunctionCoverage(S);
   if (S.renderShiftsTable) S.renderShiftsTable();
+  if (S.renderExtraPositions) S.renderExtraPositions();
 }
 
 function addFcBandClassic(S) {
@@ -24,10 +25,6 @@ function addFcBandClassic(S) {
   if (S.updateFunctionCoveragePreview) S.updateFunctionCoveragePreview();
 }
 
-function patchBagViewRoles(S) {
-  return S;
-}
-
 function patchImportCoverage(S) {
   if (!S || S._fcImportPatch || typeof S.applyPayload !== "function") return;
   S._fcImportPatch = true;
@@ -42,13 +39,14 @@ function patchImportCoverage(S) {
       if (S.ensureFunctionCoverage) S.ensureFunctionCoverage();
       if (S.fillFunctionCoverageForm) S.fillFunctionCoverageForm();
     }
+    if (payload && payload.fte && S.applyFte) S.applyFte(payload.fte);
+    if (S.renderExtraPositions) S.renderExtraPositions();
   };
 }
 
 export function bindSetupActions(S) {
   if (!S) return;
   S.addFcBand = S.addFcShiftRequirement || S.addFcBand || function () { addFcBandClassic(S); };
-  patchBagViewRoles(S);
   patchImportCoverage(S);
 
   function bindOnce(el, type, fn) {

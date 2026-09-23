@@ -1,4 +1,4 @@
-/** FTE snapshot / apply — Setup module owns these inputs. */
+/** FTE / period / extra / FC form snapshot — Setup module owns these inputs. */
 import { val } from "./sync.js";
 import { setupStore } from "../stores/setupStore.js";
 
@@ -49,14 +49,67 @@ export function applyFte(S, fte) {
   S.state.stsoF = +fte.stsoF || 0;
 }
 
+function readSetupCompanions(S) {
+  if (S.readShiftsFromDom) {
+    try { S.readShiftsFromDom(); } catch (e) {}
+  }
+  if (S.readExtraPositionsFromDom) {
+    try { S.readExtraPositionsFromDom(); } catch (e) {}
+  }
+  if (S.readFunctionCoverageFromDom) {
+    try { S.readFunctionCoverageFromDom(); } catch (e) {}
+  } else if (S.readFunctionBandsFromDom) {
+    try { S.readFunctionBandsFromDom(); } catch (e) {}
+  }
+  setupStore.extraPositions = (S.state && S.state.extraPositions) || [];
+  setupStore.functionCoverage = (S.state && S.state.functionCoverage) || null;
+}
+
 export function collectSetupInputs(S) {
   const fte = snapshotFte(S);
   const period = snapshotPeriod(S);
   applyFte(S, fte);
-  if (!S.state) return { fte, period };
-  S.state.open = period.open;
-  S.state.close = period.close;
-  S.state.weekCount = period.weeks;
-  if (S.parseStartDate) S.state.startDate = S.parseStartDate(period.start || null);
-  return { fte, period };
+  if (S.state) {
+    S.state.open = period.open;
+    S.state.close = period.close;
+    S.state.weekCount = period.weeks;
+    if (S.parseStartDate) S.state.startDate = S.parseStartDate(period.start || null);
+  }
+  readSetupCompanions(S);
+  return {
+    fte: fte,
+    period: period,
+    extraPositions: setupStore.extraPositions,
+    functionCoverage: setupStore.functionCoverage,
+    shifts: (S.state && S.state.shifts) || []
+  };
+}
+
+export function exportStaffingConfig(S) {
+  const snap = collectSetupInputs(S);
+  const payload = {
+    app: "blade-staffing",
+    version: 1,
+    savedAt: S.dj ? S.dj().toISOString() : new Date().toISOString(),
+    fte: snap.fte,
+    functionCoverage: snap.functionCoverage,
+    extraPositions: snap.extraPositions || []
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const filename = (S.exportFileName && S.exportFileName("Staffing", ".json")) || "staffing.json";
+  if (S.saveBlob) {
+    S.saveBlob(blob, filename);
+  } else {
+    const a = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+  try { localStorage.setItem("blade.staffingJson", JSON.stringify(payload)); } catch (e) {}
+  if (S.updateStatus) S.updateStatus("Saved staffing (FTE + function coverage + extra positions).");
+  return payload;
 }
