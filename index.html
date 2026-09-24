@@ -143,8 +143,8 @@
     const hint = document.getElementById("console-nav-hint");
     if (hint) {
       hint.textContent = tabs.length
-        ? "NAV: " + tabs[0].fkey + (tabs.length > 1 ? "\u2013" + tabs[tabs.length - 1].fkey : "")
-        : "NAV: \u2014";
+        ? "NAV: " + tabs[0].fkey + (tabs.length > 1 ? "-" + tabs[tabs.length - 1].fkey : "")
+        : "NAV: -";
     }
     return tabs;
   }
