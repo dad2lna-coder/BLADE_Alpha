@@ -17,6 +17,7 @@ html[data-theme="presentation"] {
   --mono: "Segoe UI", system-ui, Inter, sans-serif;
   --sans: "Segoe UI", system-ui, Inter, sans-serif;
   --radius: 8px;
+  --dal-red: #9b1c2c;
   font-size: 19px;
 }
 
@@ -268,6 +269,8 @@ html[data-theme="presentation"] .pres-dal {
   width: auto;
   object-fit: contain;
   flex: 0 0 auto;
+  /* Civic / DAL-leaning red. PNG left as-is; flatten then recolor. */
+  filter: brightness(0) saturate(100%) invert(16%) sepia(72%) saturate(2280%) hue-rotate(343deg) brightness(0.88) contrast(1.08);
 }
 
 html[data-theme="presentation"] .pres-seal {
