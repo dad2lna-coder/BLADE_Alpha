@@ -37,3 +37,76 @@
   min-height: 2rem;
   padding: 0.25rem 0.7rem;
 }
+
+/* Management only — high-contrast table / role / gender text on dark console */
+#report-sub-management .data-table,
+#report-sub-management .rpt-table {
+  color: #f0f0f0;
+}
+
+#report-sub-management .data-table td,
+#report-sub-management .rpt-table td {
+  color: #f0f0f0;
+  font-weight: 600;
+}
+
+#report-sub-management .data-table th,
+#report-sub-management .rpt-table th {
+  color: #f0f0f0;
+  font-weight: 700;
+}
+
+#report-sub-management .rpt-total {
+  font-weight: 700;
+  color: #f0f0f0;
+}
+
+#report-sub-management .rpt-role,
+#report-sub-management .rpt-role-lbl {
+  font-weight: 600;
+  color: #e4e4e4;
+}
+
+#report-sub-management .muted {
+  color: #b0b0b0;
+}
+
+#report-sub-management .sex-m {
+  color: #6eb6ff;
+  font-weight: 600;
+}
+
+#report-sub-management .sex-f {
+  color: #ff8fc4;
+  font-weight: 600;
+}
+
+html[data-theme="presentation"] #report-sub-management .data-table,
+html[data-theme="presentation"] #report-sub-management .rpt-table,
+html[data-theme="presentation"] #report-sub-management .data-table td,
+html[data-theme="presentation"] #report-sub-management .rpt-table td,
+html[data-theme="presentation"] #report-sub-management .rpt-total {
+  color: #111;
+}
+
+html[data-theme="presentation"] #report-sub-management .data-table th,
+html[data-theme="presentation"] #report-sub-management .rpt-table th {
+  color: #111;
+}
+
+html[data-theme="presentation"] #report-sub-management .rpt-role,
+html[data-theme="presentation"] #report-sub-management .rpt-role-lbl {
+  color: #222;
+}
+
+html[data-theme="presentation"] #report-sub-management .muted {
+  color: #4a4a4a;
+}
+
+html[data-theme="presentation"] #report-sub-management .sex-m {
+  color: #0b4f9c;
+}
+
+html[data-theme="presentation"] #report-sub-management .sex-f {
+  color: #9b2a62;
+}

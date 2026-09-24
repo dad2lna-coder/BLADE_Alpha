@@ -107,8 +107,8 @@
   .muted,
   .dc-xtick,
   .dc-ytick {
-    color: #444 !important;
-    fill: #444 !important;
+    color: #333 !important;
+    fill: #333 !important;
   }
 
   /* Toolbars / radios / file inputs / weight fields / buttons */
@@ -165,6 +165,25 @@
     color: #111 !important;
     border-color: #ccc !important;
     background: #fff !important;
+  }
+
+  #report-sub-management .data-table td,
+  #report-sub-management .rpt-table td {
+    font-weight: 600 !important;
+  }
+
+  #report-sub-management .data-table th,
+  #report-sub-management .rpt-table th,
+  #report-sub-management .rpt-total {
+    font-weight: 700 !important;
+  }
+
+  #report-sub-management .rpt-role {
+    font-weight: 600 !important;
+  }
+
+  #report-sub-management .muted {
+    color: #333 !important;
   }
 
   .data-table tr,
