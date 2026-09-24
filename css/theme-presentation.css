@@ -78,20 +78,32 @@ html[data-theme="presentation"] body.console-skin .topbar {
 html[data-theme="presentation"] body.console-skin .console-mast {
   font-size: 0.95rem;
   text-transform: none;
-  align-items: stretch;
-  gap: 0.28rem;
+  align-items: center;
+  gap: 0.6rem 1rem;
 }
 
 html[data-theme="presentation"] body.console-skin .console-mast .brand {
-  letter-spacing: 0.02em;
+  letter-spacing: 0.01em;
   font-weight: 700;
 }
 
-html[data-theme="presentation"] body.console-skin .console-mast .brand span,
+html[data-theme="presentation"] body.console-skin .brand-title {
+  letter-spacing: 0.01em;
+}
+
+html[data-theme="presentation"] body.console-skin .brand-ver,
 html[data-theme="presentation"] body.console-skin .brand-sub {
   color: var(--muted);
-  font-size: 0.82rem;
   font-weight: 600;
+}
+
+html[data-theme="presentation"] body.console-skin .brand-sub {
+  font-size: 0.82rem;
+}
+
+html[data-theme="presentation"] body.console-skin .console-meta-strip {
+  text-transform: none;
+  font-size: 0.88rem;
 }
 
 html[data-theme="presentation"] body.console-skin .console-meta {
@@ -257,20 +269,13 @@ html[data-theme="presentation"] body.console-skin .alert-warn {
   color: #6a5018;
 }
 
-/* Brand chrome — hidden in dark; shown only in presentation */
-.pres-dal,
+/* TSA seal stays presentation-only. DAL mark is global (console.css). */
 .pres-seal {
   display: none;
 }
 
 html[data-theme="presentation"] .pres-dal {
-  display: block;
-  height: 36px;
-  width: auto;
-  object-fit: contain;
-  flex: 0 0 auto;
-  /* Civic / DAL-leaning red. PNG left as-is; flatten then recolor. */
-  filter: brightness(0) saturate(100%) invert(16%) sepia(72%) saturate(2280%) hue-rotate(343deg) brightness(0.88) contrast(1.08);
+  height: 40px;
 }
 
 html[data-theme="presentation"] .pres-seal {
@@ -284,13 +289,6 @@ html[data-theme="presentation"] .pres-seal {
   opacity: 0.16;
   pointer-events: none;
   z-index: 5;
-}
-
-/* Mobile header: keep DAL mark off title/subtitle rows */
-@media (max-width: 768px) {
-  html[data-theme="presentation"] .pres-dal {
-    display: none;
-  }
 }
 
 html[data-theme="presentation"] body.console-skin .theme-dropdown-menu {
