@@ -56,7 +56,7 @@
 <script src="js/modset-board.js?v=20260905b"></script>
 <script src="js/export-board.js?v=20260905c"></script>
 <script src="js/instructions.js?v=20260903a"></script>
-<script src="js/main.js?v=20260924a"></script>
+<script src="js/main.js?v=20260924b"></script>
 <script src="js/console-chrome.js?v=20260924a"></script>
 <script src="js/intro.js?v=20260905g"></script>
 
@@ -138,8 +138,78 @@
     return tabs;
   }
 
+  function reportSubModules(man) {
+    const list = [];
+    for (const [name, raw] of Object.entries(man)) {
+      const cfg = typeof raw === "string" ? {} : (raw || {});
+      const sub = cfg.reportsSubTab;
+      if (!sub || !sub.id) continue;
+      list.push({
+        name,
+        cfg,
+        id: String(sub.id),
+        label: String(sub.label || sub.id),
+        order: Number(sub.order) || 99
+      });
+    }
+    list.sort(function (a, b) {
+      if (a.order !== b.order) return a.order - b.order;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function buildReportHost(subs) {
+    const tab = document.getElementById("tab-reports");
+    if (!tab) {
+      Scheduler.reportSubTabs = [];
+      return [];
+    }
+    tab.innerHTML = "";
+    const nav = document.createElement("nav");
+    nav.className = "tabs report-subtabs";
+    nav.id = "report-subtabs";
+    const panels = document.createElement("div");
+    panels.id = "report-sub-panels";
+    tab.appendChild(nav);
+    tab.appendChild(panels);
+    const out = [];
+    subs.forEach(function (entry, i) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "report-sub-btn" + (i === 0 ? " active" : "");
+      btn.dataset.subtab = entry.id;
+      btn.textContent = entry.label;
+      nav.appendChild(btn);
+
+      const panel = document.createElement("section");
+      panel.className = "report-sub-panel" + (i === 0 ? " active" : "");
+      panel.id = "report-sub-" + entry.id;
+      panels.appendChild(panel);
+
+      if (!entry.cfg.reportsMount) entry.cfg.reportsMount = "#report-sub-" + entry.id;
+      if (!entry.cfg.reportsPanel && entry.cfg.panel && (!entry.cfg.mount || String(entry.cfg.mount).indexOf("report-sub") !== -1 || entry.cfg.mount === "#tab-demand-capacity")) {
+        entry.cfg.mount = "#report-sub-" + entry.id;
+      }
+      out.push({ id: entry.id, label: entry.label, name: entry.name, order: entry.order });
+    });
+    Scheduler.reportSubTabs = out;
+    if (out.length) Scheduler.reportSubTab = out[0].id;
+    Scheduler.switchReportSub = Scheduler.switchReportSub || function (id) {
+      Scheduler.reportSubTab = id;
+      document.querySelectorAll("#report-subtabs .report-sub-btn").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.subtab === id);
+      });
+      document.querySelectorAll("#report-sub-panels .report-sub-panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === "report-sub-" + id);
+      });
+    };
+    return out;
+  }
+
   const ownedTabs = tabModules(manifest);
   buildNav(ownedTabs);
+  buildReportHost(reportSubModules(manifest));
 
   for (const [name, raw] of Object.entries(manifest)) {
     const cfg = typeof raw === "string" ? { entry: raw, init: "initTeamBuilder" } : raw;
@@ -155,9 +225,17 @@
 
       if (cfg.panel && cfg.mount) {
         const mount = document.querySelector(cfg.mount);
-        if (mount) {
+        if (mount && !(cfg.mount === "#tab-reports" && document.getElementById("report-subtabs"))) {
           const r = await fetch(cfg.panel);
           if (r.ok) mount.innerHTML = await r.text();
+        }
+      }
+
+      if (cfg.reportsPanel && cfg.reportsMount) {
+        const subMount = document.querySelector(cfg.reportsMount);
+        if (subMount) {
+          const r = await fetch(cfg.reportsPanel);
+          if (r.ok) subMount.innerHTML = await r.text();
         }
       }
 
