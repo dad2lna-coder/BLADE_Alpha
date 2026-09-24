@@ -19,7 +19,8 @@
     ],
     "panel": "modules/team-builder/panel.html",
     "docks": "modules/team-builder/docks.html",
-    "mount": "#tab-teams"
+    "mount": "#tab-teams",
+    "tab": { "id": "teams", "label": "TEAMS", "priority": 3, "order": 1 }
   },
   "function-coverage": {
     "entry": "modules/function-coverage/index.js",
@@ -32,12 +33,16 @@
       "modules/setup-panel/styles/setup-panel.css"
     ],
     "panel": "modules/setup-panel/panel.html",
-    "mount": "#tab-setup"
+    "mount": "#tab-setup",
+    "tab": { "id": "setup", "label": "SETUP", "priority": 1, "order": 1 }
   },
   "lines-table": {
     "entry": "modules/lines-table/dist/lines-table.js",
     "init": "initLinesTable",
-    "css": ["modules/lines-table/dist/lines-table.css"]
+    "css": ["modules/lines-table/dist/lines-table.css"],
+    "panel": "modules/lines-table/panel.html",
+    "mount": "#tab-lines",
+    "tab": { "id": "lines", "label": "LINES", "priority": 1, "order": 2 }
   },
   "coverage": {
     "entry": "modules/coverage/index.js",
@@ -46,7 +51,8 @@
       "modules/coverage/styles/coverage.css"
     ],
     "panel": "modules/coverage/panel.html",
-    "mount": "#tab-coverage"
+    "mount": "#tab-coverage",
+    "tab": { "id": "coverage", "label": "COVERAGE", "priority": 1, "order": 3 }
   },
   "demand-capacity": {
     "entry": "modules/demand-capacity/index.js",
@@ -56,5 +62,12 @@
     ],
     "panel": "modules/demand-capacity/panel.html",
     "mount": "#tab-demand-capacity"
+  },
+  "reports": {
+    "entry": "modules/reports/index.js",
+    "init": "initReportsShell",
+    "panel": "modules/reports/panel.html",
+    "mount": "#tab-reports",
+    "tab": { "id": "reports", "label": "REPORTS", "priority": 2, "order": 1 }
   }
 }
