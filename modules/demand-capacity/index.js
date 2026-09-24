@@ -137,6 +137,32 @@ export function refreshStaffCapacity(S) {
   return vi.lastCapacity;
 }
 
+/**
+ * Paint Demand charts even if the sub-panel was display:none, then
+ * un-hide chart/legend hosts so @media print can capture the SVGs.
+ */
+export function prepareDemandCapacityForPrint(S, opts) {
+  var scheduler = S && S.renderDemandCapacity ? S : window.Scheduler;
+  if (opts && opts.S) scheduler = opts.S;
+  var host = (opts && opts.host) || $("report-sub-demand") || $("tab-demand-capacity");
+  refreshStaffCapacity(scheduler);
+  renderDemandCapacity(scheduler);
+  var charts = $("dc-charts");
+  var legend = $("dc-legend");
+  if (charts && charts.querySelector("svg, .dc-day")) {
+    charts.hidden = false;
+    charts.style.minHeight = "220px";
+    if (legend) legend.hidden = false;
+  }
+  if (host) host.setAttribute("data-print-ready", "1");
+  var svgs = charts ? charts.querySelectorAll("svg.dc-svg") : [];
+  svgs.forEach(function (svg) {
+    svg.setAttribute("width", "100%");
+    svg.style.width = "100%";
+    svg.style.height = "auto";
+  });
+}
+
 export function renderDemandCapacity(S) {
   var scheduler = S || window.Scheduler;
   var charts = $("dc-charts");
@@ -208,7 +234,7 @@ async function onImport(S) {
     var bits = ["Imported " + file.name, parsed.rowCount + " flights"];
     if (parsed.skipped) bits.push(parsed.skipped + " skipped");
     bits.push("multiplier " + mult);
-    setStatus(bits.join(" · "));
+    setStatus(bits.join(" \u00b7 "));
     if (S.updateStatus) S.updateStatus("Volume import: " + parsed.rowCount + " flights from " + file.name);
   } catch (err) {
     setStatus("Import failed: " + (err && err.message ? err.message : err));
@@ -229,7 +255,7 @@ function onRefresh(S) {
     setStatus(capLabel + " refreshed from current PAX staffing. Import a volume file to overlay demand.");
     return;
   }
-  setStatus("Refreshed " + capLabel + " · " + (vi.rowCount || vi.flights.length) + " flights · multiplier " + multiplierFromUi(S));
+  setStatus("Refreshed " + capLabel + " \u00b7 " + (vi.rowCount || vi.flights.length) + " flights \u00b7 multiplier " + multiplierFromUi(S));
 }
 
 function onWeightsChange(S) {
@@ -312,6 +338,9 @@ function wrapTab(S) {
 export async function initDemandCapacity(scheduler) {
   var S = scheduler || window.Scheduler;
   S.renderDemandCapacity = function () { renderDemandCapacity(S); };
+  S.prepareDemandCapacityForPrint = function (opts) {
+    prepareDemandCapacityForPrint(S, opts || {});
+  };
   await ensurePanel();
   bind(S);
   wrapTab(S);
