@@ -181,6 +181,7 @@ window.Scheduler = window.Scheduler || {};
     rebindButton("btn-export", S.exportJson);
     rebindButton("btn-export-lines-excel", S.exportLinesExcel);
   }
+  S.hookConsoleIo = hookIo;
 
   function tickClock() {
     var now = new Date();
@@ -228,6 +229,13 @@ window.Scheduler = window.Scheduler || {};
     document.body.appendChild(s);
   }
 
+  function navTabList() {
+    if (S.navTabs && S.navTabs.length) return S.navTabs;
+    return Array.prototype.map.call(document.querySelectorAll(".tab-btn[data-tab]"), function (b) {
+      return { id: b.dataset.tab };
+    });
+  }
+
   function init() {
     document.body.classList.add("console-skin");
     if (!S.state) S.state = {};
@@ -247,8 +255,12 @@ window.Scheduler = window.Scheduler || {};
       if (e.defaultPrevented) return;
       var tag = (e.target && e.target.tagName) || "";
       if (tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA") return;
-      var map = { F1: "setup", F2: "coverage", F3: "lines", F4: "teams", F5: "reports", F6: "capacity", F7: "demand-capacity", F8: "rotation" };
-      if (map[e.key] && S.switchTab) { e.preventDefault(); S.switchTab(map[e.key]); }
+      var m = /^F(\d{1,2})$/.exec(e.key);
+      if (!m || !S.switchTab) return;
+      var entry = navTabList()[parseInt(m[1], 10) - 1];
+      if (!entry || !entry.id) return;
+      e.preventDefault();
+      S.switchTab(entry.id);
     });
     var orig = S.renderAll;
     if (typeof orig === "function" && !orig._consoleWrapped) {
