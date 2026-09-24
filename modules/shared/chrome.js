@@ -21,16 +21,21 @@ export function attachChrome(S) {
     if (S.refreshConsoleChrome) S.refreshConsoleChrome();
   };
   S.switchTab = function (name) {
-    document.querySelectorAll(".tab-btn").forEach(function (b) {
+    document.querySelectorAll("#blade-tabs .tab-btn").forEach(function (b) {
       b.classList.toggle("active", b.dataset.tab === name);
     });
-    document.querySelectorAll(".panel").forEach(function (p) {
+    document.querySelectorAll("#blade-panels > .panel").forEach(function (p) {
       p.classList.toggle("active", p.id === "tab-" + name);
     });
     if (name === "teams" && S.renderTeams) S.renderTeams();
     if (name === "lines" && S.renderLines) S.renderLines();
     if (name === "coverage" && S.renderCoverageBars) S.renderCoverageBars();
-    if (name === "reports" && S.renderReports) S.renderReports();
+    if (name === "reports") {
+      var sub = S.reportSubTab;
+      if (!sub && S.reportSubTabs && S.reportSubTabs[0]) sub = S.reportSubTabs[0].id;
+      if (S.switchReportSub && sub) S.switchReportSub(sub);
+      else if (S.renderReports) S.renderReports();
+    }
     if (name === "capacity" && S.renderCapacity) S.renderCapacity();
     window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "tab-switch" } }));
   };

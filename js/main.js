@@ -5,10 +5,10 @@ window.Scheduler = window.Scheduler || {};
 
   if (!S.switchTab) {
     S.switchTab = function (name) {
-      document.querySelectorAll(".tab-btn").forEach(function (b) {
+      document.querySelectorAll("#blade-tabs .tab-btn").forEach(function (b) {
         b.classList.toggle("active", b.dataset.tab === name);
       });
-      document.querySelectorAll(".panel").forEach(function (p) {
+      document.querySelectorAll("#blade-panels > .panel").forEach(function (p) {
         p.classList.toggle("active", p.id === "tab-" + name);
       });
     };
@@ -23,7 +23,12 @@ window.Scheduler = window.Scheduler || {};
 
   function init() {
     document.addEventListener("click", function (e) {
-      var btn = e.target && e.target.closest ? e.target.closest(".tab-btn") : null;
+      var sub = e.target && e.target.closest ? e.target.closest(".report-sub-btn") : null;
+      if (sub && sub.dataset.subtab && S.switchReportSub) {
+        S.switchReportSub(sub.dataset.subtab);
+        return;
+      }
+      var btn = e.target && e.target.closest ? e.target.closest("#blade-tabs .tab-btn") : null;
       if (btn && btn.dataset.tab && S.switchTab) S.switchTab(btn.dataset.tab);
     });
 
@@ -60,7 +65,7 @@ window.Scheduler = window.Scheduler || {};
       });
     }
 
-    if (S.updateStatus) S.updateStatus("BLADE Alpha Build — boot 20260924a");
+    if (S.updateStatus) S.updateStatus("BLADE Alpha Build — boot 20260924b");
     if (S.renderAll) S.renderAll();
   }
 

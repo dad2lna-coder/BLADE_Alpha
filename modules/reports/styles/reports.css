@@ -1,0 +1,31 @@
+#report-subtabs.report-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+}
+
+.report-sub-btn {
+  background: transparent;
+  border: 1px solid var(--border, #c48a18);
+  color: var(--text, #e0a020);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: inherit;
+  min-height: 2rem;
+  padding: 0.25rem 0.7rem;
+  cursor: pointer;
+}
+
+.report-sub-btn.active {
+  background: #c48a18;
+  border-color: #e0a020;
+  color: #1a1204;
+}
+
+.report-sub-panel { display: none; }
+.report-sub-panel.active { display: block; }

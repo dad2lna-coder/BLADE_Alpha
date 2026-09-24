@@ -20,7 +20,10 @@
     "panel": "modules/team-builder/panel.html",
     "docks": "modules/team-builder/docks.html",
     "mount": "#tab-teams",
-    "tab": { "id": "teams", "label": "TEAMS", "priority": 3, "order": 1 }
+    "tab": { "id": "teams", "label": "TEAMS", "priority": 3, "order": 1 },
+    "reportsSubTab": { "id": "cohesion", "label": "Team Cohesion", "order": 3 },
+    "reportsPanel": "modules/reports/cohesion.html",
+    "reportsMount": "#report-sub-cohesion"
   },
   "function-coverage": {
     "entry": "modules/function-coverage/index.js",
@@ -61,13 +64,18 @@
       "modules/demand-capacity/styles/demand-capacity.css"
     ],
     "panel": "modules/demand-capacity/panel.html",
-    "mount": "#tab-demand-capacity"
+    "mount": "#report-sub-demand",
+    "reportsSubTab": { "id": "demand", "label": "Demand", "order": 2 }
   },
   "reports": {
     "entry": "modules/reports/index.js",
     "init": "initReportsShell",
-    "panel": "modules/reports/panel.html",
-    "mount": "#tab-reports",
-    "tab": { "id": "reports", "label": "REPORTS", "priority": 2, "order": 1 }
+    "css": [
+      "modules/reports/styles/reports.css"
+    ],
+    "tab": { "id": "reports", "label": "REPORTS", "priority": 2, "order": 1 },
+    "reportsSubTab": { "id": "management", "label": "Management Reports", "order": 1 },
+    "reportsPanel": "modules/reports/management.html",
+    "reportsMount": "#report-sub-management"
   }
 }
