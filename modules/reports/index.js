@@ -1,5 +1,7 @@
 /** Reports host — nested Management / Demand / Cohesion sub-tabs. */
 import { initReportsPrint } from "./print.js";
+import { initReportsMath } from "./reports-math.js";
+import { initCapacityMath } from "./capacity-math.js";
 
 function paintReportSub(S, id) {
   if (id === "management" && S.renderReports) S.renderReports();
@@ -23,6 +25,10 @@ export function switchReportSub(scheduler, id) {
 export function initReportsShell(scheduler) {
   var S = scheduler || window.Scheduler;
   if (!S) return;
+
+  initReportsMath(S);
+  initCapacityMath(S);
+
   if (S.initReports) S.initReports();
 
   S.switchReportSub = function (id) {

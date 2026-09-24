@@ -6,3 +6,7 @@ dist-frontend/
 *.msi
 *.AppImage
 .DS_Store
+
+# Module dist builds (owned by Vite / Actions)
+modules/*/dist/
+!modules/lines-table/dist/
