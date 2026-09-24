@@ -62,6 +62,10 @@ jobs:
             echo "HARD FAIL: placeholder marker in dist"
             exit 1
           fi
+          if grep -qE "process\.env" "$FILE"; then
+            echo "HARD FAIL: process.env leaked into dist/lines-table.js"
+            exit 1
+          fi
           case "$HASH" in
             0f2093ec*)
               echo "HARD FAIL: sha256 still 0f2093ec…"

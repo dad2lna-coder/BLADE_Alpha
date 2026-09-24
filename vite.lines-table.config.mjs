@@ -4,6 +4,9 @@ import { resolve } from "path";
 
 export default defineConfig({
   plugins: [svelte()],
+  define: {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+  },
   resolve: {
     alias: {
       "@tanstack/svelte-virtual": resolve(__dirname, "node_modules/@tanstack/svelte-virtual/dist/index.js"),
