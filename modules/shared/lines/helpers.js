@@ -138,6 +138,7 @@ export function attachLineHelpers(S) {
     });
   };
   S.renderLines = function () {
+    if (S.applyExportCssVars) S.applyExportCssVars();
     var root = document.getElementById("lines-table-root");
     if (root && typeof root.refresh === "function") root.refresh();
     else window.dispatchEvent(new CustomEvent("lines:request-render"));
