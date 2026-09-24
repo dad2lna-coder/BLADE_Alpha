@@ -1,3 +1,12 @@
+<div class="card" id="setup-io-toolbar">
+<div class="toolbar setup-io-row">
+<button type="button" class="btn btn-amber" id="btn-generate">[GEN] GENERATE</button>
+<button type="button" class="btn" id="btn-export">[EXP] EXPORT</button>
+<button type="button" class="btn" id="btn-import">[IMP] IMPORT</button>
+<button type="button" class="btn btn-red" id="btn-clear">[CLR] CLEAR</button>
+<input type="file" id="file-import" accept="application/json,.json" style="display:none" />
+</div>
+</div>
 <div class="card"><div class="section-title">What this is</div><p class="muted" style="margin:0"><strong>BLADE</strong> staffing balancer. <strong>FT / PT</strong> are operational TSO. <strong>LTSO/STSO M/F</strong> are management.</p></div>
 <input type="hidden" id="cfg-open" value="03:30" /><input type="hidden" id="cfg-close" value="23:00" />
 <div class="card" id="card-period"><div class="section-title">Schedule period</div><div class="period-row" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center"><label>Schedule start <input type="date" id="cfg-start" /></label><label>Weeks <input type="number" id="cfg-weeks" min="1" max="8" value="1" style="width:4.5rem" /></label></div></div>
