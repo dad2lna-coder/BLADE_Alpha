@@ -10,33 +10,62 @@ import { attachShiftMath } from "../utils/shiftMath.js";
 import { attachAirportStub } from "../utils/airportStub.js";
 import { attachSetupState } from "../stores/setupStore.js";
 
+function safeAttach(name, fn) {
+  try {
+    fn();
+  } catch (err) {
+    console.error("setup-panel bridge:", name, err);
+  }
+}
+
 export function bridgeScheduler(S) {
   if (!S) return;
-  attachSetupState(S);
-  attachShiftMath(S);
-  attachShiftsTable(S);
-  attachExtraPositions(S);
-  attachAllocation(S);
-  attachGenerate(S);
-  attachAirportStub(S);
 
-  S.rebuildSetupTab = function () {
-    syncHoursFromAirfield(S);
-    paintFunctionCoverage(S);
-    if (S.renderShiftsTable) S.renderShiftsTable();
-    if (S.renderExtraPositions) S.renderExtraPositions();
-  };
-  S.snapshotFte = function () { return snapshotFte(S); };
-  S.applyFte = function (fte) { applyFte(S, fte); };
-  S.collectSetupInputs = function () { return collectSetupInputs(S); };
-  S.exportStaffingConfig = function () { return exportStaffingConfig(S); };
+  safeAttach("attachSetupState", function () { attachSetupState(S); });
+  safeAttach("attachGenerate", function () { attachGenerate(S); });
+  safeAttach("attachShiftMath", function () { attachShiftMath(S); });
+  safeAttach("attachShiftsTable", function () { attachShiftsTable(S); });
+  safeAttach("attachExtraPositions", function () { attachExtraPositions(S); });
+  safeAttach("attachAllocation", function () { attachAllocation(S); });
+  safeAttach("attachAirportStub", function () { attachAirportStub(S); });
 
-  if (typeof S.exportJson === "function" && !S.exportJson._setupCollectWrapped) {
-    var origExport = S.exportJson;
-    S.exportJson = function () {
-      collectSetupInputs(S);
-      return origExport.apply(S, arguments);
+  safeAttach("rebuildSetupTab", function () {
+    S.rebuildSetupTab = function () {
+      syncHoursFromAirfield(S);
+      paintFunctionCoverage(S);
+      if (S.renderShiftsTable) S.renderShiftsTable();
+      if (S.renderExtraPositions) S.renderExtraPositions();
     };
-    S.exportJson._setupCollectWrapped = true;
+  });
+  safeAttach("snapshotFte", function () {
+    S.snapshotFte = function () { return snapshotFte(S); };
+  });
+  safeAttach("applyFte", function () {
+    S.applyFte = function (fte) { applyFte(S, fte); };
+  });
+  safeAttach("collectSetupInputs", function () {
+    S.collectSetupInputs = function () { return collectSetupInputs(S); };
+  });
+  safeAttach("exportStaffingConfig", function () {
+    S.exportStaffingConfig = function () { return exportStaffingConfig(S); };
+  });
+
+  safeAttach("exportJson", function () {
+    if (typeof S.exportJson === "function" && !S.exportJson._setupCollectWrapped) {
+      var origExport = S.exportJson;
+      S.exportJson = function () {
+        collectSetupInputs(S);
+        return origExport.apply(S, arguments);
+      };
+      S.exportJson._setupCollectWrapped = true;
+    }
+  });
+
+  if (typeof S._setupGenerate !== "function" || typeof S.generate !== "function") {
+    console.error("setup-panel bridge: generate not attached", {
+      _setupGenerate: typeof S._setupGenerate,
+      generate: typeof S.generate
+    });
+    if (S.updateStatus) S.updateStatus("Setup generate failed to attach — check console.");
   }
 }

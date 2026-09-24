@@ -18,7 +18,13 @@ function seedStartDate(S) {
 export function initSetupPanel(scheduler) {
   const S = scheduler || window.Scheduler;
   ensureStyles();
-  bridgeScheduler(S);
+  try {
+    bridgeScheduler(S);
+  } catch (err) {
+    console.error("initSetupPanel", err);
+    if (S && S.updateStatus) S.updateStatus("Setup generate failed to attach — check console.");
+    throw err;
+  }
   seedStartDate(S);
 
   if (!_boundDomContentLoaded) {
