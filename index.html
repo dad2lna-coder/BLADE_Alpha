@@ -1,1 +1,272 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="en" class="console">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>BLADE Alpha Build</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<link rel="stylesheet" href="css/styles.css?v=20260911a" />
+<link rel="stylesheet" href="css/line-print.css?v=20260902i" />
+<link rel="stylesheet" href="css/intro.css?v=20260904b" />
+<link rel="stylesheet" href="css/console.css?v=20260924d" />
+<link rel="stylesheet" href="css/theme-presentation.css?v=20260924d" />
+
+</head>
+<body class="console-skin">
+<div id="blade-intro"><div class="bezel"><div class="crt"><div class="scan"></div><h1 class="banner">**** CHAOS BASIC V2 ****</h1><div class="sub">64K RAM SYSTEM&nbsp;&nbsp;38911 BYTES FREE</div><div id="blade-term"></div><pre id="blade-art"></pre><div id="blade-greet"></div></div><div class="chrome"><span><span class="led"></span>BLADE CONSOLE</span><span>PRESS Y / N WHEN PROMPTED</span></div></div></div>
+<header class="topbar">
+<div class="topbar-actions">
+<button class="btn" id="btn-instructions">Help</button>
+<div class="theme-dropdown">
+<button type="button" class="btn" data-action="toggle-theme-menu" id="btn-theme" aria-haspopup="listbox" aria-expanded="false" aria-controls="theme-menu" aria-pressed="false">Theme</button>
+<div class="theme-dropdown-menu" id="theme-menu" role="listbox" hidden>
+<button type="button" role="option" data-action="set-theme" data-theme="dark">Dark</button>
+<button type="button" role="option" data-action="set-theme" data-theme="presentation">Presentation</button>
+</div>
+</div>
+</div>
+<div class="console-mast">
+<img class="pres-dal" src="assets/dal-mark.png" alt="Dallas Love Field" />
+<div class="brand">Blade Airport Ops v2</div>
+<div class="brand-sub">Workforce Allocation System</div>
+<div class="console-ident">
+<div class="console-meta">AIRPORT: <b id="console-airport">DFW</b></div>
+<div class="console-meta">SYSTEM TIME: <b id="console-time">--:--:--</b></div>
+<div class="console-meta">DATE: <b id="console-date">--/--/----</b></div>
+</div>
+<div class="console-sched">
+<div class="console-meta">SCHEDULE WEEKS: <b id="console-weeks">1</b></div>
+<div class="console-meta">STAFF TOTAL: <b id="console-staff">—</b></div>
+<div class="console-status-chip">STATUS: READY</div>
+</div>
+</div>
+</header>
+<div class="status" id="status">Loading…</div>
+<nav class="tabs" id="blade-tabs"></nav>
+<main id="blade-panels"></main>
+<div id="shift-day-times-modal" class="modal"><div class="modal-content"><span class="modal-close" id="shift-day-times-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="shift-day-times-title">Day times</h2></div><table class="data-table"><thead><tr><th>Day</th><th></th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody id="shift-day-times-tbody"></tbody></table><div class="toolbar" style="margin-top:1rem"><button type="button" class="btn" id="btn-sdt-clear">Clear all overrides</button><button type="button" class="btn btn-amber" id="btn-sdt-save">Save</button><button type="button" class="btn" id="btn-sdt-cancel">Cancel</button></div></div></div>
+<div id="team-detail-modal" class="modal"><div class="modal-content"><span class="modal-close" id="team-detail-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="team-detail-title">Team Details</h2></div><div id="team-detail-content"></div></div></div>
+<div id="instructions-modal" class="modal"><div class="modal-content"><span class="modal-close" id="instructions-modal-close">&times;</span><div class="modal-header"><h2 class="modal-title">Instructions</h2></div><div id="instructions-content" class="instructions-container" style="max-height:70vh;overflow:auto;white-space:pre-wrap"></div></div></div>
+
+<img class="pres-seal" src="assets/tsa-seal.png" alt="" aria-hidden="true" />
+<footer class="console-footer"><span>SYSTEM STATUS: <b>READY</b></span><span>LINES GENERATED: <b id="console-lines">0</b></span><span id="console-nav-hint">NAV: —</span></footer>
+<script src="lib/luxon.min.js?v=20260902i"></script>
+<script src="lib/Sortable.min.js?v=20260902i"></script>
+<script src="lib/exceljs.min.js?v=20260902i"></script>
+<script src="js/constants.js?v=20260923b"></script>
+<script src="js/utils.js?v=20260923c"></script>
+<script src="js/utils/theme.js?v=20260924d"></script>
+<script src="js/shifts.js?v=20260923a"></script>
+<script src="js/allocation.js?v=20260923a"></script>
+<script src="js/lines-row-model.js?v=20260914a"></script>
+<script src="js/line-colors.js?v=20260905b"></script>
+<script src="js/reports.js?v=20260902i"></script>
+<script src="js/schedule.js?v=20260923a"></script>
+<script src="js/io.js?v=20260924c"></script>
+<script src="js/capacity.js?v=20260905b"></script>
+<script src="js/modset-board.js?v=20260905b"></script>
+<script src="js/export-board.js?v=20260905c"></script>
+<script src="js/instructions.js?v=20260903a"></script>
+<script src="js/main.js?v=20260924c"></script>
+<script src="js/console-chrome.js?v=20260924c"></script>
+<script src="js/intro.js?v=20260905g"></script>
+
+<script type="module">
+(async () => {
+  let manifest = {};
+  try {
+    const resp = await fetch("modules/manifest.json");
+    if (!resp.ok) throw new Error("manifest " + resp.status);
+    manifest = await resp.json();
+  } catch (e) {
+    console.warn("manifest", e);
+    return;
+  }
+
+  const Scheduler = await new Promise((resolve) => {
+    (function check() {
+      if (window.Scheduler) resolve(window.Scheduler);
+      else setTimeout(check, 50);
+    })();
+  });
+
+  function tabModules(man) {
+    const list = [];
+    for (const [name, raw] of Object.entries(man)) {
+      const cfg = typeof raw === "string" ? { entry: raw } : (raw || {});
+      const tab = cfg.tab;
+      if (!tab || !tab.id) continue;
+      list.push({
+        name,
+        cfg,
+        id: String(tab.id),
+        label: String(tab.label || tab.id).toUpperCase(),
+        priority: Number(tab.priority) || 99,
+        order: Number(tab.order) || 99
+      });
+    }
+    list.sort(function (a, b) {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      if (a.order !== b.order) return a.order - b.order;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function buildNav(entries) {
+    const nav = document.getElementById("blade-tabs") || document.querySelector("nav.tabs");
+    const host = document.getElementById("blade-panels") || document.querySelector("main");
+    if (!nav || !host) return [];
+    nav.innerHTML = "";
+    host.innerHTML = "";
+    const tabs = [];
+    entries.forEach(function (entry, i) {
+      const n = i + 1;
+      const fkey = "F" + n;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tab-btn" + (i === 0 ? " active" : "");
+      btn.dataset.tab = entry.id;
+      btn.dataset.fkey = fkey;
+      btn.textContent = "[" + fkey + "] " + entry.label;
+      nav.appendChild(btn);
+
+      const panel = document.createElement("section");
+      panel.className = "panel" + (i === 0 ? " active" : "");
+      panel.id = "tab-" + entry.id;
+      host.appendChild(panel);
+
+      if (entry.cfg.panel && !entry.cfg.mount) entry.cfg.mount = "#tab-" + entry.id;
+      tabs.push({ id: entry.id, label: entry.label, fkey: fkey, name: entry.name });
+    });
+    Scheduler.navTabs = tabs;
+    const hint = document.getElementById("console-nav-hint");
+    if (hint) {
+      hint.textContent = tabs.length
+        ? "NAV: " + tabs[0].fkey + (tabs.length > 1 ? "\u2013" + tabs[tabs.length - 1].fkey : "")
+        : "NAV: \u2014";
+    }
+    return tabs;
+  }
+
+  function reportSubModules(man) {
+    const list = [];
+    for (const [name, raw] of Object.entries(man)) {
+      const cfg = typeof raw === "string" ? {} : (raw || {});
+      const sub = cfg.reportsSubTab;
+      if (!sub || !sub.id) continue;
+      list.push({
+        name,
+        cfg,
+        id: String(sub.id),
+        label: String(sub.label || sub.id),
+        order: Number(sub.order) || 99
+      });
+    }
+    list.sort(function (a, b) {
+      if (a.order !== b.order) return a.order - b.order;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function buildReportHost(subs) {
+    const tab = document.getElementById("tab-reports");
+    if (!tab) {
+      Scheduler.reportSubTabs = [];
+      return [];
+    }
+    tab.innerHTML = "";
+    const nav = document.createElement("nav");
+    nav.className = "tabs report-subtabs";
+    nav.id = "report-subtabs";
+    const panels = document.createElement("div");
+    panels.id = "report-sub-panels";
+    tab.appendChild(nav);
+    tab.appendChild(panels);
+    const out = [];
+    subs.forEach(function (entry, i) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "report-sub-btn" + (i === 0 ? " active" : "");
+      btn.dataset.subtab = entry.id;
+      btn.textContent = entry.label;
+      nav.appendChild(btn);
+
+      const panel = document.createElement("section");
+      panel.className = "report-sub-panel" + (i === 0 ? " active" : "");
+      panel.id = "report-sub-" + entry.id;
+      panels.appendChild(panel);
+
+      if (!entry.cfg.reportsMount) entry.cfg.reportsMount = "#report-sub-" + entry.id;
+      if (!entry.cfg.reportsPanel && entry.cfg.panel && (!entry.cfg.mount || String(entry.cfg.mount).indexOf("report-sub") !== -1 || entry.cfg.mount === "#tab-demand-capacity")) {
+        entry.cfg.mount = "#report-sub-" + entry.id;
+      }
+      out.push({ id: entry.id, label: entry.label, name: entry.name, order: entry.order });
+    });
+    Scheduler.reportSubTabs = out;
+    if (out.length) Scheduler.reportSubTab = out[0].id;
+    Scheduler.switchReportSub = Scheduler.switchReportSub || function (id) {
+      Scheduler.reportSubTab = id;
+      document.querySelectorAll("#report-subtabs .report-sub-btn").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.subtab === id);
+      });
+      document.querySelectorAll("#report-sub-panels .report-sub-panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === "report-sub-" + id);
+      });
+    };
+    return out;
+  }
+
+  const ownedTabs = tabModules(manifest);
+  buildNav(ownedTabs);
+  buildReportHost(reportSubModules(manifest));
+
+  for (const [name, raw] of Object.entries(manifest)) {
+    const cfg = typeof raw === "string" ? { entry: raw, init: "initTeamBuilder" } : raw;
+    try {
+      for (const href of cfg.css || []) {
+        if (document.querySelector(`link[data-module-css="${href}"]`)) continue;
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = href;
+        link.dataset.moduleCss = href;
+        document.head.appendChild(link);
+      }
+
+      if (cfg.panel && cfg.mount) {
+        const mount = document.querySelector(cfg.mount);
+        if (mount && !(cfg.mount === "#tab-reports" && document.getElementById("report-subtabs"))) {
+          const r = await fetch(cfg.panel);
+          if (r.ok) mount.innerHTML = await r.text();
+        }
+      }
+
+      if (cfg.reportsPanel && cfg.reportsMount) {
+        const subMount = document.querySelector(cfg.reportsMount);
+        if (subMount) {
+          const r = await fetch(cfg.reportsPanel);
+          if (r.ok) subMount.innerHTML = await r.text();
+        }
+      }
+
+      if (cfg.docks && !document.getElementById("team-follow-docks")) {
+        const r = await fetch(cfg.docks);
+        if (r.ok) document.body.insertAdjacentHTML("beforeend", await r.text());
+      }
+
+      if (!cfg.entry) continue;
+      const mod = await import(new URL(cfg.entry, window.location.href).href);
+      const initFn = mod[cfg.init] || mod.init || mod.initTeamBuilder;
+      if (typeof initFn === "function") initFn(Scheduler);
+      else console.warn(name, "no init");
+    } catch (err) {
+      console.warn("module", name, err);
+    }
+  }
+
+  if (typeof Scheduler.hookConsoleIo === "function") Scheduler.hookConsoleIo();
+})();
+</script>
+</body>
+</html>
