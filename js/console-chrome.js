@@ -182,6 +182,7 @@ window.Scheduler = window.Scheduler || {};
     rebindButton("btn-export-lines-excel", S.exportLinesExcel);
   }
   S.hookConsoleIo = hookIo;
+  window.addEventListener("setup:mounted", function () { hookIo(); }, { once: true });
 
   function tickClock() {
     var now = new Date();
