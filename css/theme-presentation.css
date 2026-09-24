@@ -77,8 +77,8 @@ html[data-theme="presentation"] body.console-skin .topbar {
 html[data-theme="presentation"] body.console-skin .console-mast {
   font-size: 0.95rem;
   text-transform: none;
-  align-items: center;
-  gap: 0.5rem 1.4rem;
+  align-items: stretch;
+  gap: 0.28rem;
 }
 
 html[data-theme="presentation"] body.console-skin .console-mast .brand {
@@ -86,7 +86,8 @@ html[data-theme="presentation"] body.console-skin .console-mast .brand {
   font-weight: 700;
 }
 
-html[data-theme="presentation"] body.console-skin .console-mast .brand span {
+html[data-theme="presentation"] body.console-skin .console-mast .brand span,
+html[data-theme="presentation"] body.console-skin .brand-sub {
   color: var(--muted);
   font-size: 0.82rem;
   font-weight: 600;
@@ -280,4 +281,27 @@ html[data-theme="presentation"] .pres-seal {
   opacity: 0.16;
   pointer-events: none;
   z-index: 5;
+}
+
+/* Mobile header: keep DAL mark off title/subtitle rows */
+@media (max-width: 768px) {
+  html[data-theme="presentation"] .pres-dal {
+    display: none;
+  }
+}
+
+html[data-theme="presentation"] body.console-skin .theme-dropdown-menu {
+  background: var(--panel);
+  border-color: var(--border);
+}
+
+html[data-theme="presentation"] body.console-skin .theme-dropdown-menu button {
+  font-family: var(--sans);
+  text-transform: none;
+  color: var(--text);
+}
+
+html[data-theme="presentation"] body.console-skin .theme-dropdown-menu button.is-active,
+html[data-theme="presentation"] body.console-skin .theme-dropdown-menu button[aria-selected="true"] {
+  color: var(--accent);
 }
