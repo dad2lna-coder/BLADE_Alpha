@@ -54,10 +54,10 @@ export function renderCoverageBars(S) {
 
   var tot = "<tr><td><strong>Day total*</strong></td>";
   for (var d = 0; d < 7; d++) {
-    var base = S.state.startDate ? S.state.startDate : S.parseStartDate(null);
+    var base = S.parseStartDate(S.state.startDate || null);
     var off = null;
     for (var i = 0; i < Math.min(7, (S.state.weekCount || 1) * 7); i++) {
-      if (base.add(i, "day").day() === d) { off = i; break; }
+      if (S.dj(base).add(i).day() === d) { off = i; break; }
     }
     var m = 0, f = 0;
     if (off != null) {
