@@ -15,12 +15,6 @@ window.Scheduler = window.Scheduler || {};
   }
   if (!S.renderAll) S.renderAll = function () {};
 
-  function bindClick(id, fn) {
-    var el = document.getElementById(id);
-    if (!el) return;
-    el.addEventListener("click", fn);
-  }
-
   function init() {
     document.addEventListener("click", function (e) {
       var sub = e.target && e.target.closest ? e.target.closest(".report-sub-btn") : null;
@@ -32,20 +26,8 @@ window.Scheduler = window.Scheduler || {};
       if (btn && btn.dataset.tab && S.switchTab) S.switchTab(btn.dataset.tab);
     });
 
-    bindClick("btn-generate", function () { if (S.generate) S.generate(); });
-    bindClick("btn-export", function () { if (S.exportJson) S.exportJson(); });
-    bindClick("btn-import", function () {
-      var fileInput = document.getElementById("file-import");
-      if (fileInput) { fileInput.value = ""; fileInput.click(); }
-    });
-    var fileImport = document.getElementById("file-import");
-    if (fileImport) {
-      fileImport.addEventListener("change", function (event) {
-        var file = event.target.files && event.target.files[0];
-        if (S.importJsonFile) S.importJsonFile(file);
-      });
-    }
-    bindClick("btn-clear", function () { if (S.clearAll) S.clearAll(); });
+    // GEN/EXP/IMP/CLR + #file-import bind after Setup panel mount
+    // (modules/setup-panel bindSetupActions). Header only keeps HLP.
 
     var modal = document.getElementById("instructions-modal");
     var btn = document.getElementById("btn-instructions");

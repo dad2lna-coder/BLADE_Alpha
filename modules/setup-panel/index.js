@@ -42,6 +42,8 @@ export function initSetupPanel(scheduler) {
   });
 
   bindSetupActions(S);
+  if (typeof S.hookConsoleIo === "function") S.hookConsoleIo();
+  window.dispatchEvent(new CustomEvent("setup:mounted"));
   if (S.initShiftDayTimes) S.initShiftDayTimes();
 
   if (typeof S.initFunctionCoverage === "function") {
