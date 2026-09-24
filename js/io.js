@@ -204,13 +204,19 @@ window.Scheduler = window.Scheduler || {};
   };
 
   S.clearAll = function () {
+    if (!window.confirm("Clear generated lines, schedule, teams, and Demand volume? Setup configuration will stay.")) {
+      return;
+    }
     S.state.lines = [];
     S.state.schedule = {};
     S.state.issues = [];
     S.state.functionRotation = {};
     S.state.mode = "—";
     if (S.teams) S.teams.teams = [];
+    S.state.volumeImport = null;
     if (S.renderAll) S.renderAll();
+    window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "clear" } }));
+    if (S.renderDemandCapacity) S.renderDemandCapacity();
     if (S.updateStatus) S.updateStatus("Cleared results. Configuration remains.");
   };
 })(window.Scheduler);
