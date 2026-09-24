@@ -22,10 +22,9 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function init() {
-    document.querySelectorAll(".tab-btn").forEach(function (btn) {
-      btn.addEventListener("click", function () {
-        if (S.switchTab) S.switchTab(btn.dataset.tab);
-      });
+    document.addEventListener("click", function (e) {
+      var btn = e.target && e.target.closest ? e.target.closest(".tab-btn") : null;
+      if (btn && btn.dataset.tab && S.switchTab) S.switchTab(btn.dataset.tab);
     });
 
     bindClick("btn-generate", function () { if (S.generate) S.generate(); });
@@ -42,9 +41,6 @@ window.Scheduler = window.Scheduler || {};
       });
     }
     bindClick("btn-clear", function () { if (S.clearAll) S.clearAll(); });
-    bindClick("btn-export-lines-excel", function () {
-      if (S.exportLinesExcel) S.exportLinesExcel();
-    });
 
     var modal = document.getElementById("instructions-modal");
     var btn = document.getElementById("btn-instructions");
@@ -64,7 +60,7 @@ window.Scheduler = window.Scheduler || {};
       });
     }
 
-    if (S.updateStatus) S.updateStatus("BLADE Alpha Build — boot 20260923e");
+    if (S.updateStatus) S.updateStatus("BLADE Alpha Build — boot 20260924a");
     if (S.renderAll) S.renderAll();
   }
 
