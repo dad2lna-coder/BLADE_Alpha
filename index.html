@@ -25,7 +25,6 @@
 </div>
 <div class="topbar-actions">
 <button class="btn" id="btn-instructions">[HLP] INSTRUCTIONS</button>
-<button class="btn" id="btn-airport-config">[CFG] AIRFIELD</button>
 <button class="btn btn-amber" id="btn-generate">[GEN] GENERATE</button>
 <button class="btn" id="btn-export">[EXP] EXPORT</button>
 <button class="btn" id="btn-import">[IMP] IMPORT</button>
@@ -34,33 +33,13 @@
 </div>
 </header>
 <div class="status" id="status">Loading…</div>
-<nav class="tabs">
-<button class="tab-btn active" data-tab="setup">[F1] SETUP</button>
-<button class="tab-btn" data-tab="coverage">[F2] COVERAGE</button>
-<button class="tab-btn" data-tab="demand-capacity">[F7] DEMAND</button>
-<button class="tab-btn" data-tab="lines">[F3] LINES</button>
-<button class="tab-btn" data-tab="teams">[F4] TEAMS</button>
-<button class="tab-btn" data-tab="reports">[F5] REPORTS</button>
-<button class="tab-btn" data-tab="capacity">[F6] CAPACITY</button>
-</nav>
-<main>
-<section class="panel active" id="tab-setup"></section>
-<section class="panel" id="tab-coverage"></section>
-<section class="panel" id="tab-demand-capacity"></section>
-<section class="panel" id="tab-lines"><div class="card"><div class="section-title">Bid lines</div><div id="lines-table-root"></div>
-<div class="toolbar" id="lines-toolbar"><label>Filter role <select id="lines-filter-role"><option value="ALL" selected>All</option><option value="STSO">STSO</option><option value="LTSO">LTSO</option><option value="TSO">TSO (FT/PT)</option></select></label><label>Filter shift <select id="lines-filter-shift"><option value="">All shifts</option></select></label><label>Filter sex <select id="lines-filter-sex"><option value="">All</option><option value="M">M</option><option value="F">F</option></select></label><label>Filter team <select id="lines-filter-team"><option value="">All</option><option value="__none__">Unassigned</option></select></label><button type="button" class="btn btn-amber" id="btn-export-lines-excel">Export Excel (.xlsx)</button></div></div></section>
-
-<section class="panel" id="tab-teams"></section>
-
-<section class="panel" id="tab-capacity"><div class="card"><div class="section-title">Checkpoint capacity (TSO / STSO / LTSO)</div><p class="muted" id="capacity-summary">Airfield module removed — rebuild later. Capacity will be empty until then.</p><div class="lines-scroll"><table class="data-table"><thead><tr><th>Terminal</th><th>Checkpoint</th><th>From</th><th>Lanes</th><th>Program</th><th>TSO / lane</th><th>TSO needed</th><th>Sup seats</th></tr></thead><tbody id="capacity-tbody"></tbody></table></div></div></section>
-<section class="panel" id="tab-reports"><div class="card"><div class="section-title">Management reports</div><div class="toolbar" style="flex-wrap:wrap;gap:0.75rem"><label class="follow-me-label"><input type="radio" name="report-which" value="passenger" checked /> Passenger</label><label class="follow-me-label"><input type="radio" name="report-which" value="baggage" /> Baggage / DFO duty</label><label class="follow-me-label"><input type="radio" name="report-which" value="total" /> Total</label><label class="follow-me-label"><input type="radio" name="report-which" value="dfoPool" /> DFO pool</label></div><div id="report-main"></div></div><div class="card"><div id="report-gender"></div></div><div class="card"><div class="section-title">Team cohesion</div><div id="report-cohesion"></div></div></section>
-</main>
-<div id="airport-config-modal" class="modal"><div class="modal-content"><span class="modal-close" id="modal-close-btn">&times;</span><div class="modal-header"><h2 class="modal-title">Airport Configuration</h2></div><p class="muted" style="padding:1rem">Airfield module removed. Rebuild later.</p></div></div>
+<nav class="tabs" id="blade-tabs"></nav>
+<main id="blade-panels"></main>
 <div id="shift-day-times-modal" class="modal"><div class="modal-content"><span class="modal-close" id="shift-day-times-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="shift-day-times-title">Day times</h2></div><table class="data-table"><thead><tr><th>Day</th><th></th><th>Start</th><th>End</th><th>Duration</th></tr></thead><tbody id="shift-day-times-tbody"></tbody></table><div class="toolbar" style="margin-top:1rem"><button type="button" class="btn" id="btn-sdt-clear">Clear all overrides</button><button type="button" class="btn btn-amber" id="btn-sdt-save">Save</button><button type="button" class="btn" id="btn-sdt-cancel">Cancel</button></div></div></div>
 <div id="team-detail-modal" class="modal"><div class="modal-content"><span class="modal-close" id="team-detail-close">&times;</span><div class="modal-header"><h2 class="modal-title" id="team-detail-title">Team Details</h2></div><div id="team-detail-content"></div></div></div>
 <div id="instructions-modal" class="modal"><div class="modal-content"><span class="modal-close" id="instructions-modal-close">&times;</span><div class="modal-header"><h2 class="modal-title">Instructions</h2></div><div id="instructions-content" class="instructions-container" style="max-height:70vh;overflow:auto;white-space:pre-wrap"></div></div></div>
 
-<footer class="console-footer"><span>SYSTEM STATUS: <b>READY</b></span><span>LINES GENERATED: <b id="console-lines">0</b></span><span>NAV: F1–F7</span></footer>
+<footer class="console-footer"><span>SYSTEM STATUS: <b>READY</b></span><span>LINES GENERATED: <b id="console-lines">0</b></span><span id="console-nav-hint">NAV: —</span></footer>
 <script src="lib/luxon.min.js?v=20260902i"></script>
 <script src="lib/Sortable.min.js?v=20260902i"></script>
 <script src="lib/exceljs.min.js?v=20260902i"></script>
@@ -77,8 +56,8 @@
 <script src="js/modset-board.js?v=20260905b"></script>
 <script src="js/export-board.js?v=20260905c"></script>
 <script src="js/instructions.js?v=20260903a"></script>
-<script src="js/main.js?v=20260923d"></script>
-<script src="js/console-chrome.js?v=20260904f"></script>
+<script src="js/main.js?v=20260924a"></script>
+<script src="js/console-chrome.js?v=20260924a"></script>
 <script src="js/intro.js?v=20260905g"></script>
 
 <script type="module">
@@ -99,6 +78,68 @@
       else setTimeout(check, 50);
     })();
   });
+
+  function tabModules(man) {
+    const list = [];
+    for (const [name, raw] of Object.entries(man)) {
+      const cfg = typeof raw === "string" ? { entry: raw } : (raw || {});
+      const tab = cfg.tab;
+      if (!tab || !tab.id) continue;
+      list.push({
+        name,
+        cfg,
+        id: String(tab.id),
+        label: String(tab.label || tab.id).toUpperCase(),
+        priority: Number(tab.priority) || 99,
+        order: Number(tab.order) || 99
+      });
+    }
+    list.sort(function (a, b) {
+      if (a.priority !== b.priority) return a.priority - b.priority;
+      if (a.order !== b.order) return a.order - b.order;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function buildNav(entries) {
+    const nav = document.getElementById("blade-tabs") || document.querySelector("nav.tabs");
+    const host = document.getElementById("blade-panels") || document.querySelector("main");
+    if (!nav || !host) return [];
+    nav.innerHTML = "";
+    host.innerHTML = "";
+    const tabs = [];
+    entries.forEach(function (entry, i) {
+      const n = i + 1;
+      const fkey = "F" + n;
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "tab-btn" + (i === 0 ? " active" : "");
+      btn.dataset.tab = entry.id;
+      btn.dataset.fkey = fkey;
+      btn.textContent = "[" + fkey + "] " + entry.label;
+      nav.appendChild(btn);
+
+      const panel = document.createElement("section");
+      panel.className = "panel" + (i === 0 ? " active" : "");
+      panel.id = "tab-" + entry.id;
+      host.appendChild(panel);
+
+      if (entry.cfg.panel && !entry.cfg.mount) entry.cfg.mount = "#tab-" + entry.id;
+      tabs.push({ id: entry.id, label: entry.label, fkey: fkey, name: entry.name });
+    });
+    Scheduler.navTabs = tabs;
+    const hint = document.getElementById("console-nav-hint");
+    if (hint) {
+      hint.textContent = tabs.length
+        ? "NAV: " + tabs[0].fkey + (tabs.length > 1 ? "–" + tabs[tabs.length - 1].fkey : "")
+        : "NAV: —";
+    }
+    return tabs;
+  }
+
+  const ownedTabs = tabModules(manifest);
+  buildNav(ownedTabs);
 
   for (const [name, raw] of Object.entries(manifest)) {
     const cfg = typeof raw === "string" ? { entry: raw, init: "initTeamBuilder" } : raw;
@@ -125,6 +166,7 @@
         if (r.ok) document.body.insertAdjacentHTML("beforeend", await r.text());
       }
 
+      if (!cfg.entry) continue;
       const mod = await import(new URL(cfg.entry, window.location.href).href);
       const initFn = mod[cfg.init] || mod.init || mod.initTeamBuilder;
       if (typeof initFn === "function") initFn(Scheduler);
@@ -133,6 +175,8 @@
       console.warn("module", name, err);
     }
   }
+
+  if (typeof Scheduler.hookConsoleIo === "function") Scheduler.hookConsoleIo();
 })();
 </script>
 </body>
