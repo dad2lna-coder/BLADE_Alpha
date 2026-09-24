@@ -67,7 +67,7 @@ function setStatus(msg) {
 }
 
 function ensureHost() {
-  var tab = $("tab-demand-capacity");
+  var tab = $("report-sub-demand") || $("tab-demand-capacity");
   if (!tab) return null;
   var root = $("demand-capacity-root");
   if (!root) {
@@ -302,13 +302,16 @@ function wrapTab(S) {
   var orig = S.switchTab;
   S.switchTab = function (name) {
     var result = orig.apply(this, arguments);
-    if (name === "demand-capacity") renderDemandCapacity(S);
+    if (name === "demand-capacity" || (name === "reports" && S.reportSubTab === "demand")) {
+      renderDemandCapacity(S);
+    }
     return result;
   };
 }
 
 export async function initDemandCapacity(scheduler) {
   var S = scheduler || window.Scheduler;
+  S.renderDemandCapacity = function () { renderDemandCapacity(S); };
   await ensurePanel();
   bind(S);
   wrapTab(S);
