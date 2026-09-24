@@ -1,0 +1,283 @@
+/* Presentation theme — conference-room TV. Tokens only under [data-theme="presentation"].
+   Dark console-skin is unchanged when theme is dark or unset. Boot/intro is not themed. */
+
+html[data-theme="presentation"] {
+  --bg: #e8edf2;
+  --panel: #f6f8fb;
+  --panel2: #eef2f6;
+  --border: #9aa8b8;
+  --text: #12171c;
+  --muted: #4a5563;
+  --amber: #1e3a5f;
+  --green: #1a6b45;
+  --red: #9b2c2c;
+  --blue: #1e4e7a;
+  --cyan: #1e4e7a;
+  --accent: #1e3a5f;
+  --mono: "Segoe UI", system-ui, Inter, sans-serif;
+  --sans: "Segoe UI", system-ui, Inter, sans-serif;
+  --radius: 8px;
+  font-size: 19px;
+}
+
+html[data-theme="presentation"] body.console-skin {
+  --bg: #e8edf2;
+  --panel: #f6f8fb;
+  --panel2: #eef2f6;
+  --border: #9aa8b8;
+  --text: #12171c;
+  --muted: #4a5563;
+  --amber: #1e3a5f;
+  --green: #1a6b45;
+  --red: #9b2c2c;
+  --blue: #1e4e7a;
+  --cyan: #1e4e7a;
+  --mono: "Segoe UI", system-ui, Inter, sans-serif;
+  --sans: "Segoe UI", system-ui, Inter, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  letter-spacing: 0;
+}
+
+html[data-theme="presentation"] body.console-skin * {
+  border-radius: 0;
+}
+
+html[data-theme="presentation"] body.console-skin .card,
+html[data-theme="presentation"] body.console-skin .btn,
+html[data-theme="presentation"] body.console-skin .tab-btn,
+html[data-theme="presentation"] body.console-skin input,
+html[data-theme="presentation"] body.console-skin select,
+html[data-theme="presentation"] body.console-skin .modal-content,
+html[data-theme="presentation"] body.console-skin .alert,
+html[data-theme="presentation"] body.console-skin .pill,
+html[data-theme="presentation"] body.console-skin .badge {
+  border-radius: var(--radius) !important;
+}
+
+html[data-theme="presentation"] body.console-skin .topbar,
+html[data-theme="presentation"] body.console-skin .status,
+html[data-theme="presentation"] body.console-skin .tabs,
+html[data-theme="presentation"] body.console-skin .card,
+html[data-theme="presentation"] body.console-skin .team-board,
+html[data-theme="presentation"] body.console-skin .team-role-group,
+html[data-theme="presentation"] body.console-skin .modal-content,
+html[data-theme="presentation"] body.console-skin .config-section,
+html[data-theme="presentation"] body.console-skin .team-float-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+
+html[data-theme="presentation"] body.console-skin .topbar {
+  padding: 0.9rem 1.35rem 0.75rem;
+}
+
+html[data-theme="presentation"] body.console-skin .console-mast {
+  font-size: 0.95rem;
+  text-transform: none;
+  align-items: center;
+  gap: 0.5rem 1.4rem;
+}
+
+html[data-theme="presentation"] body.console-skin .console-mast .brand {
+  letter-spacing: 0.02em;
+  font-weight: 700;
+}
+
+html[data-theme="presentation"] body.console-skin .console-mast .brand span {
+  color: var(--muted);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+html[data-theme="presentation"] body.console-skin .console-meta {
+  color: var(--muted);
+}
+
+html[data-theme="presentation"] body.console-skin .console-meta b {
+  color: var(--text);
+  font-weight: 700;
+}
+
+html[data-theme="presentation"] body.console-skin .console-status-chip {
+  border-color: var(--green);
+  color: var(--green);
+  font-size: 0.82rem;
+  padding: 0.3rem 0.7rem;
+}
+
+html[data-theme="presentation"] body.console-skin .tabs {
+  padding: 0.65rem 1.35rem;
+  gap: 0.5rem;
+}
+
+html[data-theme="presentation"] body.console-skin .tab-btn,
+html[data-theme="presentation"] body.console-skin .btn {
+  background: var(--panel2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  font-family: var(--sans);
+  min-height: 2.6rem;
+  padding: 0.55rem 1rem;
+}
+
+html[data-theme="presentation"] body.console-skin .tab-btn.active,
+html[data-theme="presentation"] body.console-skin .btn-amber {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #f6f8fb;
+  box-shadow: none;
+}
+
+html[data-theme="presentation"] body.console-skin #btn-theme {
+  background: var(--panel);
+  border-color: var(--border);
+  color: var(--muted);
+  font-weight: 600;
+}
+
+html[data-theme="presentation"] body.console-skin .btn-red {
+  background: var(--panel);
+  border-color: var(--red);
+  color: var(--red);
+}
+
+html[data-theme="presentation"] body.console-skin main {
+  padding: 1.1rem 1.35rem 3.6rem;
+}
+
+html[data-theme="presentation"] body.console-skin .card {
+  padding: 1.1rem 1.2rem;
+  margin-bottom: 1rem;
+}
+
+html[data-theme="presentation"] body.console-skin .section-title {
+  color: var(--accent);
+  text-transform: none;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+  font-size: 1.05rem;
+}
+
+html[data-theme="presentation"] body.console-skin label {
+  color: var(--muted);
+  text-transform: none;
+  font-size: 0.88rem;
+}
+
+html[data-theme="presentation"] body.console-skin input,
+html[data-theme="presentation"] body.console-skin select {
+  background: #ffffff;
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: var(--sans);
+  padding: 0.5rem 0.7rem;
+}
+
+html[data-theme="presentation"] body.console-skin .data-table {
+  font-size: 0.95rem;
+}
+
+html[data-theme="presentation"] body.console-skin .data-table th,
+html[data-theme="presentation"] body.console-skin .data-table td {
+  padding: 0.55rem 0.7rem;
+}
+
+html[data-theme="presentation"] body.console-skin .data-table th {
+  color: var(--muted);
+  text-transform: none;
+  font-weight: 700;
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-theme="presentation"] body.console-skin .data-table td {
+  border-bottom: 1px solid #c5d0dc;
+  color: var(--text);
+}
+
+html[data-theme="presentation"] body.console-skin .cell-rdo {
+  background: #d9dee6;
+  color: #3a4450;
+}
+
+html[data-theme="presentation"] body.console-skin .cell-work {
+  background: #d7eadf;
+  color: #145a28;
+}
+
+html[data-theme="presentation"] body.console-skin .cell-bag {
+  background: #ead9cc;
+  color: #5a3010;
+}
+
+html[data-theme="presentation"] body.console-skin .cell-dfo {
+  background: #e8e4c8;
+  color: #4a4208;
+}
+
+html[data-theme="presentation"] body.console-skin .team-board-head {
+  background: var(--panel2);
+  border-bottom: 1px solid var(--border);
+}
+
+html[data-theme="presentation"] body.console-skin .team-name-input {
+  color: var(--accent);
+  text-transform: none;
+}
+
+html[data-theme="presentation"] body.console-skin .console-footer {
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  font-size: 0.85rem;
+  text-transform: none;
+  color: var(--muted);
+  padding: 0.5rem 1.35rem;
+}
+
+html[data-theme="presentation"] body.console-skin .console-footer b {
+  color: var(--green);
+  font-weight: 700;
+}
+
+html[data-theme="presentation"] body.console-skin .alert-ok {
+  background: #e4f3ea;
+  border-color: var(--green);
+  color: var(--green);
+}
+
+html[data-theme="presentation"] body.console-skin .alert-warn {
+  background: #f3eee4;
+  border-color: #8a6a28;
+  color: #6a5018;
+}
+
+/* Brand chrome — hidden in dark; shown only in presentation */
+.pres-dal,
+.pres-seal {
+  display: none;
+}
+
+html[data-theme="presentation"] .pres-dal {
+  display: block;
+  height: 36px;
+  width: auto;
+  object-fit: contain;
+  flex: 0 0 auto;
+}
+
+html[data-theme="presentation"] .pres-seal {
+  display: block;
+  position: fixed;
+  right: 1.5rem;
+  bottom: 3.2rem;
+  width: 168px;
+  height: 168px;
+  object-fit: contain;
+  opacity: 0.16;
+  pointer-events: none;
+  z-index: 5;
+}
