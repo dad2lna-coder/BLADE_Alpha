@@ -31,7 +31,7 @@ jobs:
           set -euo pipefail
           mkdir -p _site
           cp -a index.html _site/
-          for d in css js lib modules airport; do
+          for d in css js lib modules airport assets; do
             if [ -d "$d" ]; then cp -a "$d" _site/; fi
           done
           touch _site/.nojekyll

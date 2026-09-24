@@ -27,8 +27,8 @@ fs.mkdirSync(dest, { recursive: true });
 ["index.html", "INSTRUCTIONS.md"].forEach((f) => {
   copy(path.join(root, f), path.join(dest, f));
 });
-["css", "js", "lib", "modules"].forEach((d) => {
-  copy(path.join(root, d), path.join(dest, d));
+["css", "js", "lib", "modules", "assets"].forEach((d) => {
+  if (fs.existsSync(path.join(root, d))) copy(path.join(root, d), path.join(dest, d));
 });
 
 console.log("Copied web assets to dist-frontend/");
