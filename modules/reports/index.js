@@ -1,4 +1,6 @@
 /** Reports host — nested Management / Demand / Cohesion sub-tabs. */
+import { initReportsPrint } from "./print.js";
+
 function paintReportSub(S, id) {
   if (id === "management" && S.renderReports) S.renderReports();
   if (id === "cohesion" && S.renderTeamCohesionReport) S.renderTeamCohesionReport();
@@ -39,4 +41,5 @@ export function initReportsShell(scheduler) {
   var current = S.reportSubTab;
   if (!current && S.reportSubTabs && S.reportSubTabs.length) current = S.reportSubTabs[0].id;
   if (current) S.switchReportSub(current);
+  initReportsPrint(S);
 }

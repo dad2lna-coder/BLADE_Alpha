@@ -1,0 +1,234 @@
+/* Reports print — Management / Demand / Cohesion → Save as PDF via window.print() */
+
+.report-print-header {
+  display: none;
+}
+
+.report-print-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 0.75rem;
+}
+
+@media print {
+  @page {
+    size: portrait;
+    margin: 0.55in;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+    color: #111 !important;
+  }
+
+  /* Chrome / chrome-adjacent */
+  #blade-intro,
+  header.topbar,
+  .console-mast,
+  .console-meta-strip,
+  .topbar,
+  #status,
+  nav.tabs,
+  #blade-tabs,
+  #report-subtabs,
+  .report-print-actions,
+  .console-footer,
+  footer,
+  .pres-seal,
+  .pres-dal,
+  .modal,
+  .theme-dropdown {
+    display: none !important;
+  }
+
+  #blade-panels > .panel {
+    display: none !important;
+  }
+
+  #tab-reports.panel,
+  #tab-reports.panel.active {
+    display: block !important;
+    max-width: none !important;
+    width: 100% !important;
+    background: #fff !important;
+    color: #111 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  body.print-reports-current .report-sub-panel {
+    display: none !important;
+  }
+
+  body.print-reports-current .report-sub-panel.active {
+    display: block !important;
+  }
+
+  body.print-reports-all .report-sub-panel {
+    display: block !important;
+    break-before: page;
+    page-break-before: always;
+  }
+
+  body.print-reports-all .report-sub-panel:first-child {
+    break-before: auto;
+    page-break-before: auto;
+  }
+
+  .report-print-header {
+    display: block !important;
+    font-size: 0.72rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #444 !important;
+    border-bottom: 1px solid #ccc;
+    padding: 0 0 0.35rem;
+    margin: 0 0 0.7rem;
+  }
+
+  .card {
+    background: #fff !important;
+    color: #111 !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 0 1rem !important;
+  }
+
+  .section-title,
+  h3.section-title,
+  .dc-day-title {
+    color: #111 !important;
+  }
+
+  .muted,
+  .dc-xtick,
+  .dc-ytick {
+    color: #444 !important;
+    fill: #444 !important;
+  }
+
+  /* Toolbars / radios / file inputs / weight fields / buttons */
+  #tab-reports .toolbar:not(#dc-toolbar),
+  #tab-reports .btn,
+  #report-sub-management .toolbar,
+  #dc-toolbar label,
+  #dc-toolbar button,
+  #dc-toolbar .dc-file-label,
+  #dc-toolbar .dc-weights,
+  #dc-toolbar .dc-role-toggle,
+  #dc-toolbar input,
+  #dc-sample-link,
+  #tab-reports input[type="file"],
+  #tab-reports input[type="radio"],
+  #tab-reports input[type="number"] {
+    display: none !important;
+  }
+
+  #tab-reports #dc-toolbar,
+  #dc-toolbar {
+    display: block !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0 0 0.4rem !important;
+    background: transparent !important;
+  }
+
+  #dc-status {
+    display: block !important;
+    color: #333 !important;
+    max-width: none !important;
+  }
+
+  .lines-scroll,
+  .lines-scroll-wide {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
+  .data-table,
+  .rpt-table {
+    width: 100% !important;
+    max-width: none !important;
+    font-size: 0.72rem !important;
+    color: #111 !important;
+    background: #fff !important;
+  }
+
+  .data-table th,
+  .data-table td,
+  .rpt-table th,
+  .rpt-table td {
+    color: #111 !important;
+    border-color: #ccc !important;
+    background: #fff !important;
+  }
+
+  .data-table tr,
+  .rpt-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .sex-m { color: #0b4f9c !important; }
+  .sex-f { color: #9b2a62 !important; }
+  td.hc-high { background: #fff3d4 !important; color: #111 !important; }
+
+  #dc-legend,
+  #dc-charts {
+    display: flex !important;
+  }
+
+  #dc-charts[hidden],
+  #dc-legend[hidden] {
+    display: flex !important;
+  }
+
+  .dc-legend {
+    color: #222 !important;
+  }
+
+  .dc-day {
+    background: #fff !important;
+    border: 1px solid #ccc !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .dc-svg {
+    min-height: 180px;
+    max-width: 100%;
+  }
+
+  .dc-grid {
+    stroke: #ddd !important;
+  }
+
+  .dc-axis {
+    stroke: #666 !important;
+  }
+
+  .dc-vol-fill {
+    fill: rgba(196, 122, 0, 0.28) !important;
+  }
+
+  .dc-vol-line {
+    stroke: #c47a00 !important;
+  }
+
+  .dc-cap-line {
+    stroke: #1a7a3a !important;
+  }
+
+  .dc-swatch-vol {
+    background: #c47a00 !important;
+    box-shadow: none !important;
+  }
+
+  .dc-swatch-cap {
+    border-top-color: #1a7a3a !important;
+  }
+}

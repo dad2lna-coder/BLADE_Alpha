@@ -29,3 +29,11 @@
 
 .report-sub-panel { display: none; }
 .report-sub-panel.active { display: block; }
+
+.report-print-actions .btn {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-family: inherit;
+  min-height: 2rem;
+  padding: 0.25rem 0.7rem;
+}

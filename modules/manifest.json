@@ -71,7 +71,8 @@
     "entry": "modules/reports/index.js",
     "init": "initReportsShell",
     "css": [
-      "modules/reports/styles/reports.css"
+      "modules/reports/styles/reports.css",
+      "modules/reports/styles/reports-print.css"
     ],
     "tab": { "id": "reports", "label": "REPORTS", "priority": 2, "order": 1 },
     "reportsSubTab": { "id": "management", "label": "Management Reports", "order": 1 },
