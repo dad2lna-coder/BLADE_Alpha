@@ -39,21 +39,80 @@ body.console-skin .team-float-panel {
 }
 
 body.console-skin .topbar {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: start;
-  gap: 0.5rem 1rem;
-  padding: 0.55rem 0.85rem 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.28rem;
+  padding: 0.45rem 0.75rem 0.4rem;
   position: sticky;
   top: 0;
   z-index: 20;
 }
 
+body.console-skin .topbar-actions {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: nowrap;
+}
+
+body.console-skin .topbar-actions .btn {
+  min-height: 2.1rem;
+  padding: 0.28rem 0.7rem;
+  flex: 0 0 auto;
+}
+
+body.console-skin .theme-dropdown {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+body.console-skin .theme-dropdown-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 2px);
+  z-index: 40;
+  min-width: 11rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  padding: 0.15rem 0;
+}
+
+body.console-skin .theme-dropdown-menu[hidden] {
+  display: none;
+}
+
+body.console-skin .theme-dropdown-menu button {
+  display: block;
+  width: 100%;
+  background: transparent;
+  border: 0;
+  color: var(--text);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-align: left;
+  padding: 0.45rem 0.7rem;
+  min-height: 2.1rem;
+  cursor: pointer;
+}
+
+body.console-skin .theme-dropdown-menu button.is-active,
+body.console-skin .theme-dropdown-menu button[aria-selected="true"] {
+  color: var(--amber);
+}
+
+body.console-skin .theme-dropdown-menu button:hover {
+  background: #0c1216;
+}
+
 body.console-skin .console-mast {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem 1.6rem;
-  align-items: baseline;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.18rem;
   width: 100%;
   font-size: 0.78rem;
   text-transform: uppercase;
@@ -62,13 +121,38 @@ body.console-skin .console-mast {
 body.console-skin .console-mast .brand {
   font-weight: 400;
   letter-spacing: 0.08em;
-  line-height: 1.25;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-body.console-skin .console-mast .brand span {
+body.console-skin .console-mast .brand span,
+body.console-skin .brand-sub {
   display: block;
   color: var(--text);
   font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+body.console-skin .console-ident,
+body.console-skin .console-sched {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  gap: 0.35rem 0.85rem;
+  min-width: 0;
+  width: 100%;
+}
+
+body.console-skin .console-ident .console-meta,
+body.console-skin .console-sched .console-meta {
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 body.console-skin .console-meta { color: var(--text); }
@@ -77,14 +161,11 @@ body.console-skin .console-meta b { font-weight: 400; color: var(--amber); }
 body.console-skin .console-status-chip {
   border: 1px solid var(--green);
   color: var(--green);
-  padding: 0.2rem 0.55rem;
+  padding: 0.15rem 0.5rem;
   font-size: 0.72rem;
   margin-left: auto;
-}
-
-body.console-skin .topbar-actions {
-  width: 100%;
-  justify-content: flex-end;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 
 body.console-skin .status { display: none; }
@@ -217,8 +298,66 @@ body.console-skin .console-footer b { font-weight: 400; color: var(--green); }
 body.console-skin .alert-ok { background: #062010; border-color: var(--green); color: var(--green); }
 body.console-skin .alert-warn { background: #201800; border-color: var(--border); color: var(--amber); }
 
+/* Mobile-first header: five fixed rows at ~phone width */
+@media (max-width: 768px) {
+  body.console-skin .topbar {
+    gap: 0.2rem;
+    padding: 0.4rem 0.6rem 0.35rem;
+  }
+
+  body.console-skin .console-mast {
+    gap: 0.14rem;
+    font-size: 0.66rem;
+  }
+
+  body.console-skin .console-mast .brand {
+    font-size: 0.78rem;
+  }
+
+  body.console-skin .console-mast .brand span,
+  body.console-skin .brand-sub {
+    font-size: 0.64rem;
+  }
+
+  body.console-skin .console-ident,
+  body.console-skin .console-sched {
+    gap: 0.25rem 0.55rem;
+    overflow: hidden;
+  }
+
+  body.console-skin .console-status-chip {
+    font-size: 0.62rem;
+    padding: 0.12rem 0.4rem;
+  }
+
+  body.console-skin .topbar-actions .btn {
+    min-height: 2rem;
+    padding: 0.22rem 0.55rem;
+    font-size: 0.72rem;
+  }
+
+  /* DAL mark must not inflate title/subtitle rows on a phone */
+  body.console-skin .pres-dal,
+  html[data-theme="presentation"] body.console-skin .pres-dal {
+    display: none !important;
+  }
+
+  body.console-skin main { padding-bottom: 4.5rem; }
+}
+
+@media (min-width: 769px) {
+  body.console-skin .topbar {
+    padding: 0.55rem 0.85rem 0.4rem;
+    gap: 0.3rem;
+  }
+
+  body.console-skin .console-ident,
+  body.console-skin .console-sched {
+    flex-wrap: wrap;
+  }
+}
+
 @media (max-width: 900px) {
-  body.console-skin .console-mast { gap: 0.25rem 0.9rem; font-size: 0.68rem; }
   body.console-skin main { padding-bottom: 4.5rem; }
 }
 
