@@ -114,11 +114,15 @@ export function generate(S) {
   if (dMax - dMin > Math.max(2, Math.ceil(total * 0.15))) {
     S.state.issues.push("Day-of-week TSO headcount still varies " + dMin + "\u2013" + dMax + " (RDO stagger). Prefer varied seeds are already applied.");
   }
-  if (S.renderAll) S.renderAll();
-  if (S.renderCoverageBars) S.renderCoverageBars();
-  if (S.__USE_SVELTE_LINES) {
-    window.dispatchEvent(new CustomEvent("lines:request-render"));
-  } else if (S.renderLines) S.renderLines();
+  try {
+    if (S.renderAll) S.renderAll();
+    if (S.renderCoverageBars) S.renderCoverageBars();
+    if (S.__USE_SVELTE_LINES) {
+      window.dispatchEvent(new CustomEvent("lines:request-render"));
+    } else if (S.renderLines) S.renderLines();
+  } catch (err) {
+    console.error("generate UI refresh", err);
+  }
   if (S.updateStatus) {
     S.updateStatus(
       "Scheduled " + S.state.lines.length + " lines (FT " + S.state.ftM + "/" + S.state.ftF +
