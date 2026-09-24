@@ -1,5 +1,5 @@
 /** Bid-lines Excel export. Duty colors come from S.state.exportStyle. */
-import { getExportStyle, hexToArgb } from "./exportStyle.js";
+import { getExportStyle, hexToArgb, dutyFillArgb } from "./exportStyle.js";
 
 function loadExcel(cb) {
   if (typeof ExcelJS !== "undefined") { cb(); return; }
@@ -143,11 +143,11 @@ function generateAndDownloadXlsx(S) {
   if (S.collectTeamPool) S.collectTeamPool();
   lines = sortLinesForExcel(S, lines);
   var style = getExportStyle(S);
-  var headerFill = hexToArgb(style.header) || "FF1F4E79";
-  var rdoFill = hexToArgb(style.rdo) || "FF000000";
-  var bagFill = hexToArgb(style.bag) || "FFF4B4B4";
-  var dfoFill = hexToArgb(style.dfo) || "FFFFF3A8";
-  var paxFill = hexToArgb(style.pax);
+  var headerFill = dutyFillArgb(style, "header") || hexToArgb(style.header) || "FF1F4E79";
+  var rdoFill = dutyFillArgb(style, "rdo") || "FF000000";
+  var bagFill = dutyFillArgb(style, "bag") || "FFF4B4B4";
+  var dfoFill = dutyFillArgb(style, "dfo") || "FFFFF3A8";
+  var paxFill = dutyFillArgb(style, "pax");
   var msMap = modSetColorMap(S);
   var tmMap = teamColorMap(S, lines);
   var days = 7;
