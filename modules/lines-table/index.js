@@ -80,13 +80,20 @@ export function initLinesTable(scheduler) {
     return (S.state && Array.isArray(S.state.shifts)) ? S.state.shifts : [];
   }
 
+  function currentExportStyle() {
+    if (typeof S.getExportStyle === "function") return S.getExportStyle();
+    return (S.state && S.state.exportStyle) || null;
+  }
+
   function applyProps(comp) {
     if (!comp || typeof comp.$set !== "function") return;
     const nextRows = buildRows();
+    if (typeof S.applyExportCssVars === "function") S.applyExportCssVars();
     comp.$set({
       rows: Array.isArray(nextRows) ? nextRows : [],
       shiftOptions: shiftOptions(),
-      teamOptions: teamOptions()
+      teamOptions: teamOptions(),
+      exportStyle: currentExportStyle()
     });
   }
 
@@ -178,12 +185,14 @@ export function initLinesTable(scheduler) {
       } else {
         if (root.childNodes.length) root.innerHTML = '';
         const nextRows = buildRows();
+        if (typeof S.applyExportCssVars === "function") S.applyExportCssVars();
         root._linesTableApp = new LinesTable({
           target: root,
           props: {
             rows: Array.isArray(nextRows) ? nextRows : [],
             shiftOptions: shiftOptions(),
             teamOptions: teamOptions(),
+            exportStyle: currentExportStyle(),
             onInlineEdit: writeInlineEdit,
             onDayToggle: writeDayToggle
           }
