@@ -5,6 +5,13 @@
   gap: 1rem;
 }
 
+#setup-io-toolbar .setup-io-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .setup-fold {
   transition: all 0.3s ease;
 }

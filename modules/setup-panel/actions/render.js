@@ -73,4 +73,26 @@ export function bindSetupActions(S) {
   bindOnce(document.getElementById("btn-save-staffing"), "click", function () {
     if (S.exportStaffingConfig) S.exportStaffingConfig();
   });
+
+  bindOnce(document.getElementById("btn-generate"), "click", function (e) {
+    e.preventDefault();
+    if (S.generate) S.generate();
+  });
+  bindOnce(document.getElementById("btn-export"), "click", function (e) {
+    e.preventDefault();
+    if (S.exportJson) S.exportJson();
+  });
+  bindOnce(document.getElementById("btn-import"), "click", function (e) {
+    e.preventDefault();
+    var fileInput = document.getElementById("file-import");
+    if (fileInput) { fileInput.value = ""; fileInput.click(); }
+  });
+  bindOnce(document.getElementById("btn-clear"), "click", function (e) {
+    e.preventDefault();
+    if (S.clearAll) S.clearAll();
+  });
+  bindOnce(document.getElementById("file-import"), "change", function (event) {
+    var file = event.target.files && event.target.files[0];
+    if (S.importJsonFile) S.importJsonFile(file);
+  });
 }
