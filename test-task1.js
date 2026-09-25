@@ -1,4 +1,5 @@
-const fs = require('fs');
+import fs from 'fs';
+import { initRowModel } from './modules/lines-table/row-model.js';
 
 // Simulate window.Scheduler like classic boot does
 global.window = { Scheduler: {} };
@@ -9,14 +10,13 @@ global.Sortable = {};
 global.luxon = {};
 global.ExcelJS = {};
 
-// Load core classic scripts that lines-row-model depends on (state, utils, shifts)
-['js/constants.js','js/state.js','js/utils.js','js/shifts.js'].forEach(function(f){
+// Load core classic scripts that lines-row-model depends on (state, utils)
+['js/constants.js','js/utils.js'].forEach(function(f){
   try { new Function(fs.readFileSync(f,'utf8')); } catch(e){ /* ignore scripts that need DOM */ }
 });
 
-// Now load lines-row-model.js
-const code = fs.readFileSync('js/lines-row-model.js','utf8');
-const fn = new Function(code); fn.call(global.window);
+// Initialize row model on window.Scheduler
+initRowModel(global.window.Scheduler);
 
 // Verify required exports - MUST read from window.Scheduler since that's what the script writes to
 var pass = true;

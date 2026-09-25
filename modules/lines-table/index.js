@@ -2,10 +2,15 @@
  * Rows come from filtered/sorted getRowModels. Edits write Scheduler.state.
  */
 import LinesTable from './LinesTable.svelte';
+import { initRowModel } from './row-model.js';
+import { initLineColors } from './line-colors.js';
 
 export function initLinesTable(scheduler) {
   const S = scheduler || window.Scheduler;
   if (!S) return;
+
+  initRowModel(S);
+  initLineColors(S);
 
   const root = document.getElementById("lines-table-root");
   if (!root) {
