@@ -114,6 +114,9 @@ export function initLinesTable(scheduler) {
       line.sex = value === "F" ? "F" : "M";
     } else if (field === "function") {
       line.function = value === "DFO" || value === "PAX" || value === "BAG" ? value : "";
+    } else if (field === "certPool") {
+      var pool = String(value || "").trim().toUpperCase();
+      line.certPool = pool === "A" || pool === "B" ? pool : "";
     } else if (field === "emp" || field === "position") {
       if (S.applyLineEmp) S.applyLineEmp(line, value);
     } else if (field === "shift") {
