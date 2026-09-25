@@ -44,10 +44,15 @@ export function initRowModel(S) {
     var start = shift && shift.start ? shift.start : "";
     var end = shift && shift.end ? shift.end : "";
     var workLabel = line.shiftLabel || (start && end ? start + "\u2013" + end : start || "WORK");
-    var position = line.isStso || line.empClass === "STSO" ? "STSO" :
-      line.isLtso || line.empClass === "LTSO" ? "LTSO" : "TSO";
-    var emp = position === "STSO" || position === "LTSO" ? "FT" :
-      line.empClass === "PT" ? "PT" : "FT";
+    var extra = !!(line.isExtra || line.extraPositionId);
+    var position = extra
+      ? (line.position || line.extraName || "TSO")
+      : (line.isStso || line.empClass === "STSO" ? "STSO" :
+        line.isLtso || line.empClass === "LTSO" ? "LTSO" : "TSO");
+    var emp = extra
+      ? (line.empClass && line.empClass !== "FT" ? line.empClass : (line.position || line.extraName || ""))
+      : (position === "STSO" || position === "LTSO" ? "FT" :
+        line.empClass === "PT" ? "PT" : "FT");
     var paid = line.paid || 0;
     var rowSchedule = Array.isArray(schedule) ? schedule :
       schedule[line.id] || (schedule[String(line.id)] || []);
