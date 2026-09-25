@@ -132,12 +132,12 @@ export function extraCardsHtml(list, shifts) {
     var ops = opsFteYes(pos) ? "yes" : "no";
     return '<div class="extra-pos-card" data-extra-card="' + pos.id + '">' +
       '<div class="fte-sex-row extra-pos-head">' +
-      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, """) + '" style="width:7rem"></label>' +
+      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, "&quot;") + '" style="width:7rem"></label>' +
       '<label>Male <input type="number" min="0" data-extra-m="' + pos.id + '" value="' + num0(pos.m) + '" style="width:4.5rem"></label>' +
       '<label>Female <input type="number" min="0" data-extra-f="' + pos.id + '" value="' + num0(pos.f) + '" style="width:4.5rem"></label>' +
       '<label>Ops FTE <select data-extra-ops="' + pos.id + '">' +
-      '<option value="no"' + (ops === "no" ? " selected" : "") + ">No</option>' +
-      '<option value="yes"' + (ops === "yes" ? " selected" : "") + ">Yes</option>' +
+      '<option value="no"' + (ops === "no" ? " selected" : "") + ">No</option>" +
+      '<option value="yes"' + (ops === "yes" ? " selected" : "") + ">Yes</option>" +
       "</select></label>" +
       '<button type="button" class="btn btn-red btn-sm" data-extra-remove="' + pos.id + '">Remove</button>' +
       '<button type="button" class="btn btn-sm" data-extra-add-band="' + pos.id + '">+ Band</button></div>' +
