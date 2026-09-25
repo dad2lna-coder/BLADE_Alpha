@@ -183,14 +183,20 @@ export function initCuts(S) {
   if (typeof S.generate === "function" && !S.generate._cutsApplyWrapped) {
     var orig = S.generate;
     S.generate = function () {
-      var r = orig.apply(this, arguments);
-      var n = S.applyCoverageCutsToLines();
-      if (n && S.renderAll) S.renderAll();
-      if (n && S.updateStatus) {
-        S.updateStatus("Coverage cuts: " + n + " line(s) extra RDO on selected days. Shift times unchanged.");
-      }
-      if (n && typeof window !== "undefined") {
-        window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "coverage-cuts" } }));
+      var r;
+      try {
+        r = orig.apply(this, arguments);
+      } finally {
+        var n = S.applyCoverageCutsToLines ? S.applyCoverageCutsToLines(S) : applyCoverageCutsToLines(S);
+        if (n && S.renderAll) {
+          try { S.renderAll(); } catch (e) { console.warn("coverage cuts renderAll", e); }
+        }
+        if (n && S.updateStatus) {
+          S.updateStatus("Coverage cuts: " + n + " line(s) extra RDO on selected days. Shift times unchanged.");
+        }
+        if (n && typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("lines:request-render", { detail: { source: "coverage-cuts" } }));
+        }
       }
       return r;
     };
