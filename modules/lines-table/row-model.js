@@ -50,7 +50,7 @@ export function initRowModel(S) {
       : (line.isStso || line.empClass === "STSO" ? "STSO" :
         line.isLtso || line.empClass === "LTSO" ? "LTSO" : "TSO");
     var emp = extra
-      ? (line.empClass && line.empClass !== "FT" ? line.empClass : (line.position || line.extraName || ""))
+      ? (line.empClass === "PT" ? "PT" : "FT")
       : (position === "STSO" || position === "LTSO" ? "FT" :
         line.empClass === "PT" ? "PT" : "FT");
     var paid = line.paid || 0;
