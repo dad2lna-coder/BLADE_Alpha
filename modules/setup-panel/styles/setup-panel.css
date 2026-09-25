@@ -16,10 +16,6 @@
   transition: all 0.3s ease;
 }
 
-.setup-fold[open] {
-  /* Remove default details marker */
-}
-
 /* Function coverage pools match FTE role + Male/Female cards */
 #card-func .fte-role {
   text-align: center;
@@ -60,6 +56,17 @@
   max-height: 20vh;
   margin-top: 0.5rem;
 }
+.extra-pos-shifts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+  justify-content: center;
+  align-items: center;
+  margin: 0.45rem 0 0.2rem;
+}
+.extra-shift-park {
+  font-size: 0.85rem;
+}
 @media (max-width: 720px) {
   #fc-pool-row {
     grid-template-columns: 1fr;
@@ -74,7 +81,6 @@
   margin-top: 0.75rem;
 }
 
-/* Basic card layout inherits from team-builder.css */
 #team-pool,
 #team-pool.team-pool-columns,
 #team-pool.team-role-list {
