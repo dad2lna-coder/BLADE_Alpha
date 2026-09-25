@@ -48,7 +48,7 @@ export function lineCertPosition(line) {
   if (!line) return "";
   if (line.isExtra || line.extraPositionId) {
     if (!line.opsFte) return "";
-    return String(line.extraName || line.position || line.empClass || "").trim();
+    return String(line.extraName || line.position || "").trim();
   }
   if (line.isStso || line.empClass === "STSO") return "STSO";
   if (line.isLtso || line.empClass === "LTSO") return "LTSO";
@@ -225,6 +225,16 @@ export function assignCertPoolsToLines(lines, cfg, shiftStartMin) {
 
   Object.keys(slices).forEach(function (key) {
     fillSliceByHour(slices[key], cfg, ctx);
+  });
+
+  list.forEach(function (line) {
+    if (!line) return;
+    var extra = !!(line.isExtra || line.extraPositionId);
+    if (extra && !line.opsFte) {
+      line.certPool = "";
+      return;
+    }
+    if (!extra && !line.certPool) line.certPool = "A";
   });
   return list;
 }
