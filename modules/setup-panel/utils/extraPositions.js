@@ -130,9 +130,10 @@ export function extraCardsHtml(list, shifts) {
         '<td><button type="button" class="btn btn-red btn-sm" data-extra-band-remove="' + pos.id + '" data-extra-bi="' + i + '">\u2715</button></td></tr>';
     }).join("");
     var ops = opsFteYes(pos) ? "yes" : "no";
+    var safeName = String(pos.name || "").replace(/"/g, """);
     return '<div class="extra-pos-card" data-extra-card="' + pos.id + '">' +
       '<div class="fte-sex-row extra-pos-head">' +
-      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, """) + '" style="width:7rem"></label>' +
+      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + safeName + '" style="width:7rem"></label>' +
       '<label>Male <input type="number" min="0" data-extra-m="' + pos.id + '" value="' + num0(pos.m) + '" style="width:4.5rem"></label>' +
       '<label>Female <input type="number" min="0" data-extra-f="' + pos.id + '" value="' + num0(pos.f) + '" style="width:4.5rem"></label>' +
       '<label>Ops FTE <select data-extra-ops="' + pos.id + '">' +
