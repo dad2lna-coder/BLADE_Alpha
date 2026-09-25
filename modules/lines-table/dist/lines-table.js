@@ -987,6 +987,7 @@ function sn(t) {
       emp: _,
       sex: i.sex || "M",
       function: i.function || "",
+      certPool: i.certPool || "",
       rdos: n(i, o),
       paid: m,
       days: E,
