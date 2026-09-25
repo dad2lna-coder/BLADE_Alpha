@@ -1,7 +1,7 @@
 /** Pure line-to-row model mapper — export-shaped, DOM-free */
-window.Scheduler = window.Scheduler || {};
-(function (S) {
-  "use strict";
+export function initRowModel(S) {
+  S = S || window.Scheduler;
+  if (!S) return;
 
   function padTeamName(name) {
     var raw = String(name || "").trim();
@@ -114,4 +114,4 @@ window.Scheduler = window.Scheduler || {};
     }
     return S.getRowModels(lines, schedule, merged);
   };
-})(window.Scheduler);
+}

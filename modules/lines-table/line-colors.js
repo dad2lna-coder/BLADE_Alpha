@@ -1,13 +1,15 @@
 /** Paint RDO black / BAG red / DFO yellow on the Lines tab */
-window.Scheduler = window.Scheduler || {};
-(function (S) {
-  "use strict";
+export function initLineColors(S) {
+  S = S || window.Scheduler;
+  if (!S) return;
 
   function dutyFor(line, dayIndex) {
     var duty = S.getRotationDuty ? S.getRotationDuty(line.id, dayIndex) : null;
     if (duty) return duty;
     return line.function || null;
   }
+  S.dutyFor = dutyFor;
+
   function workLabel(line) {
     if (line.shiftLabel) return line.shiftLabel;
     var sh = S.getShift ? S.getShift(line.shiftId) : null;
@@ -15,30 +17,33 @@ window.Scheduler = window.Scheduler || {};
     if (sh && sh.start) return sh.start;
     return "WORK";
   }
+
   function applyBagDutyToWorkDays(line) {
     if (!line || line.function !== "BAG") return;
     if (!S.state.functionRotation) S.state.functionRotation = {};
     var key = String(line.id);
     if (!S.state.functionRotation[key]) S.state.functionRotation[key] = [];
-    var sched = S.state.schedule[line.id] || S.state.schedule[key] || [];
+    var sched = (S.state.schedule && (S.state.schedule[line.id] || S.state.schedule[key])) || [];
     var days = Math.max(sched.length, (S.state.weekCount || 1) * 7);
     for (var i = 0; i < days; i++) {
       while (S.state.functionRotation[key].length <= i) S.state.functionRotation[key].push(null);
       if (sched[i] === "WORK") S.state.functionRotation[key][i] = "BAG";
     }
   }
+
   function applyDfoDutyToWorkDays(line) {
     if (!line || line.function !== "DFO") return;
     if (!S.state.functionRotation) S.state.functionRotation = {};
     var key = String(line.id);
     if (!S.state.functionRotation[key]) S.state.functionRotation[key] = [];
-    var sched = S.state.schedule[line.id] || S.state.schedule[key] || [];
+    var sched = (S.state.schedule && (S.state.schedule[line.id] || S.state.schedule[key])) || [];
     var days = Math.max(sched.length, (S.state.weekCount || 1) * 7);
     for (var i = 0; i < days; i++) {
       while (S.state.functionRotation[key].length <= i) S.state.functionRotation[key].push(null);
       if (sched[i] === "WORK") S.state.functionRotation[key][i] = "DFO";
     }
   }
+
   function paintLinesTable() {
     var tbody = document.getElementById("lines-tbody");
     var scope = tbody || document.querySelector(".lines-virtual-root");
@@ -70,6 +75,7 @@ window.Scheduler = window.Scheduler || {};
     });
   }
   S.paintLineColors = paintLinesTable;
+
   function wrap(name) {
     var orig = S[name];
     if (typeof orig !== "function" || orig._lineColorsWrapped) return;
@@ -82,24 +88,23 @@ window.Scheduler = window.Scheduler || {};
     wrapped._lineColorsWrapped = true;
     S[name] = wrapped;
   }
+
   wrap("renderLines");
   wrap("renderAll");
   wrap("generateFunctionAssignments");
-  document.addEventListener("change", function (e) {
-    var t = e.target;
-    if (!t || t.getAttribute("data-field") !== "function") return;
-    var line = S.findLineById ? S.findLineById(t.getAttribute("data-line-id")) : null;
-    if (!line) return;
-    line.function = t.value === "DFO" || t.value === "PAX" || t.value === "BAG" ? t.value : "";
-    if (line.function === "BAG") applyBagDutyToWorkDays(line);
-    if (line.function === "DFO") applyDfoDutyToWorkDays(line);
-    if (S.renderLines) S.renderLines();
-    else paintLinesTable();
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-    wrap("renderLines");
-    wrap("renderAll");
-    wrap("generateFunctionAssignments");
-    paintLinesTable();
-  });
-})(window.Scheduler);
+
+  if (!S._lineColorsBound) {
+    S._lineColorsBound = true;
+    document.addEventListener("change", function (e) {
+      var t = e.target;
+      if (!t || t.getAttribute("data-field") !== "function") return;
+      var line = S.findLineById ? S.findLineById(t.getAttribute("data-line-id")) : null;
+      if (!line) return;
+      line.function = t.value === "DFO" || t.value === "PAX" || t.value === "BAG" ? t.value : "";
+      if (line.function === "BAG") applyBagDutyToWorkDays(line);
+      if (line.function === "DFO") applyDfoDutyToWorkDays(line);
+      if (S.renderLines) S.renderLines();
+      else paintLinesTable();
+    });
+  }
+}

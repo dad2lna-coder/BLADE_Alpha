@@ -1,7 +1,7 @@
 /** Board export — same people as Lines Excel, day cells are location */
-window.Scheduler = window.Scheduler || {};
-(function (S) {
-  "use strict";
+export function attachExportBoard(S) {
+  S = S || window.Scheduler;
+  if (!S) return;
 
   var MODSET_COLORS = ["FF2A9D8F","FFE76F51","FF6A4C93","FF90BE6D","FFF4A261","FF457B9D","FFE9C46A","FFD62828","FF2D6A4F","FF9B5DE5","FF00BBF9","FFFB5607"];
   var TEAM_COLORS = ["FFBDE0FE","FFCDB4DB","FFA8DADC","FFFFC8DD","FFB5EAD7","FFFFDAC1","FFC7CEEA","FFE2F0CB"];
@@ -63,7 +63,7 @@ window.Scheduler = window.Scheduler || {};
   }
 
   S.exportBoardExcel = function () {
-    var lines = (S.state.lines || []).slice();
+    var lines = ((S.state && S.state.lines) || []).slice();
     if (!lines.length) {
       if (S.updateStatus) S.updateStatus("No lines to export. Generate first.");
       return;
@@ -100,7 +100,7 @@ window.Scheduler = window.Scheduler || {};
         var row = [tm.name || "", line.lineCode || line.id, (line.shiftName || (sh && sh.name) || ""), sh ? sh.start : "", sh ? sh.end : "", pos(line), line.sex || "", line.function || ""];
         var flags = [];
         for (var d = 0; d < 7; d++) {
-          var sched = S.state.schedule[line.id] || S.state.schedule[String(line.id)] || [];
+          var sched = (S.state.schedule && (S.state.schedule[line.id] || S.state.schedule[String(line.id)])) || [];
           var isWork = (sched[d] || "RDO") === "WORK";
           var du = isWork ? duty(line, d) : null;
           var isBag = du === "BAG" || du === "BAGS";
@@ -182,4 +182,4 @@ window.Scheduler = window.Scheduler || {};
   }
   document.addEventListener("DOMContentLoaded", hook);
   hook();
-})(window.Scheduler);
+}

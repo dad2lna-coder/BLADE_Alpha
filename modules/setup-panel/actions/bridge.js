@@ -9,6 +9,7 @@ import { attachAllocation } from "./allocation.js";
 import { attachShiftMath } from "../utils/shiftMath.js";
 import { attachAirportStub } from "../utils/airportStub.js";
 import { attachSetupState } from "../stores/setupStore.js";
+import { attachExportBoard } from "./exportBoard.js";
 
 function safeAttach(name, fn) {
   try {
@@ -28,6 +29,7 @@ export function bridgeScheduler(S) {
   safeAttach("attachExtraPositions", function () { attachExtraPositions(S); });
   safeAttach("attachAllocation", function () { attachAllocation(S); });
   safeAttach("attachAirportStub", function () { attachAirportStub(S); });
+  safeAttach("attachExportBoard", function () { attachExportBoard(S); });
 
   safeAttach("rebuildSetupTab", function () {
     S.rebuildSetupTab = function () {
