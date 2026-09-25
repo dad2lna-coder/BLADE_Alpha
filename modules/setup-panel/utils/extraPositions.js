@@ -130,7 +130,7 @@ export function extraCardsHtml(list, shifts) {
         '<td><button type="button" class="btn btn-red btn-sm" data-extra-band-remove="' + pos.id + '" data-extra-bi="' + i + '">\u2715</button></td></tr>';
     }).join("");
     var ops = opsFteYes(pos) ? "yes" : "no";
-    var safeName = String(pos.name || "").replace(/"/g, """);
+    var safeName = String(pos.name || "").split('"').join("");
     return '<div class="extra-pos-card" data-extra-card="' + pos.id + '">' +
       '<div class="fte-sex-row extra-pos-head">' +
       '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + safeName + '" style="width:7rem"></label>' +
