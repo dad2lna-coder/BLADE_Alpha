@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { initRowModel } from './modules/lines-table/row-model.js';
+import { initRowModel } from '../modules/lines-table/row-model.js';
 
 // Simulate window.Scheduler like classic boot does
 global.window = { Scheduler: {} };

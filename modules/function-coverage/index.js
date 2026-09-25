@@ -86,9 +86,6 @@ export function initFunctionCoverage(scheduler) {
   scheduler.migrateFunctionCoverageConfig = migrateFunctionCoverageConfig;
   scheduler.ensureExtraPositions = ensureExtraPositions;
   scheduler.readExtraPositionsFromDom = readExtraPositionsFromDom;
-  scheduler.renderExtraPositions = renderExtraPositions;
-  scheduler.addExtraPosition = addExtraPosition;
-  scheduler.buildExtraPositionLines = buildExtraPositionLines;
   scheduler.clearLineFunctions = clearLineFunctions;
   scheduler.initFunctionCoverage = initFunctionCoverage;
   bindFunctionCoverageUi();

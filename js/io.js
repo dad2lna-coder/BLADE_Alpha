@@ -5,6 +5,11 @@ window.Scheduler = window.Scheduler || {};
 
   function normalizeLine(raw) {
     if (!raw || typeof raw !== "object" || raw.id == null) return null;
+    var extraId = raw.extraPositionId == null ? "" : String(raw.extraPositionId);
+    var extraName = raw.extraName == null ? "" : String(raw.extraName);
+    var isExtra = Boolean(raw.isExtra || extraId);
+    var opsRaw = raw.opsFte;
+    var opsFte = opsRaw === true || opsRaw === 1 || String(opsRaw == null ? "" : opsRaw).toLowerCase() === "yes" || String(opsRaw).toLowerCase() === "true";
     return {
       id: raw.id,
       lineCode: raw.lineCode || ("Line " + String(raw.id).padStart(3, "0")),
@@ -12,11 +17,16 @@ window.Scheduler = window.Scheduler || {};
       shiftName: raw.shiftName || "",
       shiftLabel: raw.shiftLabel || "",
       empClass: raw.empClass || "",
-      position: raw.position || raw.empClass || "",
+      position: raw.position || raw.extraName || raw.empClass || "",
       isLtso: Boolean(raw.isLtso),
       isStso: Boolean(raw.isStso),
+      isExtra: isExtra,
+      extraPositionId: extraId,
+      extraName: extraName || (isExtra ? (raw.position || raw.empClass || "") : ""),
+      opsFte: opsFte,
       sex: raw.sex === "F" ? "F" : "M",
       function: raw.function === "DFO" || raw.function === "PAX" || raw.function === "BAG" ? raw.function : "",
+      certPool: raw.certPool == null ? "" : String(raw.certPool).trim(),
       rdoDays: Array.isArray(raw.rdoDays) ? raw.rdoDays.map(Number).filter(function (x) {
         return Number.isInteger(x) && x >= 0 && x <= 6;
       }) : [],
@@ -92,7 +102,8 @@ window.Scheduler = window.Scheduler || {};
         stsoM: S.state.stsoM, stsoF: S.state.stsoF,
         shifts: S.state.shifts,
         functionCoverage: S.state.functionCoverage || null,
-        extraPositions: S.state.extraPositions || []
+        extraPositions: S.state.extraPositions || [],
+        certPool: S.state.certPool || null
       },
       results: {
         lines: S.state.lines,
@@ -148,6 +159,13 @@ window.Scheduler = window.Scheduler || {};
     if (cfg.functionCoverage && typeof cfg.functionCoverage === "object") {
       S.state.functionCoverage = Object.assign(S.state.functionCoverage || {}, cfg.functionCoverage);
       if (S.ensureFunctionCoverage) S.ensureFunctionCoverage();
+    }
+    var incomingPool = cfg.certPool || payload.certPool;
+    if (incomingPool && typeof incomingPool === "object") {
+      S.state.certPool = S.normalizeCertPoolConfig
+        ? S.normalizeCertPoolConfig(incomingPool)
+        : incomingPool;
+      if (S.fillCertPoolForm) S.fillCertPoolForm();
     }
     if (Array.isArray(cfg.extraPositions)) S.state.extraPositions = cfg.extraPositions;
     S.state.lines = Array.isArray(results.lines) ? results.lines.map(normalizeLine).filter(Boolean) : [];

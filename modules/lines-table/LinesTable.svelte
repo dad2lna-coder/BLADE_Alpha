@@ -9,6 +9,16 @@
   export let onInlineEdit = null;
   export let onDayToggle = null;
 
+  const BASE_POSITIONS = ['TSO', 'LTSO', 'STSO'];
+  const BASE_EMPS = ['FT', 'PT'];
+
+  function withCurrent(base, value) {
+    const v = value == null ? '' : String(value);
+    if (!v) return base;
+    if (base.indexOf(v) >= 0) return base;
+    return base.concat([v]);
+  }
+
   function shiftLabel(opt) {
     if (!opt) return '';
     const name = opt.name || opt.id || '';
@@ -71,6 +81,7 @@
             <th>Emp</th>
             <th>Sex</th>
             <th>Function</th>
+            <th>Cert pool</th>
             <th>RDOs</th>
             <th>Paid</th>
             <th>Sun</th>
@@ -110,18 +121,17 @@
               <td>
                 <select class="line-edit" data-field="position" data-line-id={row?.id} value={row?.position ?? ''} on:change={(e) => emitEdit(row?.id, 'position', e.target.value)}>
                   <option value="">—</option>
-                  <option value="TSO">TSO</option>
-                  <option value="LTSO">LTSO</option>
-                  <option value="STSO">STSO</option>
+                  {#each withCurrent(BASE_POSITIONS, row?.position) as pos}
+                    <option value={pos}>{pos}</option>
+                  {/each}
                 </select>
               </td>
               <td>
                 <select class="line-edit" data-field="emp" data-line-id={row?.id} value={row?.emp ?? ''} on:change={(e) => emitEdit(row?.id, 'emp', e.target.value)}>
                   <option value="">—</option>
-                  <option value="FT">FT</option>
-                  <option value="PT">PT</option>
-                  <option value="LTSO">LTSO</option>
-                  <option value="STSO">STSO</option>
+                  {#each BASE_EMPS as emp}
+                    <option value={emp}>{emp}</option>
+                  {/each}
                 </select>
               </td>
               <td>
@@ -139,6 +149,13 @@
                   <option value="PAX">PAX</option>
                 </select>
               </td>
+              <td>
+                <select class="line-edit" data-field="certPool" data-line-id={row?.id} value={row?.certPool ?? ''} on:change={(e) => emitEdit(row?.id, 'certPool', e.target.value)}>
+                  <option value="">—</option>
+                  <option value="A">A</option>
+                  <option value="B">B</option>
+                </select>
+              </td>
               <td class="line-rdo-cell">{row?.rdos ?? '—'}</td>
               <td>{row?.paid ?? ''}</td>
               {#each [0, 1, 2, 3, 4, 5, 6] as i}
@@ -149,7 +166,7 @@
               <td class="line-hours">{row?.hours ?? ''}</td>
             </tr>
           {:else}
-            <tr><td colspan="19" class="muted">No lines — Generate or Import first.</td></tr>
+            <tr><td colspan="20" class="muted">No lines — Generate or Import first.</td></tr>
           {/each}
         </tbody>
       </table>

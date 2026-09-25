@@ -35,13 +35,24 @@ function workLabelForLine(line, sh) {
   return "WORK";
 }
 
+function extraExportName(line) {
+  if (!line) return "";
+  if (!(line.isExtra || line.extraPositionId)) return "";
+  return String(line.position || line.extraName || "").trim();
+}
+
 function exportPosition(line) {
+  var extra = extraExportName(line);
+  if (extra) return extra;
   if (line.isStso || line.empClass === "STSO") return "STSO";
   if (line.isLtso || line.empClass === "LTSO") return "LTSO";
   return "TSO";
 }
 
 function exportEmpClass(line) {
+  if (line && (line.isExtra || line.extraPositionId)) {
+    return line.empClass === "PT" ? "PT" : "FT";
+  }
   var p = exportPosition(line);
   if (p === "STSO" || p === "LTSO") return "FT";
   return line.empClass === "PT" ? "PT" : "FT";
@@ -152,7 +163,7 @@ function generateAndDownloadXlsx(S) {
   var tmMap = teamColorMap(S, lines);
   var days = 7;
   var dayNames = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  var metaHeaders = ["Team", "Line", "Shift", "Start", "End", "Position", "Emp", "Sex", "Function", "RDOs", "Paid"];
+  var metaHeaders = ["Team", "Line", "Shift", "Start", "End", "Position", "Emp", "Sex", "Function", "Cert pool", "RDOs", "Paid"];
   var headers = metaHeaders.concat(dayNames, ["Hours"]);
   var workbook = new ExcelJS.Workbook();
   workbook.creator = "BrokeSched";
@@ -182,7 +193,7 @@ function generateAndDownloadXlsx(S) {
     tableRows.push([
       teamName, line.lineCode || "", line.shiftName || (sh && sh.name) || "",
       sh ? sh.start : "", sh ? sh.end : "", exportPosition(line), exportEmpClass(line),
-      line.sex || "", line.function || "", rdo, line.paid || ""
+      line.sex || "", line.function || "", line.certPool || "", rdo, line.paid || ""
     ].concat(dayValues, [hours]));
     rowMeta.push({ days: dayFlags, teamFill: teamName ? tmMap[teamName] : null });
   });
@@ -232,7 +243,7 @@ function generateAndDownloadXlsx(S) {
     }
   }
   sheet.columns.forEach(function (col, idx) {
-    col.width = idx === 0 ? 10 : idx < 11 ? 12 : 11;
+    col.width = idx === 0 ? 10 : idx < 12 ? 12 : 11;
   });
   workbook.xlsx.writeBuffer().then(function (buf) {
     var blob = new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });

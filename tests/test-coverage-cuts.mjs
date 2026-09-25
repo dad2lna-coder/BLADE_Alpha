@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
-import { applyCoverageCutsToLines } from "./modules/coverage/components/cuts.js";
-import { parseStartDate, addDays, weekdaySun0, dj } from "./modules/shared/utils/dates.js";
+import { applyCoverageCutsToLines } from "../modules/coverage/components/cuts.js";
+import { parseStartDate, addDays, weekdaySun0, dj } from "../modules/shared/utils/dates.js";
 
 const S = {
   parseStartDate,

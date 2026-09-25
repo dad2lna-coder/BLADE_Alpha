@@ -8,6 +8,8 @@ export function snapshotFte(S) {
     ftF: +(val("cfg-ft-f", S.state && S.state.ftF) || 0),
     ptM: +(val("cfg-pt-m", S.state && S.state.ptM) || 0),
     ptF: +(val("cfg-pt-f", S.state && S.state.ptF) || 0),
+    ptHoursPerDay: +(val("cfg-pt-hours", S.state && S.state.ptHoursPerDay) || 4),
+    ptDaysPerWeek: +(val("cfg-pt-days", S.state && S.state.ptDaysPerWeek) || 3),
     ltsoM: +(val("cfg-ltso-m", S.state && S.state.ltsoM) || 0),
     ltsoF: +(val("cfg-ltso-f", S.state && S.state.ltsoF) || 0),
     stsoM: +(val("cfg-stso-m", S.state && S.state.stsoM) || 0),
@@ -36,6 +38,8 @@ export function applyFte(S, fte) {
   }
   put("cfg-ft-m", fte.ftM); put("cfg-ft-f", fte.ftF);
   put("cfg-pt-m", fte.ptM); put("cfg-pt-f", fte.ptF);
+  if (fte.ptHoursPerDay != null) put("cfg-pt-hours", fte.ptHoursPerDay);
+  if (fte.ptDaysPerWeek != null) put("cfg-pt-days", fte.ptDaysPerWeek);
   put("cfg-ltso-m", fte.ltsoM); put("cfg-ltso-f", fte.ltsoF);
   put("cfg-stso-m", fte.stsoM); put("cfg-stso-f", fte.stsoF);
   if (!S.state) return;
@@ -43,6 +47,10 @@ export function applyFte(S, fte) {
   S.state.ftF = +fte.ftF || 0;
   S.state.ptM = +fte.ptM || 0;
   S.state.ptF = +fte.ptF || 0;
+  var hours = +fte.ptHoursPerDay;
+  S.state.ptHoursPerDay = Number.isFinite(hours) && hours > 0 ? Math.min(12, hours) : 4;
+  var days = Math.round(+fte.ptDaysPerWeek);
+  S.state.ptDaysPerWeek = Number.isFinite(days) && days > 0 ? Math.max(1, Math.min(6, days)) : 3;
   S.state.ltsoM = +fte.ltsoM || 0;
   S.state.ltsoF = +fte.ltsoF || 0;
   S.state.stsoM = +fte.stsoM || 0;
@@ -61,8 +69,12 @@ function readSetupCompanions(S) {
   } else if (S.readFunctionBandsFromDom) {
     try { S.readFunctionBandsFromDom(); } catch (e) {}
   }
+  if (S.readCertPoolFromDom) {
+    try { S.readCertPoolFromDom(); } catch (e) {}
+  }
   setupStore.extraPositions = (S.state && S.state.extraPositions) || [];
   setupStore.functionCoverage = (S.state && S.state.functionCoverage) || null;
+  setupStore.certPool = (S.state && S.state.certPool) || null;
 }
 
 export function collectSetupInputs(S) {
@@ -81,6 +93,7 @@ export function collectSetupInputs(S) {
     period: period,
     extraPositions: setupStore.extraPositions,
     functionCoverage: setupStore.functionCoverage,
+    certPool: setupStore.certPool,
     shifts: (S.state && S.state.shifts) || []
   };
 }
@@ -93,7 +106,8 @@ export function exportStaffingConfig(S) {
     savedAt: S.dj ? S.dj().toISOString() : new Date().toISOString(),
     fte: snap.fte,
     functionCoverage: snap.functionCoverage,
-    extraPositions: snap.extraPositions || []
+    extraPositions: snap.extraPositions || [],
+    certPool: snap.certPool || (S.state && S.state.certPool) || null
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const filename = (S.exportFileName && S.exportFileName("Staffing", ".json")) || "staffing.json";
@@ -110,6 +124,6 @@ export function exportStaffingConfig(S) {
     URL.revokeObjectURL(url);
   }
   try { localStorage.setItem("blade.staffingJson", JSON.stringify(payload)); } catch (e) {}
-  if (S.updateStatus) S.updateStatus("Saved staffing (FTE + function coverage + extra positions).");
+  if (S.updateStatus) S.updateStatus("Saved staffing (FTE + function coverage + cert pools + extra positions).");
   return payload;
 }

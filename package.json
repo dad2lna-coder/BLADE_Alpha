@@ -18,8 +18,9 @@
     "build:shared": "vite build --config vite.shared.config.mjs",
     "build:modules": "npm run build:shared && npm run build:setup-panel && npm run build:coverage && npm run build:team-builder && npm run build:reports && npm run build:demand-capacity && npm run build:lines-table && npm run build:function-coverage",
     "copy-frontend": "node scripts/copy-frontend.js",
-    "test:function-coverage": "node test-function-coverage.mjs",
-    "test:demand-capacity": "node test-demand-capacity.mjs"
+    "test": "node tests/test-task1.js && node tests/test-function-coverage.mjs && node tests/test-demand-capacity.mjs && node tests/test-coverage-cuts.mjs",
+    "test:function-coverage": "node tests/test-function-coverage.mjs",
+    "test:demand-capacity": "node tests/test-demand-capacity.mjs"
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "^3.1.2",

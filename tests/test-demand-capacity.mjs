@@ -8,19 +8,19 @@ import {
   parseVolumeRows,
   headerMapFromRow,
   missingRequired
-} from "./modules/demand-capacity/parse.js";
+} from "../modules/demand-capacity/parse.js";
 import {
   landMinFromEtd,
   bucketFlights,
   emptyDemandByDow
-} from "./modules/demand-capacity/aggregate.js";
+} from "../modules/demand-capacity/aggregate.js";
 import {
   demandSlots,
   computeStaffCapacity,
   roleAllowed,
   PAX_PER_SLOT,
   PAX_PER_HOUR
-} from "./modules/demand-capacity/staffing.js";
+} from "../modules/demand-capacity/staffing.js";
 
 function slotsFrom(open, close) {
   var start = Math.floor(open / 30) * 30;

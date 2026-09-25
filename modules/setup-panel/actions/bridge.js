@@ -10,6 +10,7 @@ import { attachShiftMath } from "../utils/shiftMath.js";
 import { attachAirportStub } from "../utils/airportStub.js";
 import { attachSetupState } from "../stores/setupStore.js";
 import { attachExportBoard } from "./exportBoard.js";
+import { attachCertPools } from "../utils/certs.js";
 
 function safeAttach(name, fn) {
   try {
@@ -23,6 +24,7 @@ export function bridgeScheduler(S) {
   if (!S) return;
 
   safeAttach("attachSetupState", function () { attachSetupState(S); });
+  safeAttach("attachCertPools", function () { attachCertPools(S); });
   safeAttach("attachGenerate", function () { attachGenerate(S); });
   safeAttach("attachShiftMath", function () { attachShiftMath(S); });
   safeAttach("attachShiftsTable", function () { attachShiftsTable(S); });
@@ -68,6 +70,6 @@ export function bridgeScheduler(S) {
       _setupGenerate: typeof S._setupGenerate,
       generate: typeof S.generate
     });
-    if (S.updateStatus) S.updateStatus("Setup generate failed to attach — check console.");
+    if (S.updateStatus) S.updateStatus("Setup generate failed to attach \u2014 check console.");
   }
 }
