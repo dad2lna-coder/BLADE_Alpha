@@ -49,9 +49,14 @@ export function generate(S) {
     }
   });
 
+  if (S.readExtraPositionsFromDom) S.readExtraPositionsFromDom();
+  var extraHead = 0;
+  ((S.state && S.state.extraPositions) || []).forEach(function (p) {
+    extraHead += (+p.m || 0) + (+p.f || 0);
+  });
   var total = S.state.ftM + S.state.ftF + S.state.ptM + S.state.ptF;
-  if (total <= 0) {
-    S.state.issues.push("Set FT/PT male and female headcounts above zero.");
+  if (total <= 0 && extraHead <= 0) {
+    S.state.issues.push("Set FT/PT male and female headcounts above zero, or add an extra type with people.");
     S.state.lines = [];
     S.state.schedule = {};
     if (S.renderAll) S.renderAll();
@@ -66,11 +71,15 @@ export function generate(S) {
     return;
   }
 
-  var allocation = S.allocateShiftHeadcounts(total, openMin, closeMin);
-  var counts = allocation.counts;
-  var mode = allocation.mode;
+  var tsoLines = [];
+  var mode = "extras";
+  if (total > 0) {
+    var allocation = S.allocateShiftHeadcounts(total, openMin, closeMin);
+    var counts = allocation.counts;
+    mode = allocation.mode;
+    tsoLines = S.buildLines(counts);
+  }
   S.state.mode = mode;
-  var tsoLines = S.buildLines(counts);
 
   var ltsoTotal = S.state.ltsoM + S.state.ltsoF;
   var ltsoLines = [];
@@ -84,7 +93,6 @@ export function generate(S) {
     var stsoAlloc = S.allocateSupervisoryHeadcounts(stsoTotal, openMin, closeMin, "stsoForce", tsoLines);
     stsoLines = S.buildSupervisoryLines(stsoAlloc.counts || {}, "STSO");
   }
-  if (S.readExtraPositionsFromDom) S.readExtraPositionsFromDom();
   var extraLines = S.buildExtraPositionLines ? S.buildExtraPositionLines() : [];
   S.state.lines = [].concat(tsoLines, ltsoLines, stsoLines, extraLines);
 
@@ -103,7 +111,38 @@ export function generate(S) {
   }
 
   var dayTotals = [];
-  var workingLines = S.state.lines.filter(function (l) { return !l.isLtso && !l.isStso && !l.isExtra; });
+  if (S.formExtraTypeTeams) {
+    try { S.formExtraTypeTeams(); } catch (teamErr) { console.error("formExtraTypeTeams", teamErr); }
+  } else {
+    S.teams = S.teams || { teams: [] };
+    if (!Array.isArray(S.teams.teams)) S.teams.teams = [];
+    var extraByType = {};
+    (S.state.lines || []).forEach(function (l) {
+      if (!(l.isExtra || l.extraPositionId)) return;
+      var key = l.extraName || l.position || l.empClass || "EXTRA";
+      if (!extraByType[key]) extraByType[key] = [];
+      extraByType[key].push(l.id);
+    });
+    Object.keys(extraByType).forEach(function (typeName) {
+      var team = S.teams.teams.find(function (t) { return t.extraGroup === typeName || t.name === typeName; });
+      if (!team) {
+        team = { id: "TX-" + typeName, name: typeName, members: [], followMe: false, phase: null, extraGroup: typeName };
+        S.teams.teams.push(team);
+      }
+      team.extraGroup = typeName;
+      team.name = typeName;
+      team.members = extraByType[typeName].slice();
+    });
+  }
+  if (S.renderTeams) {
+    try { S.renderTeams(); } catch (e) {}
+  }
+
+  var workingLines = S.state.lines.filter(function (l) {
+    if (l.isLtso || l.isStso) return false;
+    if (l.isExtra || l.extraPositionId) return !!l.opsFte;
+    return true;
+  });
   for (var d = 0; d < Math.min(7, days); d++) {
     dayTotals.push(workingLines.filter(function (l) {
       return S.state.schedule[l.id][d] === "WORK";
