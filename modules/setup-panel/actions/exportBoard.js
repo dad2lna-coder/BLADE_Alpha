@@ -17,6 +17,9 @@ export function attachExportBoard(S) {
     if (fill) cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
   }
   function pos(line) {
+    if (line && (line.isExtra || line.extraPositionId)) {
+      return String(line.position || line.extraName || "").trim() || "TSO";
+    }
     if (line.isStso || line.empClass === "STSO") return "STSO";
     if (line.isLtso || line.empClass === "LTSO") return "LTSO";
     return "TSO";
