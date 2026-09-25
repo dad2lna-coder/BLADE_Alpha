@@ -8,6 +8,8 @@ export function snapshotFte(S) {
     ftF: +(val("cfg-ft-f", S.state && S.state.ftF) || 0),
     ptM: +(val("cfg-pt-m", S.state && S.state.ptM) || 0),
     ptF: +(val("cfg-pt-f", S.state && S.state.ptF) || 0),
+    ptHoursPerDay: +(val("cfg-pt-hours", S.state && S.state.ptHoursPerDay) || 4),
+    ptDaysPerWeek: +(val("cfg-pt-days", S.state && S.state.ptDaysPerWeek) || 3),
     ltsoM: +(val("cfg-ltso-m", S.state && S.state.ltsoM) || 0),
     ltsoF: +(val("cfg-ltso-f", S.state && S.state.ltsoF) || 0),
     stsoM: +(val("cfg-stso-m", S.state && S.state.stsoM) || 0),
@@ -36,6 +38,8 @@ export function applyFte(S, fte) {
   }
   put("cfg-ft-m", fte.ftM); put("cfg-ft-f", fte.ftF);
   put("cfg-pt-m", fte.ptM); put("cfg-pt-f", fte.ptF);
+  if (fte.ptHoursPerDay != null) put("cfg-pt-hours", fte.ptHoursPerDay);
+  if (fte.ptDaysPerWeek != null) put("cfg-pt-days", fte.ptDaysPerWeek);
   put("cfg-ltso-m", fte.ltsoM); put("cfg-ltso-f", fte.ltsoF);
   put("cfg-stso-m", fte.stsoM); put("cfg-stso-f", fte.stsoF);
   if (!S.state) return;
@@ -43,6 +47,10 @@ export function applyFte(S, fte) {
   S.state.ftF = +fte.ftF || 0;
   S.state.ptM = +fte.ptM || 0;
   S.state.ptF = +fte.ptF || 0;
+  var hours = +fte.ptHoursPerDay;
+  S.state.ptHoursPerDay = Number.isFinite(hours) && hours > 0 ? Math.min(12, hours) : 4;
+  var days = Math.round(+fte.ptDaysPerWeek);
+  S.state.ptDaysPerWeek = Number.isFinite(days) && days > 0 ? Math.max(1, Math.min(6, days)) : 3;
   S.state.ltsoM = +fte.ltsoM || 0;
   S.state.ltsoF = +fte.ltsoF || 0;
   S.state.stsoM = +fte.stsoM || 0;
