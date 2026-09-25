@@ -35,13 +35,23 @@ function workLabelForLine(line, sh) {
   return "WORK";
 }
 
+function extraExportName(line) {
+  if (!line) return "";
+  if (!(line.isExtra || line.extraPositionId)) return "";
+  return String(line.position || line.extraName || "").trim();
+}
+
 function exportPosition(line) {
+  var extra = extraExportName(line);
+  if (extra) return extra;
   if (line.isStso || line.empClass === "STSO") return "STSO";
   if (line.isLtso || line.empClass === "LTSO") return "LTSO";
   return "TSO";
 }
 
 function exportEmpClass(line) {
+  var extra = extraExportName(line);
+  if (extra) return extra;
   var p = exportPosition(line);
   if (p === "STSO" || p === "LTSO") return "FT";
   return line.empClass === "PT" ? "PT" : "FT";
