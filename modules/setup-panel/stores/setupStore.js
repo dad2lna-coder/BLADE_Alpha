@@ -44,6 +44,7 @@ export function defaultSetupState() {
     stsoM: 2, stsoF: 2,
     certDfoMax: 0, certPaxMax: 0, certBagMax: 0,
     certDfoEnabled: true, certBagEnabled: true,
+    certPool: { pools: ["A", "B"], targetBPercent: 45, functionMap: { DFO: "B", BAG: "", PAX: "" } },
     functionRotation: {},
     functionCoverage: defaultFunctionCoverage(),
     shifts: defaultShifts(),
@@ -73,6 +74,9 @@ export function attachSetupState(S) {
     S.state.shifts = defaultShifts();
   }
   if (!S.state.functionCoverage) S.state.functionCoverage = defaultFunctionCoverage();
+  if (!S.state.certPool) {
+    S.state.certPool = { pools: ["A", "B"], targetBPercent: 45, functionMap: { DFO: "B", BAG: "", PAX: "" } };
+  }
   S.defaultShifts = defaultShifts;
   if (!S.shiftSeq) S.shiftSeq = (S.state.shifts && S.state.shifts.length) || 6;
 }
