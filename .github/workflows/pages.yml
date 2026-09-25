@@ -26,6 +26,18 @@ jobs:
         with:
           ref: bright-garden
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build all modules
+        run: npm run build:modules
+
       - name: Assemble site
         run: |
           set -euo pipefail

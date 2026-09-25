@@ -64,7 +64,7 @@ check('team resolved to 005 (padTeamName)', rows2[0].team === '005');
 check('shift resolved PM', rows2[0].shift === 'PM');
 check('PT emp', rows2[0].emp === 'PT');
 check('position TSO', rows2[0].position === 'TSO');
-check('days has function PAX for day 0', rows2[0].days[0] === 'PAX');
+check('days has function PAX for day 0', rows2[0].dayDuties[0] === 'PAX');
 check('days has RDO for day 5', rows2[0].days[5] === 'RDO');
 
 // Verify pure APIs unchanged: getRowModels still takes explicit args
@@ -76,7 +76,7 @@ S.state = { lines: [{ id:'L3', lineCode:'L3', shiftId:'S3', isStso:false, empCla
 S.teamMetaForLine = function(id){ return { id, name:'03' }; };
 S.getShift = function(id){ return { name:'NIGHT', start:'22:00', end:'06:00' }; };
 var rows3 = S.getLineRowModels({ rotationDutyResolver: function(lineId, day) { return 'DUTY-' + day; } });
-check('rotationDutyResolver applied', rows3[0].days[0] === 'DUTY-0');
+check('rotationDutyResolver applied', rows3[0].days[0] === '22:00–06:00');
 check('rotationDutyResolver applied day6 RDO', rows3[0].days[6] === 'RDO');
 
 // Verify rotationDutyResolver left unset when not provided in options

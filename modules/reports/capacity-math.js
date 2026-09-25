@@ -1,7 +1,7 @@
 /** Capacity + daily mod-set coverage assignment */
-window.Scheduler = window.Scheduler || {};
-(function (S) {
-  "use strict";
+export function initCapacityMath(S) {
+  S = S || window.Scheduler;
+  if (!S) return;
 
   function cfg() {
     return (S.getAirportConfig && S.getAirportConfig()) || { startTime: "03:30", endTime: "23:00", terminals: [] };
@@ -67,7 +67,7 @@ window.Scheduler = window.Scheduler || {};
   };
 
   function memberWorks(mid, day) {
-    var sched = (S.state.schedule && (S.state.schedule[mid] || S.state.schedule[String(mid)])) || [];
+    var sched = (S.state && S.state.schedule && (S.state.schedule[mid] || S.state.schedule[String(mid)])) || [];
     return sched[day] === "WORK";
   }
 
@@ -312,4 +312,4 @@ window.Scheduler = window.Scheduler || {};
     }
     S.renderCapacity();
   };
-})(window.Scheduler);
+}
