@@ -9,6 +9,16 @@
   export let onInlineEdit = null;
   export let onDayToggle = null;
 
+  const BASE_POSITIONS = ['TSO', 'LTSO', 'STSO'];
+  const BASE_EMPS = ['FT', 'PT', 'LTSO', 'STSO'];
+
+  function withCurrent(base, value) {
+    const v = value == null ? '' : String(value);
+    if (!v) return base;
+    if (base.indexOf(v) >= 0) return base;
+    return base.concat([v]);
+  }
+
   function shiftLabel(opt) {
     if (!opt) return '';
     const name = opt.name || opt.id || '';
@@ -111,18 +121,17 @@
               <td>
                 <select class="line-edit" data-field="position" data-line-id={row?.id} value={row?.position ?? ''} on:change={(e) => emitEdit(row?.id, 'position', e.target.value)}>
                   <option value="">—</option>
-                  <option value="TSO">TSO</option>
-                  <option value="LTSO">LTSO</option>
-                  <option value="STSO">STSO</option>
+                  {#each withCurrent(BASE_POSITIONS, row?.position) as pos}
+                    <option value={pos}>{pos}</option>
+                  {/each}
                 </select>
               </td>
               <td>
                 <select class="line-edit" data-field="emp" data-line-id={row?.id} value={row?.emp ?? ''} on:change={(e) => emitEdit(row?.id, 'emp', e.target.value)}>
                   <option value="">—</option>
-                  <option value="FT">FT</option>
-                  <option value="PT">PT</option>
-                  <option value="LTSO">LTSO</option>
-                  <option value="STSO">STSO</option>
+                  {#each withCurrent(BASE_EMPS, row?.emp) as emp}
+                    <option value={emp}>{emp}</option>
+                  {/each}
                 </select>
               </td>
               <td>
