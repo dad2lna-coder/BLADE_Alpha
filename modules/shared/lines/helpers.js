@@ -77,9 +77,56 @@ export function attachLineHelpers(S) {
   };
   S.applyLineEmp = function (line, emp) {
     if (!line) return;
-    line.empClass = emp;
-    line.isStso = emp === "STSO";
-    line.isLtso = emp === "LTSO";
+    var v = String(emp == null ? "" : emp).trim();
+    var extra = !!(line.isExtra || line.extraPositionId);
+    if (v === "STSO") {
+      line.empClass = extra ? (line.empClass || v) : "STSO";
+      if (!extra) line.position = "STSO";
+      line.isStso = !extra;
+      line.isLtso = false;
+      if (extra) {
+        line.empClass = v === line.empClass ? line.empClass : line.empClass;
+        line.isStso = false;
+      }
+      if (!extra) return;
+    }
+    if (!extra && v === "STSO") {
+      line.empClass = "STSO";
+      line.position = "STSO";
+      line.isStso = true;
+      line.isLtso = false;
+      return;
+    }
+    if (!extra && v === "LTSO") {
+      line.empClass = "LTSO";
+      line.position = "LTSO";
+      line.isStso = false;
+      line.isLtso = true;
+      return;
+    }
+    if (!extra && (v === "FT" || v === "PT" || v === "TSO")) {
+      line.empClass = v === "PT" ? "PT" : "FT";
+      line.position = "TSO";
+      line.isStso = false;
+      line.isLtso = false;
+      return;
+    }
+    if (extra) {
+      if (v) {
+        line.empClass = v;
+        line.position = v;
+        line.extraName = v;
+      }
+      line.isStso = false;
+      line.isLtso = false;
+      return;
+    }
+    if (v) {
+      line.empClass = v;
+      line.position = v;
+      line.isStso = false;
+      line.isLtso = false;
+    }
   };
   S.filterLinesForView = function (list) {
     var fr = S.linesView.filterRole || "ALL";
