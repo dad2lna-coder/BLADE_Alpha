@@ -5,6 +5,14 @@
   gap: 1rem;
 }
 
+#tab-setup.active > * {
+  flex-shrink: 0;
+}
+
+#tab-setup.active details.setup-fold {
+  display: block;
+}
+
 #setup-io-toolbar .setup-io-row {
   display: flex;
   flex-wrap: wrap;
@@ -14,10 +22,6 @@
 
 .setup-fold {
   transition: all 0.3s ease;
-}
-
-.setup-fold[open] {
-  /* Remove default details marker */
 }
 
 /* Function coverage pools match FTE role + Male/Female cards */
@@ -60,6 +64,17 @@
   max-height: 20vh;
   margin-top: 0.5rem;
 }
+.extra-pos-shifts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.85rem;
+  justify-content: center;
+  align-items: center;
+  margin: 0.45rem 0 0.2rem;
+}
+.extra-shift-park {
+  font-size: 0.85rem;
+}
 @media (max-width: 720px) {
   #fc-pool-row {
     grid-template-columns: 1fr;
@@ -74,7 +89,6 @@
   margin-top: 0.75rem;
 }
 
-/* Basic card layout inherits from team-builder.css */
 #team-pool,
 #team-pool.team-pool-columns,
 #team-pool.team-role-list {
@@ -87,4 +101,13 @@
 
 #team-pool .team-line {
   flex: 0 0 auto;
+}
+
+#card-cert-pool .fte-role {
+  text-align: center;
+  font-weight: 700;
+  margin: 0.85rem 0 0.35rem;
+}
+#card-cert-pool .cert-map-row select {
+  min-width: 5rem;
 }

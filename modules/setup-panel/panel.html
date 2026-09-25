@@ -20,7 +20,7 @@
 <div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ltso-m" min="0" value="1" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ltso-f" min="0" value="1" style="width:4.5rem" /></label></div>
 <div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">STSO</div>
 <div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-stso-m" min="0" value="2" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-stso-f" min="0" value="2" style="width:4.5rem" /></label></div>
-<div class="toolbar" style="margin-top:0.75rem;gap:0.5rem;flex-wrap:wrap"><button type="button" class="btn" id="btn-add-position">+ Add position</button><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button><span class="muted">FTE + function coverage only. No lines.</span></div>
+<div class="toolbar" style="margin-top:0.75rem;gap:0.5rem;flex-wrap:wrap"><button type="button" class="btn" id="btn-add-position">+ Add position</button><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button></div>
 <div id="extra-pos-list" class="extra-pos-list"></div>
 </div>
 </details>
@@ -60,6 +60,37 @@
 </div>
 <div id="fc-bands-wrap" class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Shift</th><th>Start</th><th>End</th><th>STSO min</th><th>STSO max</th><th>LTSO min</th><th>LTSO max</th><th>TSO min</th><th>TSO max</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
 <p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
+</details>
+<details class="card setup-fold" id="card-cert-pool"><summary class="section-title">Cert pools</summary>
+<p class="muted" style="margin:0 0 0.65rem">Second label on each ops line. Function stays DFO / BAG / PAX. Function map wins — every DFO is B even if that hour goes over the target. 45% B is a best-effort target for every operational hour of every day inside the slice. A person counts only on days they work, and only in the hours their shift covers. Part-time counts for those hours, not as a full open-to-close body. After forced B labels, remaining B labels go to people who cover hours that are still short. Anyone still unlabeled becomes A. Slices stay STSO, LTSO, and TSO × sex (TSO men = FT+PT; same for women). Ops Yes extras use their own type name × sex slice and are not folded into TSO. Ops No extras stay blank and out of every slice.</p>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">Pools A and B</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap">
+<label>B target % <input type="number" id="cfg-cert-pool-b-pct" min="0" max="100" value="45" style="width:4.5rem" /></label>
+</div>
+<div class="fte-role" style="text-align:center;font-weight:600;margin:0.85rem 0 0.35rem">Function map</div>
+<div class="fte-sex-row cert-map-row" style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap">
+<label>DFO
+  <select id="cfg-cert-map-dfo">
+    <option value="none">none</option>
+    <option value="A">A</option>
+    <option value="B" selected>B</option>
+  </select>
+</label>
+<label>BAG
+  <select id="cfg-cert-map-bag">
+    <option value="none" selected>none</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+  </select>
+</label>
+<label>PAX
+  <select id="cfg-cert-map-pax">
+    <option value="none" selected>none</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+  </select>
+</label>
+</div>
 </details>
 <div class="card"><div class="section-title">Shifts</div><div class="toolbar"><button type="button" class="btn" id="btn-add-shift">+ Add shift</button></div><div class="lines-scroll" style="max-height:none"><table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Phase</th><th>Paid h</th><th>TSO force</th><th>LTSO force</th><th>STSO force</th><th>Hard RDOs (Sun–Sat)</th><th>Day times</th></tr></thead><tbody id="shifts-tbody"></tbody></table></div></div>
 <div id="issues"></div>

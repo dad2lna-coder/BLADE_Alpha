@@ -6,7 +6,7 @@ export function defaultShifts() {
     { id: "S2", name: "0400", start: "04:00", end: "12:30", paid: 8, force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [] },
     { id: "S3", name: "1230", start: "12:00", end: "20:30", paid: 8, force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [] },
     { id: "S4", name: "1430", start: "14:30", end: "23:00", paid: 8, force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [] },
-    { id: "S5", name: "4×10", start: "10:30", end: "20:00", paid: 10, force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [2, 3, 6] }
+    { id: "S5", name: "4\u00d710", start: "10:30", end: "20:00", paid: 10, force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [2, 3, 6] }
   ];
 }
 
@@ -38,10 +38,13 @@ export function defaultSetupState() {
     weekCount: 1,
     ftM: 10, ftF: 10,
     ptM: 4, ptF: 4,
+    ptHoursPerDay: 4,
+    ptDaysPerWeek: 3,
     ltsoM: 1, ltsoF: 1,
     stsoM: 2, stsoF: 2,
     certDfoMax: 0, certPaxMax: 0, certBagMax: 0,
     certDfoEnabled: true, certBagEnabled: true,
+    certPool: { pools: ["A", "B"], targetBPercent: 45, functionMap: { DFO: "B", BAG: "", PAX: "" } },
     functionRotation: {},
     functionCoverage: defaultFunctionCoverage(),
     shifts: defaultShifts(),
@@ -71,6 +74,9 @@ export function attachSetupState(S) {
     S.state.shifts = defaultShifts();
   }
   if (!S.state.functionCoverage) S.state.functionCoverage = defaultFunctionCoverage();
+  if (!S.state.certPool) {
+    S.state.certPool = { pools: ["A", "B"], targetBPercent: 45, functionMap: { DFO: "B", BAG: "", PAX: "" } };
+  }
   S.defaultShifts = defaultShifts;
   if (!S.shiftSeq) S.shiftSeq = (S.state.shifts && S.state.shifts.length) || 6;
 }

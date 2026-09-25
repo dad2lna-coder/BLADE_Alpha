@@ -60,8 +60,10 @@ export function lineCoversSlot(line, dayIndex, slotMin) {
   if (!sched || sched[dayIndex] !== "WORK") return false;
   var dow = dayIndex % 7;
   var base = api.state && api.state.startDate;
-  if (base && typeof base.add === "function" && typeof base.day === "function") {
-    dow = base.add(dayIndex, "day").day();
+  if (base) {
+    dow = (api.weekdaySun0 && api.addDays)
+      ? api.weekdaySun0(api.addDays(base, dayIndex))
+      : (api.dj ? api.dj(base).add(dayIndex).day() : dayIndex % 7);
   }
   var times = api.getEffectiveShiftTimes ? api.getEffectiveShiftTimes(line.shiftId, dow) : null;
   if (!times) {

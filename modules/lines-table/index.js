@@ -2,10 +2,15 @@
  * Rows come from filtered/sorted getRowModels. Edits write Scheduler.state.
  */
 import LinesTable from './LinesTable.svelte';
+import { initRowModel } from './row-model.js';
+import { initLineColors } from './line-colors.js';
 
 export function initLinesTable(scheduler) {
   const S = scheduler || window.Scheduler;
   if (!S) return;
+
+  initRowModel(S);
+  initLineColors(S);
 
   const root = document.getElementById("lines-table-root");
   if (!root) {
@@ -109,8 +114,24 @@ export function initLinesTable(scheduler) {
       line.sex = value === "F" ? "F" : "M";
     } else if (field === "function") {
       line.function = value === "DFO" || value === "PAX" || value === "BAG" ? value : "";
-    } else if (field === "emp" || field === "position") {
+    } else if (field === "certPool") {
+      var pool = String(value || "").trim().toUpperCase();
+      line.certPool = pool === "A" || pool === "B" ? pool : "";
+    } else if (field === "emp") {
       if (S.applyLineEmp) S.applyLineEmp(line, value);
+    } else if (field === "position") {
+      var extraPos = !!(line.isExtra || line.extraPositionId);
+      var pos = String(value == null ? "" : value).trim();
+      if (extraPos) {
+        if (pos) {
+          line.position = pos;
+          line.extraName = pos;
+        }
+        line.isStso = false;
+        line.isLtso = false;
+      } else if (S.applyLineEmp) {
+        S.applyLineEmp(line, pos);
+      }
     } else if (field === "shift") {
       if (S.applyLineShift) S.applyLineShift(line, value);
     } else if (field === "team") {

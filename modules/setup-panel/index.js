@@ -2,6 +2,7 @@
 import { ensureStyles } from "./utils/sync.js";
 import { bridgeScheduler } from "./actions/bridge.js";
 import { renderAll, bindSetupActions } from "./actions/render.js";
+import { attachExtraPositions } from "./utils/extraPositions.js";
 
 let _boundDomContentLoaded = false;
 
@@ -55,6 +56,8 @@ export function initSetupPanel(scheduler) {
       try { S.fillFunctionCoverageForm(); } catch (e) {}
     }
   }
+  // Setup owns extra-type cards + line build; reclaim if FC rebound the helpers.
+  attachExtraPositions(S);
 
   renderAll(S);
 }

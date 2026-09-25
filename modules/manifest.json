@@ -1,18 +1,18 @@
 {
   "shared-utils": {
-    "entry": "modules/shared/utils/index.js",
+    "entry": "modules/shared/dist/shared-utils.js",
     "init": "initSharedUtils"
   },
   "shared-chrome": {
-    "entry": "modules/shared/chrome.js",
+    "entry": "modules/shared/dist/shared-chrome.js",
     "init": "initSharedChrome"
   },
   "shared-lines": {
-    "entry": "modules/shared/lines/helpers.js",
+    "entry": "modules/shared/dist/shared-lines.js",
     "init": "initLineHelpers"
   },
   "team-builder": {
-    "entry": "modules/team-builder/index.js",
+    "entry": "modules/team-builder/dist/team-builder.js",
     "init": "initTeamBuilder",
     "css": [
       "modules/team-builder/styles/team-builder.css"
@@ -26,11 +26,11 @@
     "reportsMount": "#report-sub-cohesion"
   },
   "function-coverage": {
-    "entry": "modules/function-coverage/index.js",
+    "entry": "modules/function-coverage/dist/function-coverage.js",
     "init": "initFunctionCoverage"
   },
   "setup-panel": {
-    "entry": "modules/setup-panel/index.js",
+    "entry": "modules/setup-panel/dist/setup-panel.js",
     "init": "initSetupPanel",
     "css": [
       "modules/setup-panel/styles/setup-panel.css"
@@ -48,7 +48,7 @@
     "tab": { "id": "lines", "label": "LINES", "priority": 1, "order": 2 }
   },
   "coverage": {
-    "entry": "modules/coverage/index.js",
+    "entry": "modules/coverage/dist/coverage.js",
     "init": "initCoverage",
     "css": [
       "modules/coverage/styles/coverage.css"
@@ -58,7 +58,7 @@
     "tab": { "id": "coverage", "label": "COVERAGE", "priority": 1, "order": 3 }
   },
   "demand-capacity": {
-    "entry": "modules/demand-capacity/index.js",
+    "entry": "modules/demand-capacity/dist/demand-capacity.js",
     "init": "initDemandCapacity",
     "css": [
       "modules/demand-capacity/styles/demand-capacity.css"
@@ -68,7 +68,7 @@
     "reportsSubTab": { "id": "demand", "label": "Demand", "order": 2 }
   },
   "reports": {
-    "entry": "modules/reports/index.js",
+    "entry": "modules/reports/dist/reports.js",
     "init": "initReportsShell",
     "css": [
       "modules/reports/styles/reports.css",

@@ -1,7 +1,7 @@
 /** Management reports — deviation tables + gender balance analysis */
-window.Scheduler = window.Scheduler || {};
-(function (S) {
-  "use strict";
+export function initReportsMath(S) {
+  S = S || window.Scheduler;
+  if (!S) return;
 
   S.reportsView = S.reportsView || {
     which: "passenger", // passenger | baggage | total | dfoPool
@@ -52,7 +52,7 @@ window.Scheduler = window.Scheduler || {};
       });
     });
 
-    S.state.lines.forEach(function (line) {
+    (S.state.lines || []).forEach(function (line) {
       if (!S.getShift(line.shiftId)) return;
       var role = roleOf(line);
       var sex = line.sex === "F" ? "F" : "M";
@@ -159,7 +159,7 @@ window.Scheduler = window.Scheduler || {};
   S.renderDeviationReport = function (containerId, mode, title) {
     var el = S.$(containerId);
     if (!el) return;
-    if (!S.state.lines.length) {
+    if (!S.state.lines || !S.state.lines.length) {
       el.innerHTML = '<p class="muted">Generate a schedule first.</p>';
       return;
     }
@@ -174,7 +174,8 @@ window.Scheduler = window.Scheduler || {};
       title +
       "</h3>" +
       '<div class="lines-scroll"><table class="data-table rpt-table"><thead><tr><th>Window</th>';
-    for (var d = 0; d < 7; d++) html += "<th>" + (S.DAYS[d] || d) + "</th>";
+    var days = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    for (var d = 0; d < 7; d++) html += "<th>" + (days[d] || d) + "</th>";
     html += "</tr></thead><tbody>";
     rows.forEach(function (r) {
       html +=
@@ -238,7 +239,7 @@ window.Scheduler = window.Scheduler || {};
   S.renderGenderBalanceReports = function () {
     var el = S.$("report-gender");
     if (!el) return;
-    if (!S.state.lines.length) {
+    if (!S.state.lines || !S.state.lines.length) {
       el.innerHTML = '<p class="muted">Generate a schedule first.</p>';
       return;
     }
@@ -294,6 +295,7 @@ window.Scheduler = window.Scheduler || {};
       }
     });
 
+    var daysArr = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     var html =
       '<h3 class="section-title">Gender balance by shift phase</h3>' +
       '<p class="muted">AM anchor ' +
@@ -308,7 +310,7 @@ window.Scheduler = window.Scheduler || {};
       skewThr +
       " pts</p>" +
       '<div class="lines-scroll"><table class="data-table"><thead><tr><th>Phase</th>';
-    for (var d = 0; d < 7; d++) html += "<th>" + S.DAYS[d] + "</th>";
+    for (var d = 0; d < 7; d++) html += "<th>" + daysArr[d] + "</th>";
     html += "</tr></thead><tbody>";
     phases.forEach(function (p) {
       html += "<tr><td><strong>" + p + "</strong></td>";
@@ -384,7 +386,7 @@ window.Scheduler = window.Scheduler || {};
     html +=
       '<h3 class="section-title" style="margin-top:1rem">RDO pattern equity by gender</h3>' +
       '<table class="data-table"><thead><tr><th>Sex</th>';
-    for (var d = 0; d < 7; d++) html += "<th>" + S.DAYS[d] + "</th>";
+    for (var d = 0; d < 7; d++) html += "<th>" + daysArr[d] + "</th>";
     html += "<th>Total</th></tr></thead><tbody>";
     function rdoRow(label, arr) {
       var sum = arr.reduce(function (a, b) { return a + b; }, 0);
@@ -510,8 +512,6 @@ window.Scheduler = window.Scheduler || {};
     return { name: name, stso: stso, ltso: ltso, tso: tso, cohesionPct: cohesionPct };
   };
 
-  // Pair/group cohesion: retrofit later.
-
   S.renderTeamCohesionReport = function () {
     var el = S.$("report-cohesion");
     if (!el) return;
@@ -583,4 +583,4 @@ window.Scheduler = window.Scheduler || {};
       }
     });
   };
-})(window.Scheduler);
+}

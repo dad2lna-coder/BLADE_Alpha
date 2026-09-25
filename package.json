@@ -10,6 +10,13 @@
     "build:win": "tauri build --bundles nsis",
     "build:function-coverage": "vite build --config vite.function-coverage.config.mjs",
     "build:lines-table": "vite build --config vite.lines-table.config.mjs",
+    "build:setup-panel": "vite build --config vite.setup-panel.config.mjs",
+    "build:coverage": "vite build --config vite.coverage.config.mjs",
+    "build:team-builder": "vite build --config vite.team-builder.config.mjs",
+    "build:reports": "vite build --config vite.reports.config.mjs",
+    "build:demand-capacity": "vite build --config vite.demand-capacity.config.mjs",
+    "build:shared": "vite build --config vite.shared.config.mjs",
+    "build:modules": "npm run build:shared && npm run build:setup-panel && npm run build:coverage && npm run build:team-builder && npm run build:reports && npm run build:demand-capacity && npm run build:lines-table && npm run build:function-coverage",
     "copy-frontend": "node scripts/copy-frontend.js",
     "test:function-coverage": "node test-function-coverage.mjs",
     "test:demand-capacity": "node test-demand-capacity.mjs"
