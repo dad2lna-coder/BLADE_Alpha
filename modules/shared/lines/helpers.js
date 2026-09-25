@@ -79,44 +79,30 @@ export function attachLineHelpers(S) {
     if (!line) return;
     var v = String(emp == null ? "" : emp).trim();
     var extra = !!(line.isExtra || line.extraPositionId);
-    if (v === "STSO") {
-      line.empClass = extra ? (line.empClass || v) : "STSO";
-      if (!extra) line.position = "STSO";
-      line.isStso = !extra;
+    if (extra) {
+      if (v === "PT") line.empClass = "PT";
+      else if (v === "FT" || v === "TSO") line.empClass = "FT";
+      line.isStso = false;
       line.isLtso = false;
-      if (extra) {
-        line.empClass = v === line.empClass ? line.empClass : line.empClass;
-        line.isStso = false;
-      }
-      if (!extra) return;
+      return;
     }
-    if (!extra && v === "STSO") {
+    if (v === "STSO") {
       line.empClass = "STSO";
       line.position = "STSO";
       line.isStso = true;
       line.isLtso = false;
       return;
     }
-    if (!extra && v === "LTSO") {
+    if (v === "LTSO") {
       line.empClass = "LTSO";
       line.position = "LTSO";
       line.isStso = false;
       line.isLtso = true;
       return;
     }
-    if (!extra && (v === "FT" || v === "PT" || v === "TSO")) {
+    if (v === "FT" || v === "PT" || v === "TSO") {
       line.empClass = v === "PT" ? "PT" : "FT";
       line.position = "TSO";
-      line.isStso = false;
-      line.isLtso = false;
-      return;
-    }
-    if (extra) {
-      if (v) {
-        line.empClass = v;
-        line.position = v;
-        line.extraName = v;
-      }
       line.isStso = false;
       line.isLtso = false;
       return;
