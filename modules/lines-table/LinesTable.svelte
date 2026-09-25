@@ -10,7 +10,7 @@
   export let onDayToggle = null;
 
   const BASE_POSITIONS = ['TSO', 'LTSO', 'STSO'];
-  const BASE_EMPS = ['FT', 'PT', 'LTSO', 'STSO'];
+  const BASE_EMPS = ['FT', 'PT'];
 
   function withCurrent(base, value) {
     const v = value == null ? '' : String(value);
@@ -129,7 +129,7 @@
               <td>
                 <select class="line-edit" data-field="emp" data-line-id={row?.id} value={row?.emp ?? ''} on:change={(e) => emitEdit(row?.id, 'emp', e.target.value)}>
                   <option value="">—</option>
-                  {#each withCurrent(BASE_EMPS, row?.emp) as emp}
+                  {#each BASE_EMPS as emp}
                     <option value={emp}>{emp}</option>
                   {/each}
                 </select>
