@@ -94,3 +94,12 @@
 #team-pool .team-line {
   flex: 0 0 auto;
 }
+
+#card-cert-pool .fte-role {
+  text-align: center;
+  font-weight: 700;
+  margin: 0.85rem 0 0.35rem;
+}
+#card-cert-pool .cert-map-row select {
+  min-width: 5rem;
+}

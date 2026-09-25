@@ -69,8 +69,12 @@ function readSetupCompanions(S) {
   } else if (S.readFunctionBandsFromDom) {
     try { S.readFunctionBandsFromDom(); } catch (e) {}
   }
+  if (S.readCertPoolFromDom) {
+    try { S.readCertPoolFromDom(); } catch (e) {}
+  }
   setupStore.extraPositions = (S.state && S.state.extraPositions) || [];
   setupStore.functionCoverage = (S.state && S.state.functionCoverage) || null;
+  setupStore.certPool = (S.state && S.state.certPool) || null;
 }
 
 export function collectSetupInputs(S) {
@@ -89,6 +93,7 @@ export function collectSetupInputs(S) {
     period: period,
     extraPositions: setupStore.extraPositions,
     functionCoverage: setupStore.functionCoverage,
+    certPool: setupStore.certPool,
     shifts: (S.state && S.state.shifts) || []
   };
 }
@@ -101,7 +106,8 @@ export function exportStaffingConfig(S) {
     savedAt: S.dj ? S.dj().toISOString() : new Date().toISOString(),
     fte: snap.fte,
     functionCoverage: snap.functionCoverage,
-    extraPositions: snap.extraPositions || []
+    extraPositions: snap.extraPositions || [],
+    certPool: snap.certPool || (S.state && S.state.certPool) || null
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
   const filename = (S.exportFileName && S.exportFileName("Staffing", ".json")) || "staffing.json";
@@ -118,6 +124,6 @@ export function exportStaffingConfig(S) {
     URL.revokeObjectURL(url);
   }
   try { localStorage.setItem("blade.staffingJson", JSON.stringify(payload)); } catch (e) {}
-  if (S.updateStatus) S.updateStatus("Saved staffing (FTE + function coverage + extra positions).");
+  if (S.updateStatus) S.updateStatus("Saved staffing (FTE + function coverage + cert pools + extra positions).");
   return payload;
 }

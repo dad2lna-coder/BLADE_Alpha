@@ -40,6 +40,15 @@ function patchImportCoverage(S) {
       if (S.fillFunctionCoverageForm) S.fillFunctionCoverageForm();
     }
     if (payload && payload.fte && S.applyFte) S.applyFte(payload.fte);
+    var incomingPool = (payload && payload.certPool)
+      || (cfg && cfg.certPool)
+      || null;
+    if (incomingPool && S.state) {
+      S.state.certPool = S.normalizeCertPoolConfig
+        ? S.normalizeCertPoolConfig(incomingPool)
+        : incomingPool;
+      if (S.fillCertPoolForm) S.fillCertPoolForm();
+    }
     if (S.renderExtraPositions) S.renderExtraPositions();
   };
 }
