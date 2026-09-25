@@ -9,4 +9,7 @@ export function paintFunctionCoverage(S) {
   if (S.renderExtraPositions) {
     try { S.renderExtraPositions(); } catch (e) {}
   }
+  if (S.fillCertPoolForm) {
+    try { S.fillCertPoolForm(); } catch (e) {}
+  }
 }
