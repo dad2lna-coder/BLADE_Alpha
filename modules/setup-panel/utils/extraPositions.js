@@ -132,7 +132,7 @@ export function extraCardsHtml(list, shifts) {
     var ops = opsFteYes(pos) ? "yes" : "no";
     return '<div class="extra-pos-card" data-extra-card="' + pos.id + '">' +
       '<div class="fte-sex-row extra-pos-head">' +
-      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, "&quot;") + '" style="width:7rem"></label>' +
+      '<label>Name <input type="text" data-extra-name="' + pos.id + '" value="' + String(pos.name || "").replace(/"/g, """) + '" style="width:7rem"></label>' +
       '<label>Male <input type="number" min="0" data-extra-m="' + pos.id + '" value="' + num0(pos.m) + '" style="width:4.5rem"></label>' +
       '<label>Female <input type="number" min="0" data-extra-f="' + pos.id + '" value="' + num0(pos.f) + '" style="width:4.5rem"></label>' +
       '<label>Ops FTE <select data-extra-ops="' + pos.id + '">' +
@@ -165,6 +165,16 @@ function pickShiftQueue(pos, shifts, need) {
   }
   if (queue.length > need) queue = queue.slice(0, need);
   return queue;
+}
+
+function extraEmpClass(def, S) {
+  var paid = +((def && def.paid) || 8);
+  var marked = String((def && def.empClass) || "").trim().toUpperCase();
+  if (marked === "PT") return "PT";
+  var ptHours = S && S.state ? Number(S.state.ptHoursPerDay) : NaN;
+  if (Number.isFinite(ptHours) && ptHours > 0 && paid > 0 && paid <= ptHours) return "PT";
+  if (paid > 0 && paid < 8) return "PT";
+  return "FT";
 }
 
 function rdoDaysFor(S, def, workDays, seed) {
@@ -215,7 +225,8 @@ export function buildExtraPositionLines(S) {
     var idBase = 30000 + pi * 1000;
     people.forEach(function (sex, idx) {
       var def = parked[idx] || fallback;
-      var workDays = S.targetWorkDays ? S.targetWorkDays(def.id, "FT") : ((+def.paid || 8) >= 10 ? 4 : 5);
+      var empClass = extraEmpClass(def, S);
+      var workDays = S.targetWorkDays ? S.targetWorkDays(def.id, empClass) : ((+def.paid || 8) >= 10 ? 4 : 5);
       var rdo = rdoDaysFor(S, def, workDays, (idBase + idx) % 7);
       out.push({
         id: idBase + idx + 1,
@@ -223,7 +234,7 @@ export function buildExtraPositionLines(S) {
         shiftId: def.id,
         shiftName: def.name,
         shiftLabel: S.shiftLabel ? S.shiftLabel(def) : ((def.start || "") + "-" + (def.end || "")),
-        empClass: typeName,
+        empClass: empClass,
         position: typeName,
         isLtso: false,
         isStso: false,
