@@ -50,8 +50,9 @@ function exportPosition(line) {
 }
 
 function exportEmpClass(line) {
-  var extra = extraExportName(line);
-  if (extra) return extra;
+  if (line && (line.isExtra || line.extraPositionId)) {
+    return line.empClass === "PT" ? "PT" : "FT";
+  }
   var p = exportPosition(line);
   if (p === "STSO" || p === "LTSO") return "FT";
   return line.empClass === "PT" ? "PT" : "FT";
