@@ -109,6 +109,7 @@ export function generate(S) {
   } else if (S.clearLineFunctions) {
     S.clearLineFunctions();
   }
+  if (S.assignCertPools) S.assignCertPools();
 
   var dayTotals = [];
   if (S.formExtraTypeTeams) {
