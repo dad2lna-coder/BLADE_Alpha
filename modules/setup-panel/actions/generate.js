@@ -112,18 +112,29 @@ export function generate(S) {
   if (S.assignCertPools) S.assignCertPools();
 
   var dayTotals = [];
-  if (S.formExtraTypeTeams) {
-    try { S.formExtraTypeTeams(); } catch (teamErr) { console.error("formExtraTypeTeams", teamErr); }
-  } else {
+  (function formExtraTeamsOnSameLines() {
+    var lines = S.state.lines || [];
+    var reserved = { TSO: true, LTSO: true, STSO: true, FT: true, PT: true };
+    function extraTypeKey(l) {
+      var name = String(l.extraName || l.position || "").trim();
+      if (name && !reserved[name]) return name;
+      return "";
+    }
     S.teams = S.teams || { teams: [] };
     if (!Array.isArray(S.teams.teams)) S.teams.teams = [];
     var extraByType = {};
-    (S.state.lines || []).forEach(function (l) {
+    var extraIds = {};
+    lines.forEach(function (l) {
       if (!(l.isExtra || l.extraPositionId)) return;
-      var key = l.extraName || l.position || l.empClass || "EXTRA";
+      extraIds[+l.id] = true;
+      var key = extraTypeKey(l);
+      if (!key) return;
       if (!extraByType[key]) extraByType[key] = [];
       extraByType[key].push(l.id);
     });
+    if (S.formExtraTypeTeams) {
+      try { S.formExtraTypeTeams(); } catch (teamErr) { console.error("formExtraTypeTeams", teamErr); }
+    }
     Object.keys(extraByType).forEach(function (typeName) {
       var team = S.teams.teams.find(function (t) { return t.extraGroup === typeName || t.name === typeName; });
       if (!team) {
@@ -132,9 +143,26 @@ export function generate(S) {
       }
       team.extraGroup = typeName;
       team.name = typeName;
-      team.members = extraByType[typeName].slice();
+      var have = {};
+      (team.members || []).forEach(function (m) { have[+m] = true; });
+      extraByType[typeName].forEach(function (id) {
+        if (!have[+id]) team.members.push(id);
+      });
     });
-  }
+    S.teams.teams.forEach(function (t) {
+      var tName = String(t.name || "").trim().toUpperCase();
+      var reservedTeam = reserved[tName] || reserved[String(t.extraGroup || "").trim().toUpperCase()];
+      if (t.extraGroup && extraByType[t.extraGroup]) {
+        t.members = extraByType[t.extraGroup].slice();
+        return;
+      }
+      t.members = (t.members || []).filter(function (m) {
+        if (!extraIds[+m]) return true;
+        if (t.extraGroup && extraByType[t.extraGroup] && extraByType[t.extraGroup].indexOf(m) >= 0) return true;
+        return !reservedTeam && !!t.extraGroup;
+      });
+    });
+  })();
   if (S.renderTeams) {
     try { S.renderTeams(); } catch (e) {}
   }
