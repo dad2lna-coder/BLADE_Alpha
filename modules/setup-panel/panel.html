@@ -61,5 +61,36 @@
 <div id="fc-bands-wrap" class="lines-scroll" style="max-height:40vh;margin-top:0.75rem"><table class="data-table"><thead><tr><th>Shift</th><th>Start</th><th>End</th><th>STSO min</th><th>STSO max</th><th>LTSO min</th><th>LTSO max</th><th>TSO min</th><th>TSO max</th><th></th></tr></thead><tbody id="fc-bands-tbody"></tbody></table></div>
 <p class="muted" id="fc-preview" style="margin-top:0.75rem"></p>
 </details>
+<details class="card setup-fold" id="card-cert-pool"><summary class="section-title">Cert pools</summary>
+<p class="muted" style="margin:0 0 0.65rem">Second label on each ops line. Function stays DFO / BAG / PAX. Function map wins over the B target — every DFO is B even if that exceeds the slice %. Target is percent of ops headcount by position × sex (STSO M/F, LTSO M/F, TSO M/F; TSO = FT+PT). Non-ops add-ons stay blank and are out of the %.</p>
+<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">Pools A and B</div>
+<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap">
+<label>B target % <input type="number" id="cfg-cert-pool-b-pct" min="0" max="100" value="45" style="width:4.5rem" /></label>
+</div>
+<div class="fte-role" style="text-align:center;font-weight:600;margin:0.85rem 0 0.35rem">Function map</div>
+<div class="fte-sex-row cert-map-row" style="display:flex;justify-content:center;gap:1.5rem;flex-wrap:wrap">
+<label>DFO
+  <select id="cfg-cert-map-dfo">
+    <option value="none">none</option>
+    <option value="A">A</option>
+    <option value="B" selected>B</option>
+  </select>
+</label>
+<label>BAG
+  <select id="cfg-cert-map-bag">
+    <option value="none" selected>none</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+  </select>
+</label>
+<label>PAX
+  <select id="cfg-cert-map-pax">
+    <option value="none" selected>none</option>
+    <option value="A">A</option>
+    <option value="B">B</option>
+  </select>
+</label>
+</div>
+</details>
 <div class="card"><div class="section-title">Shifts</div><div class="toolbar"><button type="button" class="btn" id="btn-add-shift">+ Add shift</button></div><div class="lines-scroll" style="max-height:none"><table class="data-table"><thead><tr><th>Name</th><th>Start</th><th>End</th><th>Phase</th><th>Paid h</th><th>TSO force</th><th>LTSO force</th><th>STSO force</th><th>Hard RDOs (Sun–Sat)</th><th>Day times</th></tr></thead><tbody id="shifts-tbody"></tbody></table></div></div>
 <div id="issues"></div>
