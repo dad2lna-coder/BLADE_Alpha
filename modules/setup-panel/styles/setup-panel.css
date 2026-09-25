@@ -5,6 +5,14 @@
   gap: 1rem;
 }
 
+#tab-setup.active > * {
+  flex-shrink: 0;
+}
+
+#tab-setup.active details.setup-fold {
+  display: block;
+}
+
 #setup-io-toolbar .setup-io-row {
   display: flex;
   flex-wrap: wrap;
