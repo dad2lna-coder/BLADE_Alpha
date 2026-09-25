@@ -5,6 +5,11 @@ window.Scheduler = window.Scheduler || {};
 
   function normalizeLine(raw) {
     if (!raw || typeof raw !== "object" || raw.id == null) return null;
+    var extraId = raw.extraPositionId == null ? "" : String(raw.extraPositionId);
+    var extraName = raw.extraName == null ? "" : String(raw.extraName);
+    var isExtra = Boolean(raw.isExtra || extraId);
+    var opsRaw = raw.opsFte;
+    var opsFte = opsRaw === true || opsRaw === 1 || String(opsRaw == null ? "" : opsRaw).toLowerCase() === "yes" || String(opsRaw).toLowerCase() === "true";
     return {
       id: raw.id,
       lineCode: raw.lineCode || ("Line " + String(raw.id).padStart(3, "0")),
@@ -12,9 +17,13 @@ window.Scheduler = window.Scheduler || {};
       shiftName: raw.shiftName || "",
       shiftLabel: raw.shiftLabel || "",
       empClass: raw.empClass || "",
-      position: raw.position || raw.empClass || "",
+      position: raw.position || raw.extraName || raw.empClass || "",
       isLtso: Boolean(raw.isLtso),
       isStso: Boolean(raw.isStso),
+      isExtra: isExtra,
+      extraPositionId: extraId,
+      extraName: extraName || (isExtra ? (raw.position || raw.empClass || "") : ""),
+      opsFte: opsFte,
       sex: raw.sex === "F" ? "F" : "M",
       function: raw.function === "DFO" || raw.function === "PAX" || raw.function === "BAG" ? raw.function : "",
       certPool: raw.certPool == null ? "" : String(raw.certPool).trim(),
