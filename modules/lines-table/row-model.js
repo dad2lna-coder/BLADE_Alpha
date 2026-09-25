@@ -84,6 +84,7 @@ export function initRowModel(S) {
       emp: emp,
       sex: line.sex || "M",
       function: line.function || "",
+      certPool: line.certPool || "",
       rdos: rdoText(line, dayNames),
       paid: paid,
       days: days,
