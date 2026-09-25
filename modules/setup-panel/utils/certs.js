@@ -306,10 +306,10 @@ export function attachCertPools(S) {
   if (!S) return;
   S.defaultCertPoolConfig = defaultCertPoolConfig;
   S.normalizeCertPoolConfig = normalizeCertPoolConfig;
-  S.ensureCertPoolConfig = ensureCertPoolConfig;
-  S.readCertPoolFromDom = readCertPoolFromDom;
-  S.fillCertPoolForm = fillCertPoolForm;
-  S.assignCertPools = assignCertPools;
+  S.ensureCertPoolConfig = function () { return ensureCertPoolConfig(S); };
+  S.readCertPoolFromDom = function () { return readCertPoolFromDom(S); };
+  S.fillCertPoolForm = function () { return fillCertPoolForm(S); };
+  S.assignCertPools = function () { return assignCertPools(S); };
   S.assignCertPoolsToLines = assignCertPoolsToLines;
   ensureCertPoolConfig(S);
 }
