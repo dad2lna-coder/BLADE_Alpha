@@ -1,7 +1,8 @@
 /**
  * Node Unit Tests for Bid Planner Module
  * Tests date engine, forward/backward scheduling, dual anchor validation,
- * calendar conflicts, manual move validation, leap years, and boundary conditions.
+ * calendar conflicts, manual move validation, leap years, boundary conditions,
+ * and conflict resolution stickiness.
  */
 
 import assert from "node:assert/strict";
@@ -226,6 +227,28 @@ console.log("Running Bid Planner unit tests...");
   assert.equal(invalidRules.valid, false);
 
   console.log("✓ Schema validation tests passed.");
+}
+
+// 8. Conflict Resolution Stickiness Test
+{
+  const schedule = [
+    {
+      sequence: 1,
+      actionId: "posting",
+      action: "Posting",
+      requiredDate: "2026-07-04",
+      status: "VALID (USER KEPT)",
+      conflict: "User explicitly kept date despite conflict",
+      userResolved: true,
+      resolvedForDate: "2026-07-04"
+    }
+  ];
+
+  const conflictRes = detectConflicts(schedule, [], testCalendar);
+  assert.equal(conflictRes.conflictCount, 0); // User resolution persisted for 2026-07-04
+  assert.equal(conflictRes.schedule[0].status, "VALID (USER KEPT)");
+
+  console.log("✓ Conflict Resolution stickiness test passed.");
 }
 
 console.log("\nALL BID PLANNER UNIT TESTS PASSED SUCCESSFULLY!");

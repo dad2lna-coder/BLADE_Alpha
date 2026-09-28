@@ -204,7 +204,7 @@ export function bindBidPlannerUI(scheduler) {
     schedule.forEach((r) => {
       const tr = document.createElement("tr");
 
-      const statusClass = (r.status || "VALID").toLowerCase();
+      const statusClass = (r.status || "VALID").toLowerCase().replace(/[^a-z0-9]/g, "-");
       const statusTag = `<span class="bp-status-tag ${statusClass}">${r.status}</span>`;
       const adjustedTag = r.adjusted ? `<span style="color:#d97706;font-weight:bold;">Yes</span>` : "No";
 
@@ -278,6 +278,8 @@ export function bindBidPlannerUI(scheduler) {
     if (actionType === "keep-date") {
       row.status = "VALID (USER KEPT)";
       row.conflict = "User explicitly kept date despite conflict";
+      row.userResolved = true;
+      row.resolvedForDate = row.requiredDate;
       reEvaluateActiveSchedule();
     } else if (actionType === "move-event") {
       if (moveSection) moveSection.style.display = "block";
@@ -289,6 +291,8 @@ export function bindBidPlannerUI(scheduler) {
       row.status = "DEFERRED";
       row.notes = "Bid event deferred in favor of existing calendar event";
       row.conflict = "Deferred";
+      row.userResolved = true;
+      row.resolvedForDate = row.requiredDate;
       reEvaluateActiveSchedule();
     } else if (actionType === "resolve-manual") {
       const note = prompt("Enter resolution notes:", "Manually resolved");
@@ -296,6 +300,8 @@ export function bindBidPlannerUI(scheduler) {
         row.status = "RESOLVED";
         row.notes = note;
         row.conflict = "Resolved manually";
+        row.userResolved = true;
+        row.resolvedForDate = row.requiredDate;
         reEvaluateActiveSchedule();
       }
     }
@@ -348,14 +354,20 @@ export function bindBidPlannerUI(scheduler) {
       }
 
       if (btnConfirmMove) {
-        btnConfirmMove.style.display = "inline-block";
+        if (val.valid) {
+          btnConfirmMove.style.display = "inline-block";
+          btnConfirmMove.removeAttribute("disabled");
+        } else {
+          btnConfirmMove.style.display = "none";
+          btnConfirmMove.setAttribute("disabled", "true");
+        }
       }
     });
   }
 
   if (btnConfirmMove) {
     btnConfirmMove.addEventListener("click", () => {
-      if (!pendingMoveValidation) return;
+      if (!pendingMoveValidation || !pendingMoveValidation.valid) return;
       const { actionId, newDate } = pendingMoveValidation;
       const row = activeSchedule.find((r) => r.actionId === actionId);
       if (row) {
@@ -363,6 +375,8 @@ export function bindBidPlannerUI(scheduler) {
         row.adjusted = true;
         row.adjustmentReason = `Manually moved by user to ${newDate}`;
         row.status = "MOVED";
+        row.userResolved = true;
+        row.resolvedForDate = newDate;
         reEvaluateActiveSchedule();
       }
       if (moveSection) moveSection.style.display = "none";

@@ -7,6 +7,7 @@ import { isHoliday, isBlackoutDate, parseUtcDate } from "./calendar.js";
 
 /**
  * Evaluates conflicts for a generated schedule against imported calendar events and calendar config.
+ * Persists user conflict resolutions so re-eval does not reset status unless requiredDate changes.
  * Never silently changes calculated dates.
  */
 export function detectConflicts(schedule, calendarEvents = [], calendarConfig = {}) {
@@ -16,6 +17,9 @@ export function detectConflicts(schedule, calendarEvents = [], calendarConfig = 
   const updatedSchedule = schedule.map((row, idx) => {
     const rowConflicts = [];
     const dateStr = row.requiredDate;
+
+    // Check if user previously resolved conflict for this exact requiredDate
+    const isResolvedForDate = row.userResolved && row.resolvedForDate === dateStr;
 
     // 1. Check imported calendar events
     if (Array.isArray(calendarEvents) && calendarEvents.length > 0) {
@@ -69,21 +73,31 @@ export function detectConflicts(schedule, calendarEvents = [], calendarConfig = 
     }
 
     const conflictSummary = rowConflicts.map((c) => c.message).join("; ");
-    let status = row.status;
-    if (rowConflicts.length > 0) {
-      status = "CONFLICT";
+
+    // If date changed since user resolution, clear resolution
+    if (row.userResolved && row.resolvedForDate !== dateStr) {
+      row.userResolved = false;
+      row.resolvedForDate = null;
+    }
+
+    if (rowConflicts.length > 0 && !row.userResolved) {
       conflictsFound.push({
         sequence: row.sequence,
         action: row.action,
         requiredDate: row.requiredDate,
         conflicts: rowConflicts
       });
+      return {
+        ...row,
+        conflict: conflictSummary,
+        status: "CONFLICT"
+      };
     }
 
     return {
       ...row,
-      conflict: conflictSummary ? conflictSummary : row.conflict || "None",
-      status: rowConflicts.length > 0 ? "CONFLICT" : status
+      conflict: isResolvedForDate ? row.conflict : (conflictSummary || "None"),
+      status: isResolvedForDate ? row.status : (row.status === "CONFLICT" ? "VALID" : row.status)
     };
   });
 
