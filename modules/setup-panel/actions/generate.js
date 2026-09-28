@@ -120,12 +120,17 @@ export function generate(S) {
       if (name && !reserved[name]) return name;
       return "";
     }
+    function extraInOps(l) {
+      if (S.lineInOpsCoverage) return !!S.lineInOpsCoverage(l);
+      return !!l.opsFte;
+    }
     S.teams = S.teams || { teams: [] };
     if (!Array.isArray(S.teams.teams)) S.teams.teams = [];
     var extraByType = {};
     var extraIds = {};
     lines.forEach(function (l) {
       if (!(l.isExtra || l.extraPositionId)) return;
+      if (!extraInOps(l)) return;
       extraIds[+l.id] = true;
       var key = extraTypeKey(l);
       if (!key) return;
