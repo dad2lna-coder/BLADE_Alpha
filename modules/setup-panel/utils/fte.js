@@ -13,7 +13,9 @@ export function snapshotFte(S) {
     ltsoM: +(val("cfg-ltso-m", S.state && S.state.ltsoM) || 0),
     ltsoF: +(val("cfg-ltso-f", S.state && S.state.ltsoF) || 0),
     stsoM: +(val("cfg-stso-m", S.state && S.state.stsoM) || 0),
-    stsoF: +(val("cfg-stso-f", S.state && S.state.stsoF) || 0)
+    stsoF: +(val("cfg-stso-f", S.state && S.state.stsoF) || 0),
+    esti: +(val("cfg-esti", S.state && S.state.esti) || 0),
+    msti: +(val("cfg-msti", S.state && S.state.msti) || 0)
   };
   setupStore.fte = fte;
   return fte;
@@ -42,6 +44,7 @@ export function applyFte(S, fte) {
   if (fte.ptDaysPerWeek != null) put("cfg-pt-days", fte.ptDaysPerWeek);
   put("cfg-ltso-m", fte.ltsoM); put("cfg-ltso-f", fte.ltsoF);
   put("cfg-stso-m", fte.stsoM); put("cfg-stso-f", fte.stsoF);
+  put("cfg-esti", fte.esti); put("cfg-msti", fte.msti);
   if (!S.state) return;
   S.state.ftM = +fte.ftM || 0;
   S.state.ftF = +fte.ftF || 0;
@@ -55,6 +58,8 @@ export function applyFte(S, fte) {
   S.state.ltsoF = +fte.ltsoF || 0;
   S.state.stsoM = +fte.stsoM || 0;
   S.state.stsoF = +fte.stsoF || 0;
+  S.state.esti = +fte.esti || 0;
+  S.state.msti = +fte.msti || 0;
 }
 
 function readSetupCompanions(S) {

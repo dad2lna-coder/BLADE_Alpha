@@ -1,0 +1,21 @@
+name: Blade Alpha Deploy
+
+on:
+  push:
+    branches: [bright-garden]
+
+jobs:
+  deploy:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout this repo
+        uses: actions/checkout@v4
+        with:
+          repository: dad2lna-coder/BLADE_Alpha
+          ref: bright-garden
+          fetch-depth: 1
+
+      - name: Pull latest changes on this machine
+        run: |
+          cd /root/.openclaw/workspace/code-assistant-1
+          git pull origin bright-garden

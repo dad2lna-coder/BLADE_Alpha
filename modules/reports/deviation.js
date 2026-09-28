@@ -10,6 +10,64 @@ function roleOf(S, line) {
   return S.lineRoleKey ? S.lineRoleKey(line) : "TSO";
 }
 
+function scheduleRow(S, line) {
+  var sched = S.state.schedule || {};
+  if (!line) return [];
+  return sched[line.id] || sched[String(line.id)] || [];
+}
+
+function rotationRow(S, lineId) {
+  var rot = (S.state && S.state.functionRotation) || {};
+  if (rot[lineId]) return rot[lineId];
+  if (rot[String(lineId)]) return rot[String(lineId)];
+  var asNum = +lineId;
+  if (!isNaN(asNum) && rot[asNum]) return rot[asNum];
+  return null;
+}
+
+function normalizeDuty(cell) {
+  if (cell == null || cell === "") return null;
+  var d = String(cell).toUpperCase();
+  if (d === "BAG" || d === "BAGGAGE") return "BAG";
+  if (d === "PAX" || d === "PASSENGER") return "PAX";
+  if (d === "DFO") return "DFO";
+  return d;
+}
+
+function dutyForDay(row, off) {
+  if (!row) return null;
+  var cell = Array.isArray(row) ? row[off] : (row[off] != null ? row[off] : row[String(off)]);
+  return normalizeDuty(cell);
+}
+
+/** True when Generate (or a later editor) has written any BAG/PAX/DFO duty cells. */
+export function rotationHasAssignedDuties(S) {
+  var rot = (S && S.state && S.state.functionRotation) || {};
+  var keys = Object.keys(rot);
+  for (var i = 0; i < keys.length; i++) {
+    var row = rot[keys[i]];
+    if (!row) continue;
+    if (Array.isArray(row)) {
+      for (var j = 0; j < row.length; j++) {
+        if (normalizeDuty(row[j])) return true;
+      }
+    } else if (typeof row === "object") {
+      var inner = Object.keys(row);
+      for (var k = 0; k < inner.length; k++) {
+        if (normalizeDuty(row[inner[k]])) return true;
+      }
+    }
+  }
+  return false;
+}
+
+function lineIsDfoFunction(line) {
+  if (!line) return false;
+  if (line.function === "DFO") return true;
+  var el = line.functionEligible || {};
+  return !!(el.dfo || el.DFO);
+}
+
 export function computeRoleMatrixByDow(S, opts) {
   opts = opts || {};
   var mode = opts.mode || "total"; // passenger | baggage | total | dfoPool
@@ -40,31 +98,37 @@ export function computeRoleMatrixByDow(S, opts) {
     });
   });
 
+  var dutiesAssigned = rotationHasAssignedDuties(S);
+
   (S.state.lines || []).forEach(function (line) {
     if (!S.getShift(line.shiftId)) return;
     var role = roleOf(S, line);
     var sex = line.sex === "F" ? "F" : "M";
 
     if (mode === "dfoPool") {
-      var el = line.functionEligible || {};
-      if (!el.dfo) return;
+      if (!lineIsDfoFunction(line)) return;
     }
+
+    var rotRow = rotationRow(S, line.id);
 
     for (var dow = 0; dow < 7; dow++) {
       var off = dowToOffset[dow];
       if (off == null) continue;
-      if ((S.state.schedule[line.id] || [])[off] !== "WORK") continue;
+      if (scheduleRow(S, line)[off] !== "WORK") continue;
+
+      var duty = dutyForDay(rotRow, off);
 
       if (mode === "baggage") {
-        var rotMap = S.state.functionRotation || {};
-        var rotRow = rotMap[line.id] || rotMap[String(line.id)];
-        var duty = rotRow ? (rotRow[off] || null) : null;
-        if (duty !== "BAG" && duty !== "DFO") continue;
+        // BAG duty only — DFO is a function pool, not a baggage duty.
+        if (duty !== "BAG") continue;
       } else if (mode === "passenger") {
-        var rotMapP = S.state.functionRotation || {};
-        var rotRowP = rotMapP[line.id] || rotMapP[String(line.id)];
-        var dutyP = rotRowP ? (rotRowP[off] || null) : null;
-        if (dutyP === "BAG" || dutyP === "DFO") continue;
+        // Generate writes "PAX" for leftover passenger days. Require that when
+        // rotation is populated; treat missing/null as PAX only when no duties
+        // have been assigned yet (and the UI banner explains the alias).
+        if (duty === "BAG") continue;
+        if (dutiesAssigned) {
+          if (duty !== "PAX") continue;
+        }
       }
 
       var times = S.getEffectiveShiftTimes
@@ -185,5 +249,6 @@ export function attachDeviation(S) {
   if (!S) return;
   S.computeRoleMatrixByDow = function (opts) { return computeRoleMatrixByDow(S, opts); };
   S.compressDeviationRows = compressDeviationRows;
+  S.rotationHasAssignedDuties = function () { return rotationHasAssignedDuties(S); };
   S.renderDeviationReport = function (containerId, mode, title) { return renderDeviationReport(S, containerId, mode, title); };
 }

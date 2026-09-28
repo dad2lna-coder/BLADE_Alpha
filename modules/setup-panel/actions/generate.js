@@ -126,15 +126,14 @@ export function generate(S) {
     var extraIds = {};
     lines.forEach(function (l) {
       if (!(l.isExtra || l.extraPositionId)) return;
+      var inOps = S.lineInOpsCoverage ? S.lineInOpsCoverage(l) : !!l.opsFte;
+      if (!inOps) return;
       extraIds[+l.id] = true;
       var key = extraTypeKey(l);
       if (!key) return;
       if (!extraByType[key]) extraByType[key] = [];
       extraByType[key].push(l.id);
     });
-    if (S.formExtraTypeTeams) {
-      try { S.formExtraTypeTeams(); } catch (teamErr) { console.error("formExtraTypeTeams", teamErr); }
-    }
     Object.keys(extraByType).forEach(function (typeName) {
       var team = S.teams.teams.find(function (t) { return t.extraGroup === typeName || t.name === typeName; });
       if (!team) {
@@ -157,6 +156,11 @@ export function generate(S) {
         return;
       }
       t.members = (t.members || []).filter(function (m) {
+        var line = lines.find(function (l) { return +l.id === +m; });
+        if (line && (line.isExtra || line.extraPositionId)) {
+          var inOps = S.lineInOpsCoverage ? S.lineInOpsCoverage(line) : !!line.opsFte;
+          if (!inOps) return false;
+        }
         if (!extraIds[+m]) return true;
         if (t.extraGroup && extraByType[t.extraGroup] && extraByType[t.extraGroup].indexOf(m) >= 0) return true;
         return !reservedTeam && !!t.extraGroup;

@@ -78,5 +78,13 @@
     "reportsSubTab": { "id": "management", "label": "Management Reports", "order": 1 },
     "reportsPanel": "modules/reports/management.html",
     "reportsMount": "#report-sub-management"
+  },
+  "bid-planner": {
+    "entry": "modules/bid-planner/dist/bid-planner.js",
+    "init": "initBidPlanner",
+    "css": ["modules/bid-planner/styles/bid-planner.css"],
+    "panel": "modules/bid-planner/panel.html",
+    "mount": "#tab-bid-planner",
+    "tab": { "id": "bid-planner", "label": "BID PLANNER", "priority": 2, "order": 2 }
   }
 }

@@ -65,7 +65,7 @@ export function renderModSetBoard(S) {
         continue;
       }
       var msId = team && S.modSetForTeamDay ? S.modSetForTeamDay(team.id, d) : null;
-      html += "<td>" + (msId != null ? (setName(S, msId) || "—") : "—") + "</td>";
+      html += "<td>" + (msId != null ? (setName(S, msId) || "\u2014") : "\u2014") + "</td>";
     }
     return "<tr>" + html + "</tr>";
   }).join("") || '<tr><td class="muted" colspan="12">Generate lines and form teams first.</td></tr>';
@@ -92,7 +92,7 @@ export function renderCapacity(S) {
     for (var d = 0; d < 7; d++) {
       if (!S.teamWorksDay || !S.teamWorksDay(t, d)) { cells += "<td style=\"background:#000;color:#fff\">RDO</td>"; continue; }
       var ms = S.modSetForTeamDay ? S.modSetForTeamDay(t.id, d) : null;
-      cells += "<td>" + (ms != null ? setName(S, ms) : "—") + "</td>";
+      cells += "<td>" + (ms != null ? setName(S, ms) : "\u2014") + "</td>";
     }
     return "<tr><td>" + (t.name || t.id) + "</td>" + cells + "</tr>";
   }).join("") || '<tr><td class="muted" colspan="8">Form teams, then assign daily coverage.</td></tr>';
@@ -129,14 +129,14 @@ export function renderCapacity(S) {
   }).join("");
 
   host.innerHTML =
-    '<div class="card"><div class="section-title">Daily coverage (team → mod set)</div>' +
+    '<div class="card"><div class="section-title">Daily coverage (team \u2192 mod set)</div>' +
     '<p class="muted">A team does not live on one set. Each day we take who is working and fill the hungriest sets first. Pairings can change day to day.</p>' +
     '<div class="toolbar"><button type="button" class="btn btn-amber" id="btn-assign-ms">Assign daily coverage</button>' +
     '<span class="muted" id="ms-assign-hint">Uses working members that day, not a locked home set.</span></div>' +
     '<div class="lines-scroll"><table class="data-table"><thead><tr><th>Team</th>' + dayHead + "</tr></thead><tbody>" +
     coverRows + "</tbody></table></div></div>" +
     '<div class="card"><div class="section-title">Half-hour throughput</div>' +
-    '<p class="muted">STD ' + r.STD + " · PRE " + r.PRE + " · MIX " + r.MIX + " /lane/hr</p>" +
+    '<p class="muted">STD ' + r.STD + " \u00b7 PRE " + r.PRE + " \u00b7 MIX " + r.MIX + " /lane/hr</p>" +
     '<div class="toolbar"><label>Terminal <select id="cap-filter-term">' + opts + "</select></label></div>" +
     '<div class="lines-scroll"><table class="data-table cov-matrix"><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div></div>";
   var sel = S.$("cap-filter-term");

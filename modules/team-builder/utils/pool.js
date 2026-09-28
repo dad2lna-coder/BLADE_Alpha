@@ -1,6 +1,13 @@
-﻿import { pool, filters, teams } from '../stores/teamBuilderStore.js';
+import { pool, filters, teams } from '../stores/teamBuilderStore.js';
 import { roleOf, rdoKey, rdoLabel } from './team.js';
 import { startOf, startLabel } from './time.js';
+
+function lineInOps(S, line) {
+    if (!line) return false;
+    if (S && S.lineInOpsCoverage) return !!S.lineInOpsCoverage(line);
+    if (line.isExtra || line.extraPositionId) return !!line.opsFte;
+    return true;
+}
 
 export function collectTeamPool() {
     const S = window.Scheduler; // Bridge
@@ -8,6 +15,7 @@ export function collectTeamPool() {
 
     pool.length = 0; // Clear and repopulate
     lines.forEach(l => {
+        if (!lineInOps(S, l)) return;
         pool.push({
             id: l.id,
             lineCode: l.lineCode || ("L" + l.id),
@@ -20,7 +28,11 @@ export function collectTeamPool() {
             empClass: l.empClass || "",
             shiftId: l.shiftId,
             shiftName: (S.getShift && S.getShift(l.shiftId)) ? S.getShift(l.shiftId).name : l.shiftId,
-            paid: l.paid || 0
+            paid: l.paid || 0,
+            isExtra: !!(l.isExtra || l.extraPositionId),
+            extraPositionId: l.extraPositionId || null,
+            extraName: l.extraName || "",
+            opsFte: !!l.opsFte
         });
     });
 

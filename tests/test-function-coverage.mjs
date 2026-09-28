@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { initFunctionCoverage } from "./modules/function-coverage/index.js";
+import { initFunctionCoverage } from "../modules/function-coverage/index.js";
 
 const S = {
   $: () => null,

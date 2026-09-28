@@ -11,27 +11,24 @@ export function bindPoolsApi(scheduler) {
   bindCertifiedPoolsApi(scheduler);
 }
 
-// Local helper (classic equivalent, not exported)
 function num0(v) { return Math.max(0, Math.floor(+v || 0)); }
 
-// Exported: bag pool total from classic
 export function bagPoolTotal(fc) {
   return num0(fc.poolStsoBagM) + num0(fc.poolStsoBagF) + num0(fc.poolLtsoBagM) + num0(fc.poolLtsoBagF) +
     num0(fc.poolTsoBagM) + num0(fc.poolTsoBagF);
 }
 
-// Exported: dfo pool total from classic
 export function dfoPoolTotal(fc) {
   return num0(fc.poolStsoDfoM) + num0(fc.poolStsoDfoF) + num0(fc.poolLtsoDfoM) + num0(fc.poolLtsoDfoF) +
     num0(fc.poolTsoDfoM) + num0(fc.poolTsoDfoF);
 }
 
-// Exported: initialize function coverage state from api.state
 export function ensureFunctionCoverage() {
   if (!api.state.functionCoverage) api.state.functionCoverage = {};
   var fc = api.state.functionCoverage;
   ["poolStsoDfoM","poolStsoDfoF","poolLtsoDfoM","poolLtsoDfoF","poolTsoDfoM","poolTsoDfoF",
-   "poolStsoBagM","poolStsoBagF","poolLtsoBagM","poolLtsoBagF","poolTsoBagM","poolTsoBagF"].forEach(function (k) {
+   "poolStsoBagM","poolStsoBagF","poolLtsoBagM","poolLtsoBagF","poolTsoBagM","poolTsoBagF",
+   "poolTsoDfoPt"].forEach(function (k) {
     if (fc[k] == null) fc[k] = 0;
   });
   if (fc.poolStsoDfo == null) fc.poolStsoDfo = num0(fc.poolStsoDfoM) + num0(fc.poolStsoDfoF);
@@ -70,12 +67,10 @@ export function ensureFunctionCoverage() {
   return fc;
 }
 
-// Exported: derive mode from ensured coverage
 export function getFunctionMode() {
   return syncDerivedMode(ensureFunctionCoverage());
 }
 
-// Exported: FTE caps by role/sex from scheduler state
 export function fteCapsByRoleSex() {
   var st = api.state || {};
   return {
@@ -85,7 +80,6 @@ export function fteCapsByRoleSex() {
   };
 }
 
-// Exported: cap function pools to FTE from classic
 export function capFunctionPoolsToFte(fc, issues) {
   fc = fc || ensureFunctionCoverage();
   var caps = fteCapsByRoleSex();
@@ -107,7 +101,6 @@ export function capFunctionPoolsToFte(fc, issues) {
   return fc;
 }
 
-// Exported: sync derived mode (used by ensureFunctionCoverage and getFunctionMode)
 function syncDerivedMode(fc) {
   var bag = bagPoolTotal(fc) > 0, dfo = dfoPoolTotal(fc) > 0;
   fc.poolBag = bagPoolTotal(fc);

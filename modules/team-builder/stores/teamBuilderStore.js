@@ -78,10 +78,21 @@ export function renameTeam(id, name) {
     if (t) t.name = name;
 }
 
+function lineAllowsTeam(lineId) {
+    const S = window.Scheduler;
+    const lines = (S && S.state && S.state.lines) ? S.state.lines : [];
+    const line = lines.find(l => +l.id === +lineId);
+    if (!line) return true;
+    if (S && S.lineInOpsCoverage) return !!S.lineInOpsCoverage(line);
+    if (line.isExtra || line.extraPositionId) return !!line.opsFte;
+    return true;
+}
+
 export function addMemberToTeam(teamId, poolId) {
     const team = getTeamById(teamId);
     if (!team) return false;
     poolId = +poolId;
+    if (!lineAllowsTeam(poolId)) return false;
 
     if (team.members.indexOf(poolId) !== -1) return false;
 
@@ -124,6 +135,7 @@ export function assignSelectedToTeam(targetTeamId) {
     });
     const have = new Set((team.members || []).map(Number));
     want.forEach(id => {
+        if (!lineAllowsTeam(id)) return;
         if (!have.has(id)) {
             team.members.push(id);
             have.add(id);

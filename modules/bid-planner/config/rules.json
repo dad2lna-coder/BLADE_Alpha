@@ -1,0 +1,136 @@
+{
+  "bidTypes": [
+    {
+      "id": "leave-bid",
+      "name": "Leave Bid",
+      "ruleSets": [
+        {
+          "id": "standard-leave",
+          "name": "Standard (placeholder)",
+          "actions": [
+            {
+              "id": "announcement",
+              "label": "Announcement",
+              "sequence": 1,
+              "offset": { "amount": 0, "unit": "calendar_days", "from": "anchor", "placeholder": true }
+            },
+            {
+              "id": "posting",
+              "label": "Posting",
+              "sequence": 2,
+              "offset": { "amount": 5, "unit": "business_days", "from": "announcement", "placeholder": true }
+            },
+            {
+              "id": "conduct",
+              "label": "Conduct",
+              "sequence": 3,
+              "offset": { "amount": 7, "unit": "calendar_days", "from": "posting", "placeholder": true }
+            },
+            {
+              "id": "execution",
+              "label": "Execution",
+              "sequence": 4,
+              "offset": { "amount": 10, "unit": "business_days", "from": "conduct", "placeholder": true }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shift-bid",
+      "name": "Shift Bid",
+      "ruleSets": [
+        {
+          "id": "small-op",
+          "name": "Small Operation",
+          "actions": [
+            {
+              "id": "announcement",
+              "label": "Announcement",
+              "sequence": 1,
+              "offset": { "amount": 0, "unit": "calendar_days", "from": "anchor", "placeholder": true }
+            },
+            {
+              "id": "posting",
+              "label": "Posting",
+              "sequence": 2,
+              "offset": { "amount": 3, "unit": "business_days", "from": "announcement", "placeholder": true }
+            },
+            {
+              "id": "conduct",
+              "label": "Conduct",
+              "sequence": 3,
+              "offset": { "amount": 5, "unit": "calendar_days", "from": "posting", "placeholder": true }
+            },
+            {
+              "id": "execution",
+              "label": "Execution",
+              "sequence": 4,
+              "offset": { "amount": 7, "unit": "business_days", "from": "conduct", "placeholder": true }
+            }
+          ]
+        },
+        {
+          "id": "medium-op",
+          "name": "Medium Operation",
+          "actions": [
+            {
+              "id": "announcement",
+              "label": "Announcement",
+              "sequence": 1,
+              "offset": { "amount": 0, "unit": "calendar_days", "from": "anchor", "placeholder": true }
+            },
+            {
+              "id": "posting",
+              "label": "Posting",
+              "sequence": 2,
+              "offset": { "amount": 5, "unit": "business_days", "from": "announcement", "placeholder": true }
+            },
+            {
+              "id": "conduct",
+              "label": "Conduct",
+              "sequence": 3,
+              "offset": { "amount": 10, "unit": "calendar_days", "from": "posting", "placeholder": true }
+            },
+            {
+              "id": "execution",
+              "label": "Execution",
+              "sequence": 4,
+              "offset": { "amount": 14, "unit": "business_days", "from": "conduct", "placeholder": true }
+            }
+          ]
+        },
+        {
+          "id": "large-op",
+          "name": "Large Operation",
+          "actions": [
+            {
+              "id": "announcement",
+              "label": "Announcement",
+              "sequence": 1,
+              "offset": { "amount": 0, "unit": "calendar_days", "from": "anchor", "placeholder": true }
+            },
+            {
+              "id": "posting",
+              "label": "Posting",
+              "sequence": 2,
+              "offset": { "amount": 10, "unit": "business_days", "from": "announcement", "placeholder": true }
+            },
+            {
+              "id": "conduct",
+              "label": "Conduct",
+              "sequence": 3,
+              "offset": { "amount": 14, "unit": "calendar_days", "from": "posting", "placeholder": true }
+            },
+            {
+              "id": "execution",
+              "label": "Execution",
+              "sequence": 4,
+              "offset": { "amount": 21, "unit": "business_days", "from": "conduct", "placeholder": true }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

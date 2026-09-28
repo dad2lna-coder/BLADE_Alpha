@@ -1,6 +1,6 @@
 /** Turn allocated headcounts into bid lines. */
 
-function takeFromPools(S, pools, preferLongFt, placed) {
+function takeFromPools(S, pools, preferLongFt, placed, preferPt) {
   placed = placed || { M: 0, F: 0 };
   function take(emp, sex) {
     var key = emp + sex;
@@ -24,6 +24,7 @@ function takeFromPools(S, pools, preferLongFt, placed) {
     return mLeft >= fLeft ? take(emp, "M") : take(emp, "F");
   }
   if (preferLongFt) return pickSex("FT");
+  if (preferPt) return pickSex("PT") || pickSex("FT");
   var ftLeft = (pools.FTM || 0) + (pools.FTF || 0);
   var ptLeft = (pools.PTM || 0) + (pools.PTF || 0);
   if (ftLeft > 0) return pickSex("FT");
@@ -58,7 +59,12 @@ function makeLineFromPerson(S, def, person, id) {
     function: "",
     rdoDays: rdoDays,
     rdoHard: hard.length > 0,
-    paid: def.paid || 8
+    paid: person.empClass === "PT"
+      ? (function () {
+          var hours = +(S.state && S.state.ptHoursPerDay);
+          return Number.isFinite(hours) && hours > 0 ? Math.min(12, hours) : 4;
+        })()
+      : (def.paid || 8)
   };
 }
 
@@ -66,27 +72,50 @@ export function buildLines(S, counts) {
   var lines = [], id = 1;
   var pools = { FTM: S.state.ftM || 0, FTF: S.state.ftF || 0, PTM: S.state.ptM || 0, PTF: S.state.ptF || 0 };
   var placedGlobal = { M: 0, F: 0 };
-  function fillShift(def, need) {
+  var shifts = S.state.shifts || [];
+  var order = [];
+  shifts.forEach(function (def) {
+    var need = counts[def.id] || 0;
+    if (need > 0 && (def.force || 0) > 0) order.push(def);
+  });
+  shifts.forEach(function (def) {
+    var need = counts[def.id] || 0;
+    if (need > 0 && !(def.force > 0)) order.push(def);
+  });
+  var remainingNeed = 0;
+  order.forEach(function (def) {
+    if ((+def.paid || 8) >= 10) return;
+    remainingNeed += counts[def.id] || 0;
+  });
+  function fillShift(def, need, seatsLeft) {
     var placed = 0;
+    var isLong = (+def.paid || 8) >= 10;
+    var ptLeft = (pools.PTM || 0) + (pools.PTF || 0);
+    var ptQuota = 0;
+    if (!isLong && seatsLeft > 0) {
+      ptQuota = Math.round(need * ptLeft / seatsLeft);
+      if (ptQuota < 0) ptQuota = 0;
+      if (ptQuota > need) ptQuota = need;
+      if (ptQuota > ptLeft) ptQuota = ptLeft;
+    }
+    var ptPlaced = 0;
     while (placed < need) {
-      var isLong = (+def.paid || 8) >= 10;
-      var person = takeFromPools(S, pools, isLong, placedGlobal);
+      var preferPt = !isLong && ptPlaced < ptQuota;
+      var person = takeFromPools(S, pools, isLong, placedGlobal, preferPt);
       if (!person) break;
+      if (person.empClass === "PT") ptPlaced++;
       placedGlobal[person.sex]++;
       lines.push(makeLineFromPerson(S, def, person, id));
       id++; placed++;
     }
     if (placed < need) {
-      S.state.issues.push(def.name + ": needed " + need + " people, only placed " + placed + " (pool empty or 4×10 needs FT).");
+      S.state.issues.push(def.name + ": needed " + need + " people, only placed " + placed + " (pool empty or 4\u00d710 needs FT).");
     }
   }
-  (S.state.shifts || []).forEach(function (def) {
+  order.forEach(function (def) {
     var need = counts[def.id] || 0;
-    if (need > 0 && (def.force || 0) > 0) fillShift(def, need);
-  });
-  (S.state.shifts || []).forEach(function (def) {
-    var need = counts[def.id] || 0;
-    if (need > 0 && !(def.force > 0)) fillShift(def, need);
+    fillShift(def, need, remainingNeed);
+    if ((+def.paid || 8) < 10) remainingNeed -= need;
   });
   return lines;
 }
