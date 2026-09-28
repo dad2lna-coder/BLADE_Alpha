@@ -54,19 +54,24 @@ export function renderCoverageBars(S) {
 
   var tot = "<tr><td><strong>Day total*</strong></td>";
   for (var d = 0; d < 7; d++) {
-    var base = S.parseStartDate(S.state.startDate || null);
-    var off = null;
-    for (var i = 0; i < Math.min(7, (S.state.weekCount || 1) * 7); i++) {
-      if (S.dj(base).add(i).day() === d) { off = i; break; }
+    var off = computed.dowToOffset ? computed.dowToOffset[d] : null;
+    if (off == null && S.parseStartDate) {
+      var base = S.parseStartDate(S.state.startDate || null);
+      for (var i = 0; i < Math.min(7, (S.state.weekCount || 1) * 7); i++) {
+        if (S.dj ? S.dj(base).add(i).day() === d : i % 7 === d) { off = i; break; }
+      }
     }
     var m = 0, f = 0;
     if (off != null) {
       S.state.lines.forEach(function (line) {
-        if (line.isLtso || line.isStso) return;
-        if ((S.state.schedule[line.id] || [])[off] === "WORK") {
-          if (line.sex === "M") m++;
-          else f++;
-        }
+        if (!S.getShift(line.shiftId)) return;
+        if ((S.state.schedule[line.id] || [])[off] !== "WORK") return;
+        var filterOk = S.lineMatchesCoverageFilter
+          ? S.lineMatchesCoverageFilter(line, off)
+          : true;
+        if (!filterOk) return;
+        if (line.sex === "M") m++;
+        else f++;
       });
     }
     tot +=
@@ -80,9 +85,9 @@ export function renderCoverageBars(S) {
       '<span class="sex-legend">' +
       '<i class="sw-m"></i><span class="sex-m">Male</span> ' +
       '<i class="sw-f"></i><span class="sex-f">Female</span> ' +
-      "· cells are TSO <strong>M/F/Total</strong></span> · " +
-      "30-min TSO total " + lo + "–" + hi + " (avg " + avg.toFixed(1) + "). " +
-      "*Day total = TSO on WORK that weekday.";
+      "· cells are <strong>M/F/Total</strong></span> · " +
+      "30-min total " + lo + "–" + hi + " (avg " + avg.toFixed(1) + "). " +
+      "*Day total = headcount on WORK that weekday matching active filters.";
   }
 
   if (bars) {

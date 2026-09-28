@@ -98,8 +98,6 @@ export function computeRoleMatrixByDow(S, opts) {
     });
   });
 
-  var dutiesAssigned = rotationHasAssignedDuties(S);
-
   (S.state.lines || []).forEach(function (line) {
     if (!S.getShift(line.shiftId)) return;
     var role = roleOf(S, line);
@@ -119,16 +117,9 @@ export function computeRoleMatrixByDow(S, opts) {
       var duty = dutyForDay(rotRow, off);
 
       if (mode === "baggage") {
-        // BAG duty only — DFO is a function pool, not a baggage duty.
         if (duty !== "BAG") continue;
       } else if (mode === "passenger") {
-        // Generate writes "PAX" for leftover passenger days. Require that when
-        // rotation is populated; treat missing/null as PAX only when no duties
-        // have been assigned yet (and the UI banner explains the alias).
         if (duty === "BAG") continue;
-        if (dutiesAssigned) {
-          if (duty !== "PAX") continue;
-        }
       }
 
       var times = S.getEffectiveShiftTimes
