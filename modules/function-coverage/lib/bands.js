@@ -23,6 +23,7 @@ export function syncFunctionModeUi() {
   setVal("fc-pool-dfo-stso-m", fc.poolStsoDfoM); setVal("fc-pool-dfo-stso-f", fc.poolStsoDfoF);
   setVal("fc-pool-dfo-ltso-m", fc.poolLtsoDfoM); setVal("fc-pool-dfo-ltso-f", fc.poolLtsoDfoF);
   setVal("fc-pool-dfo-tso-m", fc.poolTsoDfoM); setVal("fc-pool-dfo-tso-f", fc.poolTsoDfoF);
+  setVal("fc-pool-dfo-pt", fc.poolTsoDfoPt);
   const wrap = api.$("fc-bands-wrap");
   const add = api.$("fc-add-band");
   if (wrap) wrap.style.display = "";
@@ -113,6 +114,7 @@ function readPoolsAndTools(fc) {
   take("fc-pool-dfo-stso-m", "poolStsoDfoM"); take("fc-pool-dfo-stso-f", "poolStsoDfoF");
   take("fc-pool-dfo-ltso-m", "poolLtsoDfoM"); take("fc-pool-dfo-ltso-f", "poolLtsoDfoF");
   take("fc-pool-dfo-tso-m", "poolTsoDfoM"); take("fc-pool-dfo-tso-f", "poolTsoDfoF");
+  take("fc-pool-dfo-pt", "poolTsoDfoPt");
   syncDerivedMode(fc);
   const thr = api.$("fc-phase-thr"), split = api.$("fc-ampm-split");
   if (thr) fc.phaseThresholdMin = num0(thr.value || 15);
@@ -214,6 +216,7 @@ export function updateFunctionCoveragePreview() {
     " \u00b7 DFO STSO " + fc.poolStsoDfoM + "/" + fc.poolStsoDfoF +
     " LTSO " + fc.poolLtsoDfoM + "/" + fc.poolLtsoDfoF +
     " TSO " + fc.poolTsoDfoM + "/" + fc.poolTsoDfoF +
+    " PT " + num0(fc.poolTsoDfoPt) +
     " \u00b7 AM " + (api.slotLabel ? api.slotLabel(anchors.am) : "") +
     " PM " + (api.slotLabel ? api.slotLabel(anchors.pm) : "") +
     " " + (reqTxt || "no shift requirements") +
@@ -222,7 +225,6 @@ export function updateFunctionCoveragePreview() {
 }
 
 function defaultExtraBands() {
-  // Extra-position coverage windows — not Function Coverage shift requirements.
   return [{ start: "04:00", end: "20:30", min: 1 }];
 }
 

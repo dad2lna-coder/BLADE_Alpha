@@ -7,27 +7,24 @@ export function bindPoolsApi(scheduler) {
   api = scheduler;
 }
 
-// Local helper (classic equivalent, not exported)
 function num0(v) { return Math.max(0, Math.floor(+v || 0)); }
 
-// Exported: bag pool total from classic
 export function bagPoolTotal(fc) {
   return num0(fc.poolStsoBagM) + num0(fc.poolStsoBagF) + num0(fc.poolLtsoBagM) + num0(fc.poolLtsoBagF) +
     num0(fc.poolTsoBagM) + num0(fc.poolTsoBagF);
 }
 
-// Exported: dfo pool total from classic
 export function dfoPoolTotal(fc) {
   return num0(fc.poolStsoDfoM) + num0(fc.poolStsoDfoF) + num0(fc.poolLtsoDfoM) + num0(fc.poolLtsoDfoF) +
     num0(fc.poolTsoDfoM) + num0(fc.poolTsoDfoF);
 }
 
-// Exported: initialize function coverage state from api.state
 export function ensureFunctionCoverage() {
   if (!api.state.functionCoverage) api.state.functionCoverage = {};
   var fc = api.state.functionCoverage;
   ["poolStsoDfoM","poolStsoDfoF","poolLtsoDfoM","poolLtsoDfoF","poolTsoDfoM","poolTsoDfoF",
-   "poolStsoBagM","poolStsoBagF","poolLtsoBagM","poolLtsoBagF","poolTsoBagM","poolTsoBagF"].forEach(function (k) {
+   "poolStsoBagM","poolStsoBagF","poolLtsoBagM","poolLtsoBagF","poolTsoBagM","poolTsoBagF",
+   "poolTsoDfoPt"].forEach(function (k) {
     if (fc[k] == null) fc[k] = 0;
   });
   if (fc.poolStsoDfo == null) fc.poolStsoDfo = num0(fc.poolStsoDfoM) + num0(fc.poolStsoDfoF);
@@ -66,12 +63,10 @@ export function ensureFunctionCoverage() {
   return fc;
 }
 
-// Exported: derive mode from ensured coverage
 export function getFunctionMode() {
   return syncDerivedMode(ensureFunctionCoverage());
 }
 
-// Exported: FTE caps by role/sex from scheduler state
 export function fteCapsByRoleSex() {
   var st = api.state || {};
   return {
@@ -81,7 +76,6 @@ export function fteCapsByRoleSex() {
   };
 }
 
-// Exported: cap function pools to FTE from classic
 export function capFunctionPoolsToFte(fc, issues) {
   fc = fc || ensureFunctionCoverage();
   var caps = fteCapsByRoleSex();
@@ -103,7 +97,6 @@ export function capFunctionPoolsToFte(fc, issues) {
   return fc;
 }
 
-// Exported: sync derived mode (used by ensureFunctionCoverage and getFunctionMode)
 function syncDerivedMode(fc) {
   var bag = bagPoolTotal(fc) > 0, dfo = dfoPoolTotal(fc) > 0;
   fc.poolBag = bagPoolTotal(fc);
@@ -121,7 +114,6 @@ function shiftStartMin(shiftId) {
   return 1e9;
 }
 
-// Exported: build certified pools from classic js/functions.js
 export function buildCertifiedPools(fc) {
   fc = fc || ensureFunctionCoverage();
   var lines = api.state.lines || [];
@@ -154,6 +146,122 @@ export function buildCertifiedPools(fc) {
     var taken = 0;
     for (var i = 0; i < pool.length && taken < n; i++) { ensureEligible(pool[i]).bag = true; taken++; }
     return { total: taken };
+  }
+
+  function isPtLine(line) {
+    if (!line) return false;
+    if (line.isPt === true) return true;
+    return String(line.empClass || "").trim().toUpperCase() === "PT";
+  }
+
+  function clampTsoPtDfo() {
+    var cap = num0(fc.poolTsoDfoPt);
+    var pts = [];
+    lines.forEach(function (l) {
+      if (!l || l.isExtra || l.extraPositionId) return;
+      if (api.lineRoleKey(l) !== "TSO") return;
+      if (!isPtLine(l)) return;
+      var el = ensureEligible(l);
+      if (el.bag || !el.dfo) return;
+      pts.push(l);
+    });
+    pts.sort(function (a, b) {
+      var d = api.lineStartMin(b) - api.lineStartMin(a);
+      if (d) return d;
+      return String(b.id).localeCompare(String(a.id));
+    });
+    var cleared = 0;
+    while (pts.length > cap) {
+      var drop = pts.shift();
+      ensureEligible(drop).dfo = false;
+      cleared++;
+    }
+    if (cleared && api.state) {
+      if (!api.state.issues) api.state.issues = [];
+      var msg = "PT DFO capped to " + cap;
+      if (api.state.issues.indexOf(msg) < 0) api.state.issues.push(msg);
+    }
+    return cleared;
+  }
+
+  function recountDfoSides(arr) {
+    var am = 0, pm = 0;
+    arr.forEach(function (res) {
+      am += res.am || 0;
+      pm += res.pm || 0;
+    });
+    var total = 0;
+    lines.forEach(function (l) {
+      if (!l || l.isExtra || l.extraPositionId) return;
+      if (api.lineRoleKey(l) !== "TSO") return;
+      var el = l.functionEligible;
+      if (el && el.dfo && !el.bag) total++;
+    });
+    return { total: total, am: am, pm: pm };
+  }
+
+  var ptReserveLeft = num0(fc.poolTsoDfoPt);
+
+  function tsoPtDfoCount() {
+    var used = 0;
+    lines.forEach(function (l) {
+      if (!l || l.isExtra || l.extraPositionId) return;
+      if (api.lineRoleKey(l) !== "TSO") return;
+      if (!isPtLine(l)) return;
+      var el = l.functionEligible;
+      if (el && el.dfo && !el.bag) used++;
+    });
+    return used;
+  }
+
+  function tsoPtDfoRemaining() {
+    return Math.max(0, num0(fc.poolTsoDfoPt) - tsoPtDfoCount());
+  }
+
+  function tryMarkTsoDfo(cand) {
+    var el = ensureEligible(cand);
+    if (el.bag || el.dfo) return false;
+    if (isPtLine(cand)) {
+      if (ptReserveLeft <= 0) return false;
+      el.dfo = true;
+      ptReserveLeft--;
+      return true;
+    }
+    el.dfo = true;
+    return true;
+  }
+
+  function fillPtReserveBySwap() {
+    var want = num0(fc.poolTsoDfoPt);
+    ["M", "F"].forEach(function (sex) {
+      while (tsoPtDfoCount() < want) {
+        var unusedPt = unused("TSO", sex).filter(isPtLine);
+        var ftDfo = lines.filter(function (l) {
+          if (!l || l.isExtra || l.extraPositionId) return false;
+          if (api.lineRoleKey(l) !== "TSO" || l.sex !== sex) return false;
+          if (isPtLine(l)) return false;
+          var el = ensureEligible(l);
+          return el.dfo && !el.bag;
+        });
+        if (!unusedPt.length || !ftDfo.length) break;
+        unusedPt.sort(preferFtThenStart);
+        ftDfo.sort(function (a, b) {
+          var d = api.lineStartMin(b) - api.lineStartMin(a);
+          if (d) return d;
+          return String(b.id).localeCompare(String(a.id));
+        });
+        ensureEligible(ftDfo[0]).dfo = false;
+        ensureEligible(unusedPt[0]).dfo = true;
+        if (ptReserveLeft > 0) ptReserveLeft--;
+      }
+    });
+  }
+
+  function preferFtThenStart(a, b) {
+    var ap = isPtLine(a) ? 1 : 0;
+    var bp = isPtLine(b) ? 1 : 0;
+    if (ap !== bp) return ap - bp;
+    return api.lineStartMin(a) - api.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
   }
 
   function markDfo(role, sex, n) {
@@ -196,6 +304,7 @@ export function buildCertifiedPools(fc) {
     });
     function sortLines(arr) {
       arr.sort(function (a, b) {
+        if (role === "TSO") return preferFtThenStart(a, b);
         return api.lineStartMin(a) - api.lineStartMin(b) || String(a.id).localeCompare(String(b.id));
       });
     }
@@ -259,10 +368,15 @@ export function buildCertifiedPools(fc) {
       var arr = buckets[id];
       var want = quotas[i];
       for (var j = 0; j < arr.length && tagged.length < n && want > 0; j++) {
-        var el = ensureEligible(arr[j]);
+        var cand = arr[j];
+        var el = ensureEligible(cand);
         if (el.bag || el.dfo) continue;
-        el.dfo = true;
-        tagged.push(arr[j]);
+        if (role === "TSO") {
+          if (!tryMarkTsoDfo(cand)) continue;
+        } else {
+          el.dfo = true;
+        }
+        tagged.push(cand);
         want--;
       }
     });
@@ -270,10 +384,15 @@ export function buildCertifiedPools(fc) {
       var rest = unused(role, sex).slice();
       sortLines(rest);
       for (var k = 0; k < rest.length && tagged.length < n; k++) {
-        var el2 = ensureEligible(rest[k]);
+        var cand2 = rest[k];
+        var el2 = ensureEligible(cand2);
         if (el2.bag || el2.dfo) continue;
-        el2.dfo = true;
-        tagged.push(rest[k]);
+        if (role === "TSO") {
+          if (!tryMarkTsoDfo(cand2)) continue;
+        } else {
+          el2.dfo = true;
+        }
+        tagged.push(cand2);
       }
     }
 
@@ -298,11 +417,14 @@ export function buildCertifiedPools(fc) {
     ltso: markDfo("LTSO", "M", fc.poolLtsoDfoM), ltsoF: markDfo("LTSO", "F", fc.poolLtsoDfoF),
     tso: markDfo("TSO", "M", fc.poolTsoDfoM), tsoF: markDfo("TSO", "F", fc.poolTsoDfoF)
   };
+  fillPtReserveBySwap();
+  clampTsoPtDfo();
+  var tsoSides = recountDfoSides([dfo.tso, dfo.tsoF]);
   return {
     bag: bag,
     stso: { total: dfo.stso.total + dfo.stsoF.total, am: dfo.stso.am + dfo.stsoF.am, pm: dfo.stso.pm + dfo.stsoF.pm },
     ltso: { total: dfo.ltso.total + dfo.ltsoF.total, am: dfo.ltso.am + dfo.ltsoF.am, pm: dfo.ltso.pm + dfo.ltsoF.pm },
-    tso: { total: dfo.tso.total + dfo.tsoF.total, am: dfo.tso.am + dfo.tsoF.am, pm: dfo.tso.pm + dfo.tsoF.pm },
+    tso: tsoSides,
     anchors: anchors
   };
 }

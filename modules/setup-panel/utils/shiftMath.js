@@ -45,18 +45,21 @@ export function shiftOverlapsWindow(S, s, openMin, closeMin) {
 }
 
 export function targetWorkDays(S, shiftId, empClass) {
+  if (empClass === "PT") {
+    var days = Math.round(+(S.state && S.state.ptDaysPerWeek));
+    return Number.isFinite(days) && days > 0 ? Math.max(1, Math.min(6, days)) : 3;
+  }
   if (empClass === "STSO" || empClass === "LTSO") {
     var s0 = getShift(S, shiftId);
     return s0 && (+s0.paid || 8) >= 10 ? 4 : 5;
   }
   var s = getShift(S, shiftId);
   if (s && (+s.paid || 8) >= 10) return 4;
-  if (empClass === "PT") return 3;
   return 5;
 }
 
 export function consecutiveRdos(count, start) {
-  var n = Math.max(2, Math.min(3, count || 2));
+  var n = Math.max(1, Math.min(6, count || 2));
   var out = [];
   for (var i = 0; i < n; i++) out.push((start + i) % 7);
   return out;

@@ -87,7 +87,7 @@ export function initRowModel(S) {
       end: end,
       position: position,
       emp: emp,
-      sex: line.sex || "M",
+      sex: line.sex === "F" || line.sex === "M" ? line.sex : "",
       function: line.function || "",
       certPool: line.certPool || "",
       rdos: rdoText(line, dayNames),

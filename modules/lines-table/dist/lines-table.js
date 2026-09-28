@@ -1136,7 +1136,7 @@ function yn(t) {
       end: F,
       position: c,
       emp: b,
-      sex: l.sex || "M",
+      sex: l.sex === "F" || l.sex === "M" ? l.sex : "",
       function: l.function || "",
       certPool: l.certPool || "",
       rdos: n(l, s),
