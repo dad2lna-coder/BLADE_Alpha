@@ -39,8 +39,8 @@ function takeFromPools(S, pools, preferLongFt, placed, preferPt) {
     if (pools[key] > 0) { pools[key]--; return { empClass: emp, sex: sex }; }
     return null;
   }
-  var startM = (S.state.ftM || 0) + (S.state.ptM || 0);
-  var startF = (S.state.ftF || 0) + (S.state.ptF || 0);
+  var startM = (pools.FTM || 0) + (pools.PTM || 0);
+  var startF = (pools.FTF || 0) + (pools.PTF || 0);
   var startT = startM + startF;
   var targetFShare = startT > 0 ? startF / startT : 0.5;
   function pickSex(emp) {
@@ -100,8 +100,11 @@ function makeLineFromPerson(S, def, person, id) {
   };
 }
 
-export function buildLines(S, counts) {
-  var pools = { FTM: S.state.ftM || 0, FTF: S.state.ftF || 0, PTM: S.state.ptM || 0, PTF: S.state.ptF || 0 };
+export function buildLines(S, counts, options) {
+  var usedIds = (options && options.usedIds) || new Set();
+  var pools = (options && options.pools)
+    ? Object.assign({}, options.pools)
+    : { FTM: S.state.ftM || 0, FTF: S.state.ftF || 0, PTM: S.state.ptM || 0, PTF: S.state.ptF || 0 };
   var placedGlobal = { M: 0, F: 0 };
   var shifts = S.state.shifts || [];
   var order = [];
@@ -247,6 +250,8 @@ export function buildLines(S, counts) {
   // Build final lines array in slot order
   slots.forEach(function (slot) {
     if (!slot.person) return;
+    while (usedIds.has(id)) id++;
+    usedIds.add(id);
     lines.push({
       id: id,
       lineCode: "Line " + String(id).padStart(3, "0"),
@@ -288,12 +293,15 @@ function takeSupervisoryFromPools(pools, targetFShare, placed) {
   return pools.M >= pools.F ? take("M") : take("F");
 }
 
-export function buildSupervisoryLines(S, supCounts, supType) {
+export function buildSupervisoryLines(S, supCounts, supType, options) {
+  var usedIds = (options && options.usedIds) || new Set();
   var isLtso = supType === "LTSO";
-  var pools = {
-    M: isLtso ? (S.state.ltsoM || 0) : (S.state.stsoM || 0),
-    F: isLtso ? (S.state.ltsoF || 0) : (S.state.stsoF || 0)
-  };
+  var pools = (options && options.pools)
+    ? Object.assign({}, options.pools)
+    : {
+        M: isLtso ? (S.state.ltsoM || 0) : (S.state.stsoM || 0),
+        F: isLtso ? (S.state.ltsoF || 0) : (S.state.stsoF || 0)
+      };
   var totalM = pools.M;
   var totalF = pools.F;
   var totalSup = totalM + totalF;
@@ -407,6 +415,8 @@ export function buildSupervisoryLines(S, supCounts, supType) {
 
   slots.forEach(function (slot) {
     if (!slot.sex) return;
+    while (usedIds.has(id)) id++;
+    usedIds.add(id);
     lines.push({
       id: id,
       lineCode: supType + " " + String(lines.length + 1).padStart(2, "0"),

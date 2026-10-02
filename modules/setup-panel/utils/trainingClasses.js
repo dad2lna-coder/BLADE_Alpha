@@ -75,9 +75,15 @@ function rdoDaysFor(S, def, workDays, seed) {
   return { rdoDays: rdoDays, hard: hard.length > 0 };
 }
 
-export function buildTrainingClassLines(S) {
+export function buildTrainingClassLines(S, options) {
+  var usedIds = (options && options.usedIds) || new Set();
+  var lockedCounts = (options && options.lockedTrainingCounts) || {};
   var out = [];
-  var counts = trainingHeadcount(S);
+  var rawCounts = trainingHeadcount(S);
+  var counts = {
+    ESTI: Math.max(0, rawCounts.ESTI - (lockedCounts.ESTI || 0)),
+    MSTI: Math.max(0, rawCounts.MSTI - (lockedCounts.MSTI || 0))
+  };
   var shifts = (S.state && S.state.shifts) || [];
   var fallback = shifts[0] || { id: "", name: "Shift", start: "04:00", end: "20:30", paid: 8, rdoHard: [] };
 
@@ -126,8 +132,11 @@ export function buildTrainingClassLines(S) {
     // Build lines
     var idBase = 40000 + ci * 1000;
     slots.forEach(function (slot, idx) {
+      var newId = idBase + idx + 1;
+      while (usedIds.has(newId)) newId++;
+      usedIds.add(newId);
       out.push({
-        id: idBase + idx + 1,
+        id: newId,
         lineCode: cls + " " + String(idx + 1).padStart(2, "0"),
         shiftId: slot.def.id,
         shiftName: slot.def.name,

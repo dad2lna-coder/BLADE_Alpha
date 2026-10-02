@@ -2,32 +2,13 @@
 import { parseStartDate, addDays, weekdaySun0 } from "../../shared/utils/dates.js";
 
 export function buildScheduleForLine(S, line, days) {
-  var arr = [];
   var rdo = new Set((line.rdoDays || []).map(Number));
-  var need = S.targetWorkDays(line.shiftId, line.empClass);
-  var base = parseStartDate(S.state.startDate);
-  var weeks = Math.ceil(days / 7);
-  for (var w = 0; w < weeks; w++) {
-    var weekOffsets = [];
-    for (var i = 0; i < 7; i++) {
-      var off = w * 7 + i;
-      if (off >= days) break;
-      weekOffsets.push({ off: off, dow: weekdaySun0(addDays(base, off)) });
-    }
-    var weekVal = {};
-    weekOffsets.forEach(function (x) {
-      weekVal[x.off] = rdo.has(x.dow) ? "RDO" : "WORK";
-    });
-    var workOffs = weekOffsets
-      .filter(function (x) { return weekVal[x.off] === "WORK"; })
-      .sort(function (a, b) { return a.dow - b.dow; });
-    workOffs.forEach(function (x, idx) {
-      weekVal[x.off] = idx < need ? "WORK" : "RDO";
-    });
-    weekOffsets.forEach(function (x) { arr[x.off] = weekVal[x.off]; });
+  var arr = [];
+  for (var i = 0; i < days; i++) {
+    var dow = i % 7;
+    arr.push(rdo.has(dow) ? "RDO" : "WORK");
   }
-  for (var i = 0; i < days; i++) if (!arr[i]) arr[i] = "RDO";
-  return arr.slice(0, days);
+  return arr;
 }
 
 export function generate(S) {
@@ -90,6 +71,11 @@ export function generate(S) {
     existingLockedLines = S.state.lines.filter(function (l) { return S.isLineScheduleLocked(l); });
   }
 
+  var usedIds = new Set();
+  existingLockedLines.forEach(function (l) {
+    if (l.id != null) usedIds.add(l.id);
+  });
+
   function adjustCountsForLocked(counts, lockedLines, filterFn) {
     var adj = Object.assign({}, counts || {});
     lockedLines.forEach(function (l) {
@@ -115,6 +101,46 @@ export function generate(S) {
     return !isTsoLine(l) && !isLtsoLine(l) && !isStsoLine(l);
   });
 
+  // Calculate sex pools subtraction for locked lines
+  var lockedFTM = 0, lockedFTF = 0, lockedPTM = 0, lockedPTF = 0;
+  lockedTso.forEach(function (l) {
+    if (l.empClass === "FT") {
+      if (l.sex === "M") lockedFTM++;
+      else if (l.sex === "F") lockedFTF++;
+    } else if (l.empClass === "PT") {
+      if (l.sex === "M") lockedPTM++;
+      else if (l.sex === "F") lockedPTF++;
+    }
+  });
+
+  var lockedLtsoM = 0, lockedLtsoF = 0;
+  lockedLtso.forEach(function (l) {
+    if (l.sex === "M") lockedLtsoM++;
+    else if (l.sex === "F") lockedLtsoF++;
+  });
+
+  var lockedStsoM = 0, lockedStsoF = 0;
+  lockedStso.forEach(function (l) {
+    if (l.sex === "M") lockedStsoM++;
+    else if (l.sex === "F") lockedStsoF++;
+  });
+
+  var lockedExtraCounts = {};
+  var lockedTrainingCounts = { ESTI: 0, MSTI: 0 };
+  lockedOther.forEach(function (l) {
+    if (l.isTraining || l.trainingClass) {
+      var cls = String(l.trainingClass || l.empClass || "").trim().toUpperCase();
+      if (cls === "ESTI" || cls === "MSTI") {
+        lockedTrainingCounts[cls] = (lockedTrainingCounts[cls] || 0) + 1;
+      }
+    } else if (l.isExtra || l.extraPositionId) {
+      var posId = l.extraPositionId || "extra-1";
+      if (!lockedExtraCounts[posId]) lockedExtraCounts[posId] = { M: 0, F: 0 };
+      if (l.sex === "M") lockedExtraCounts[posId].M++;
+      else if (l.sex === "F") lockedExtraCounts[posId].F++;
+    }
+  });
+
   // Ensure locked lines refresh shift metadata
   existingLockedLines.forEach(function (l) {
     var sh = S.getShift ? S.getShift(l.shiftId) : null;
@@ -130,28 +156,49 @@ export function generate(S) {
 
   var tsoLines = [];
   var mode = "extras";
-  if (total > 0) {
+  var tsoPools = {
+    FTM: Math.max(0, (S.state.ftM || 0) - lockedFTM),
+    FTF: Math.max(0, (S.state.ftF || 0) - lockedFTF),
+    PTM: Math.max(0, (S.state.ptM || 0) - lockedPTM),
+    PTF: Math.max(0, (S.state.ptF || 0) - lockedPTF)
+  };
+  var remainingTso = tsoPools.FTM + tsoPools.FTF + tsoPools.PTM + tsoPools.PTF;
+
+  if (total > 0 && remainingTso > 0) {
     var allocation = S.allocateShiftHeadcounts(total, openMin, closeMin);
     var counts = adjustCountsForLocked(allocation.counts, lockedTso, isTsoLine);
     mode = allocation.mode;
-    tsoLines = S.buildLines(counts);
+    tsoLines = S.buildLines(counts, { pools: tsoPools, usedIds: usedIds });
+  } else if (total > 0) {
+    var allocOnly = S.allocateShiftHeadcounts(total, openMin, closeMin);
+    mode = allocOnly.mode;
   }
   S.state.mode = mode;
 
-  var ltsoTotal = Math.max(0, (S.state.ltsoM + S.state.ltsoF) - lockedLtso.length);
+  var ltsoPools = {
+    M: Math.max(0, (S.state.ltsoM || 0) - lockedLtsoM),
+    F: Math.max(0, (S.state.ltsoF || 0) - lockedLtsoF)
+  };
+  var ltsoTotal = ltsoPools.M + ltsoPools.F;
   var ltsoLines = [];
   if (ltsoTotal > 0) {
     var ltsoAlloc = S.allocateSupervisoryHeadcounts(ltsoTotal, openMin, closeMin, "ltsoForce", tsoLines);
-    ltsoLines = S.buildSupervisoryLines(ltsoAlloc.counts || {}, "LTSO");
+    ltsoLines = S.buildSupervisoryLines(ltsoAlloc.counts || {}, "LTSO", { pools: ltsoPools, usedIds: usedIds });
   }
-  var stsoTotal = Math.max(0, (S.state.stsoM + S.state.stsoF) - lockedStso.length);
+
+  var stsoPools = {
+    M: Math.max(0, (S.state.stsoM || 0) - lockedStsoM),
+    F: Math.max(0, (S.state.stsoF || 0) - lockedStsoF)
+  };
+  var stsoTotal = stsoPools.M + stsoPools.F;
   var stsoLines = [];
   if (stsoTotal > 0) {
     var stsoAlloc = S.allocateSupervisoryHeadcounts(stsoTotal, openMin, closeMin, "stsoForce", tsoLines);
-    stsoLines = S.buildSupervisoryLines(stsoAlloc.counts || {}, "STSO");
+    stsoLines = S.buildSupervisoryLines(stsoAlloc.counts || {}, "STSO", { pools: stsoPools, usedIds: usedIds });
   }
-  var extraLines = S.buildExtraPositionLines ? S.buildExtraPositionLines() : [];
-  var trainingLines = S.buildTrainingClassLines ? S.buildTrainingClassLines() : [];
+
+  var extraLines = S.buildExtraPositionLines ? S.buildExtraPositionLines({ lockedExtraCounts: lockedExtraCounts, usedIds: usedIds }) : [];
+  var trainingLines = S.buildTrainingClassLines ? S.buildTrainingClassLines({ lockedTrainingCounts: lockedTrainingCounts, usedIds: usedIds }) : [];
 
   S.state.lines = [].concat(
     lockedTso, tsoLines,

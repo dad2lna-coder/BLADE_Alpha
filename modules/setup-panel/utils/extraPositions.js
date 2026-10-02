@@ -206,15 +206,18 @@ function rdoDaysFor(S, def, workDays, seed) {
 
 import { getBandKey, createPRNG, seededShuffle } from "./buildLines.js";
 
-export function buildExtraPositionLines(S) {
+export function buildExtraPositionLines(S, options) {
+  var usedIds = (options && options.usedIds) || new Set();
+  var lockedCounts = (options && options.lockedExtraCounts) || {};
   var out = [];
   var list = ensureExtraList(S);
   var shifts = (S.state && S.state.shifts) || [];
   var fallback = shifts[0] || { id: "", name: "Shift", start: "04:00", end: "20:30", paid: 8, rdoHard: [] };
 
   list.forEach(function (pos, pi) {
-    var males = num0(pos.m);
-    var females = num0(pos.f);
+    var lockedForPos = lockedCounts[pos.id] || { M: 0, F: 0 };
+    var males = Math.max(0, num0(pos.m) - (lockedForPos.M || 0));
+    var females = Math.max(0, num0(pos.f) - (lockedForPos.F || 0));
     var total = males + females;
     if (!total) return;
     if (!pos.bands || !pos.bands.length) {
@@ -321,8 +324,11 @@ export function buildExtraPositionLines(S) {
     var idBase = 30000 + pi * 1000;
     slots.forEach(function (slot, idx) {
       if (!slot.sex) return;
+      var newId = idBase + idx + 1;
+      while (usedIds.has(newId)) newId++;
+      usedIds.add(newId);
       out.push({
-        id: idBase + idx + 1,
+        id: newId,
         lineCode: typeName + " " + String(idx + 1).padStart(2, "0"),
         shiftId: slot.def.id,
         shiftName: slot.def.name,
