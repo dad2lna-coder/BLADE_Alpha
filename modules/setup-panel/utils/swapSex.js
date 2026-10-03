@@ -178,6 +178,7 @@ export function approveSexSwaps(S, swapPairs) {
     var lineM = lines.find(function (l) { return String(l.id) === String(pair.lineMId); });
     var lineF = lines.find(function (l) { return String(l.id) === String(pair.lineFId); });
     if (!lineM || !lineF) return;
+    if (S.isLineScheduleLocked && (S.isLineScheduleLocked(lineM) || S.isLineScheduleLocked(lineF))) return;
 
     var shiftA = shifts.find(function (s) { return s.id === pair.shiftAId; });
     var shiftB = shifts.find(function (s) { return s.id === pair.shiftBId; });

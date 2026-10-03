@@ -2,6 +2,11 @@ import assert from "node:assert";
 import { attachScheduleLocks, lineMatchesLockRule, isLineScheduleLocked } from "../modules/setup-panel/utils/scheduleLocks.js";
 import { getLinesForClass } from "../modules/setup-panel/utils/rebalanceFt.js";
 import { attachShiftMath } from "../modules/setup-panel/utils/shiftMath.js";
+import { attachGenerate, generate } from "../modules/setup-panel/actions/generate.js";
+import { attachAllocation } from "../modules/setup-panel/actions/allocation.js";
+import { buildLines, buildSupervisoryLines } from "../modules/setup-panel/utils/buildLines.js";
+import { attachExtraPositions } from "../modules/setup-panel/utils/extraPositions.js";
+import { attachTrainingClasses } from "../modules/setup-panel/utils/trainingClasses.js";
 
 function timeToMin(t) {
   if (!t) return 0;
@@ -43,6 +48,12 @@ var S = {
 attachShiftMath(S);
 attachScheduleLocks(S);
 S.getLinesForClass = getLinesForClass;
+S.buildLines = function (counts, opts) { return buildLines(S, counts, opts); };
+S.buildSupervisoryLines = function (counts, type, opts) { return buildSupervisoryLines(S, counts, type, opts); };
+attachAllocation(S);
+attachGenerate(S);
+attachExtraPositions(S);
+attachTrainingClasses(S);
 
 // Test 1: Stacked lock rules composition (AND within rule, OR across rules)
 var line1 = { id: "L1", shiftId: "S1", empClass: "STSO", isStso: true, sex: "M" };
@@ -107,5 +118,88 @@ for (var dow = 0; dow <= 6; dow++) {
   var testSched = buildScheduleForLine(S, testLine, 7);
   assert.strictEqual(testSched[dow], "RDO", "Sole hard DOW " + dow + " is scheduled RDO");
 }
+
+// Test 5: Hard RDO exceeding pattern rdoCount (e.g. 3 hard days on 8h shift / 2 pattern RDOs)
+var S8hExceed = {
+  state: {
+    shifts: [
+      { id: "S8_EXCEED", name: "8hExceed", start: "08:00", end: "16:30", paid: 8, force: 1, rdoHard: [1, 3, 5] },
+      { id: "S8_SPLIT_EXCEED", name: "SplitExceed", start: "05:00", end: "17:00", segments: [{ start: "05:00", end: "10:00" }, { start: "12:00", end: "17:00" }], paid: 8, force: 1, rdoHard: [0, 2, 4] }
+    ],
+    scheduleLocks: [],
+    lines: [],
+    ftM: 2, ftF: 0, ptM: 0, ptF: 0, ltsoM: 0, ltsoF: 0, stsoM: 0, stsoF: 0,
+    open: "05:00", close: "22:00", weekCount: 1, generateSeed: "42"
+  },
+  timeToMin: timeToMin,
+  isValidTimeText: isValidTimeText,
+  safeNumber: function (v, d) { return Number.isFinite(+v) ? +v : d; }
+};
+S8hExceed.getLinesForClass = getLinesForClass;
+attachShiftMath(S8hExceed);
+attachScheduleLocks(S8hExceed);
+S8hExceed.buildLines = function (counts, opts) { return buildLines(S8hExceed, counts, opts); };
+S8hExceed.buildSupervisoryLines = function (counts, type, opts) { return buildSupervisoryLines(S8hExceed, counts, type, opts); };
+attachAllocation(S8hExceed);
+attachGenerate(S8hExceed);
+attachExtraPositions(S8hExceed);
+attachTrainingClasses(S8hExceed);
+
+generate(S8hExceed);
+
+assert.strictEqual(S8hExceed.state.lines.length, 2, "Generated 2 lines");
+var lineExceed1 = S8hExceed.state.lines.find(l => l.shiftId === "S8_EXCEED");
+var lineExceed2 = S8hExceed.state.lines.find(l => l.shiftId === "S8_SPLIT_EXCEED");
+
+assert.deepStrictEqual(lineExceed1.rdoDays.sort(), [1, 3, 5], "Shift with 3 hard RDOs on 8h pattern retained all 3 hard days");
+assert.deepStrictEqual(lineExceed2.rdoDays.sort(), [0, 2, 4], "Split shift with 3 hard RDOs on 8h pattern retained all 3 hard days");
+
+// Test 6: GENERATE with STSO-M on shift A locked
+var SGenLock = {
+  state: {
+    shifts: [
+      { id: "SA", name: "ShiftA", start: "05:00", end: "13:30", paid: 8, rdoHard: [] },
+      { id: "SB", name: "ShiftB", start: "13:30", end: "22:00", paid: 8, rdoHard: [] }
+    ],
+    scheduleLocks: [
+      { id: "L_STSO_M_SA", classKey: "STSO", sex: "M", shiftId: "SA" }
+    ],
+    lines: [
+      { id: 10001, lineCode: "STSO 01", shiftId: "SA", empClass: "STSO", isStso: true, sex: "M", rdoDays: [0, 6], paid: 8 }
+    ],
+    ftM: 2, ftF: 2, ptM: 0, ptF: 0, ltsoM: 0, ltsoF: 0, stsoM: 2, stsoF: 0,
+    open: "05:00", close: "22:00", weekCount: 1, generateSeed: "100"
+  },
+  timeToMin: timeToMin,
+  isValidTimeText: isValidTimeText,
+  safeNumber: function (v, d) { return Number.isFinite(+v) ? +v : d; }
+};
+SGenLock.getLinesForClass = getLinesForClass;
+attachShiftMath(SGenLock);
+attachScheduleLocks(SGenLock);
+SGenLock.buildLines = function (counts, opts) { return buildLines(SGenLock, counts, opts); };
+SGenLock.buildSupervisoryLines = function (counts, type, opts) { return buildSupervisoryLines(SGenLock, counts, type, opts); };
+attachAllocation(SGenLock);
+attachGenerate(SGenLock);
+attachExtraPositions(SGenLock);
+attachTrainingClasses(SGenLock);
+
+generate(SGenLock);
+
+var stsoLines = SGenLock.state.lines.filter(l => l.isStso || l.empClass === "STSO");
+assert.strictEqual(stsoLines.length, 2, "Total STSO lines equals stsoM = 2");
+
+var lockedStsoLine = stsoLines.find(l => l.id === 10001);
+assert.ok(lockedStsoLine, "Locked STSO line (id 10001) survived generate");
+assert.strictEqual(lockedStsoLine.shiftId, "SA", "Locked STSO remains on shift SA");
+
+var newStsoLine = stsoLines.find(l => l.id !== 10001);
+assert.ok(newStsoLine, "Newly generated unlocked STSO line exists");
+assert.notStrictEqual(newStsoLine.id, 10001, "New STSO line ID does not collide with locked line ID");
+
+// Verify no duplicate line IDs anywhere in SGenLock.state.lines
+var allIds = SGenLock.state.lines.map(l => l.id);
+var uniqueIds = new Set(allIds);
+assert.strictEqual(allIds.length, uniqueIds.size, "All line IDs are unique after generate with locks");
 
 console.log("ALL SCHEDULE LOCKS & HARD RDO UNIT TESTS PASSED SUCCESSFULLY!");

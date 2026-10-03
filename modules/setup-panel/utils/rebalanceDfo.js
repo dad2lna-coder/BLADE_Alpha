@@ -209,6 +209,7 @@ export function approveDfoRebalance(S, moves) {
   moves.forEach(function (m) {
     var line = lines.find(function (l) { return String(l.id) === String(m.lineId); });
     if (!line) return;
+    if (S.isLineScheduleLocked && S.isLineScheduleLocked(line)) return;
     var targetShift = shifts.find(function (s) { return s.id === m.targetShiftId; });
     if (!targetShift) return;
 
