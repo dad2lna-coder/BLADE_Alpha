@@ -28,7 +28,7 @@ The host owns the shared runtime state object (`window.Scheduler`) and file Impo
 | `shared-chrome` | Shell chrome sub-tab helpers | `modules/shared/dist/shared-chrome.js` | `initSharedChrome` |
 | `shared-lines` | Line helpers | `modules/shared/dist/shared-lines.js` | `initLineHelpers` |
 | `setup-panel` | Setup tab UI, shifts table, allocation & generate engine | `modules/setup-panel/dist/setup-panel.js` | `initSetupPanel` |
-| `function-coverage` | Engine-only BAG/DFO/PAX function assignment | `modules/function-coverage/dist/function-coverage.js` | `initFunctionCoverage` |
+| `function-coverage` | Engine & modal function coverage assignment | `modules/function-coverage/dist/function-coverage.js` | `initFunctionCoverage` |
 | `lines-table` | Virtualized bid line table (Svelte 4 island) + row model | `modules/lines-table/dist/lines-table.js` | `initLinesTable` |
 | `coverage` | 30-min heatmap matrix, shift mix, coverage cuts | `modules/coverage/dist/coverage.js` | `initCoverage` |
 | `reports` | Management reports, gender equity, capacity math & mod-set board | `modules/reports/dist/reports.js` | `initReportsShell` |
@@ -42,7 +42,7 @@ The host owns the shared runtime state object (`window.Scheduler`) and file Impo
 
 - **Source Code**: All module development takes place in module source directories (`modules/<name>/`).
 - **Vite Build**: Executing `npm run build:modules` runs per-module Vite configurations (`vite.<module-name>.config.mjs`) to produce standalone single-file ESM bundles in `modules/<name>/dist/`.
-- **Git Tracking**: Compiled `dist/*.js` files are git-ignored (`.gitignore`), letting Vite in GitHub Actions (`.github/workflows/pages.yml`) build production bundles automatically on push.
+- **Git Tracking**: `.gitignore` ignores `modules/*/dist/` by default, with tracked overrides for `modules/bid-planner/dist/bid-planner.js`, `modules/function-coverage/dist/function-coverage.js`, `modules/lines-table/dist/lines-table.css`, and `modules/lines-table/dist/lines-table.js`.
 - **Actions Workflow**: `.github/workflows/pages.yml` executes `npm install` and `npm run build:modules` before assembling the site artifact for GitHub Pages.
 
 ---
@@ -53,14 +53,14 @@ Classic `js/` contains host shell runtime and chrome:
 
 | File | Purpose |
 |------|---------|
-| `constants.js` | Core constants (`DEFAULT_SHIFTS`, `DEFAULT_COVERAGE`, `CREW_FUNCTIONS`) |
-| `utils.js` | Cross-module primitives (`parseTime`, `formatTime`, `getShiftHours`, `cloneDeep`) |
-| `utils/theme.js` | Theme toggle (Dark / Presentation) |
-| `io.js` | File Import/Export (`exportSchedule`, `importSchedule`) |
-| `instructions.js` | Help modal markdown text and renderer |
-| `main.js` | Shell DOM tab switcher & help modal listener |
-| `console-chrome.js` | Console status header/footer update |
-| `intro.js` | Retro splash overlay animation |
+| `constants.js` | Core constants (`DAYS`, `BADGES`) |
+| `utils.js` | Cross-module primitives (`S.$`, `S.timeToMin`, `S.minToTime`, `S.safeNumber`, `S.isValidTimeText`, `S.setInputValue`, `S.updateStatus`, `S.parseStartDate`, `S.toDateInputValue`, `S.dj`) |
+| `utils/theme.js` | Theme toggle (`getTheme`, `applyTheme`, `toggleTheme`, `initTheme`) |
+| `io.js` | File Import/Export (`exportJson`, `applyPayload`, `importJsonFile`, `clearAll`) |
+| `instructions.js` | Embedded Markdown text copy (`Scheduler.INSTRUCTIONS_MD`) |
+| `main.js` | Shell DOM tab switcher (`Scheduler.switchTab`) & help modal listener |
+| `console-chrome.js` | Console status header/footer update, F-key shortcuts, Tauri desktop IPC |
+| `intro.js` | Retro splash overlay animation (`blade-intro-done`) |
 
 ---
 

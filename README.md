@@ -39,13 +39,13 @@ That URL is GitHub Pages from **bright-garden** (see `.github/workflows/pages.ym
 
 | Tab | Purpose |
 | --- | --- |
-| **[F1] Setup** | Weeks, FTE by role/sex, BAG + DFO pools, shifts, Generate |
-| **[F2] Lines** | Virtualized bid-line table (Svelte island); Excel export |
-| **[F3] Coverage** | 30-minute headcount matrix, coverage cuts, shift mix |
-| **[F4] Reports** | Passenger / bag-DFO / total / pool dashboards & capacity math |
-| **[F5] Teams** | Architecture, auto-form by RDO, drag-drop boards |
-| **[F6] Capacity** | Checkpoint lane demand & mod-set board |
-| **[F7] Demand** | Import flight-volume xlsx vs PAX staffing capacity |
+| **Setup** | Weeks, FTE by role/sex, BAG + DFO pools, shifts, Generate |
+| **Lines** | Virtualized bid-line table (Svelte island); Excel export |
+| **Coverage** | 30-minute headcount matrix, coverage cuts, shift mix |
+| **Reports** | Management, passenger / bag-DFO / total / pool dashboards & capacity math |
+| **Teams** | Architecture, auto-form by RDO, drag-drop boards |
+| **Demand** | Import flight-volume xlsx vs PAX staffing capacity |
+| **Bid Planner** | Milestone calculators, seniority rules, calendar & conflict visualization |
 
 ### Core capabilities
 
@@ -62,10 +62,10 @@ That URL is GitHub Pages from **bright-garden** (see `.github/workflows/pages.ym
 
 The host shell (`index.html` + thin `js/` runtime) acts as a renderer that fetches `modules/manifest.json`, mounts DOM panel slots, and dynamically imports Vite ESM bundles into the page. Feature modules interact with a single shared runtime state object (`window.Scheduler`).
 
-For the canonical system architecture map, module inventory, data flow, and runtime contracts, see:
-👉 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+For the single canonical application map recording module entries, file ownership, imports/exports, build configs, and caller-callee connections, see:
+👉 **[docs/APP-MAP.md](docs/APP-MAP.md)**
 
-For technical runtime script inventories and test procedures, see [DEPENDENCY_MAP.md](DEPENDENCY_MAP.md).
+For system architecture details, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [DEPENDENCY_MAP.md](DEPENDENCY_MAP.md).
 
 ---
 
@@ -76,9 +76,7 @@ For technical runtime script inventories and test procedures, see [DEPENDENCY_MA
 ```bash
 npm install
 npm run build:modules            # Builds Vite ESM dists for all modules
-npm run test:function-coverage  # Run function coverage engine test
-npm run test:demand-capacity     # Run demand parser test
-node test-task1.js              # Run lines row model test
+npm test                         # Runs unit test suite
 ```
 
 ---
@@ -87,4 +85,4 @@ node test-task1.js              # Run lines row model test
 
 https://dad2lna-coder.github.io/BLADE_Alpha/
 
-**v0.2 · bright-garden · docs synced Sep 2026**
+**v0.2 · bright-garden · docs synced Oct 2026**

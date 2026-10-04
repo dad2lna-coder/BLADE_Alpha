@@ -13,14 +13,14 @@ The current monolithic files in `js/` will be absorbed into specific ESM modules
 
 | Monolithic Script | Current Behavior / Ownership | Target Owning Module | Proposed Absorption Strategy |
 |---|---|---|---|
-| `js/constants.js` | Enums & default config parameters | `modules/shared` | Export immutable constant objects from `modules/shared/constants.js`. |
-| `js/utils.js` | Helper utilities (time calculation, clone, etc.) | `modules/shared` | Move core domain utilities into `modules/shared/utils/`. |
-| `js/utils/theme.js` | Dark vs. Presentation theme toggle | `modules/shared` | Convert `ThemeManager` into `modules/shared/theme.js`. |
-| `js/io.js` | EXP/IMP state serialization & file save/load | `modules/shared` (or `modules/io`) | Encapsulate JSON/Excel file persistence into a dedicated IO module service. |
-| `js/instructions.js` | Help modal rendering & markdown parsing | `modules/shared` | Port help modal parsing and rendering to a shared dialog component. |
-| `js/main.js` | State initialization & tab switching | Shell / Core App | Retain only minimal application bootstrap loader; state management moves to central store. |
-| `js/console-chrome.js` | Terminal UI status updates & footer messaging | `modules/shared` | Move RETRO terminal updates into `modules/shared/chrome.js`. |
-| `js/intro.js` | CRT startup boot sequence animation | `modules/shared` | Wrap boot sequence into an isolated startup component in `modules/shared`. |
+| `js/constants.js` | Array constants `Scheduler.DAYS` and `Scheduler.BADGES` | `modules/shared` | Export constant arrays from `modules/shared/constants.js`. |
+| `js/utils.js` | Helper utilities (`S.$`, `timeToMin`, `minToTime`, `safeNumber`, `isValidTimeText`, `setInputValue`, `updateStatus`, `parseStartDate`, `toDateInputValue`, `dj`) | `modules/shared` | Move domain utilities into `modules/shared/utils/`. |
+| `js/utils/theme.js` | Theme toggling (`getTheme`, `applyTheme`, `toggleTheme`, `initTheme`) | `modules/shared` | Move theme methods into `modules/shared/theme.js`. |
+| `js/io.js` | State export/import (`exportJson`, `importJsonFile`, `applyPayload`, `clearAll`) | `modules/shared` | Encapsulate JSON state serialization into `modules/shared/io.js`. |
+| `js/instructions.js` | Embedded text copy `Scheduler.INSTRUCTIONS_MD` | `modules/shared` | Move instructions copy and markdown parser into `modules/shared/instructions.js`. |
+| `js/main.js` | Tab switching logic (`Scheduler.switchTab`) and `#instructions-modal` display | Shell / Host Loader | Retain only minimal shell loader; tab state management moves to host store. |
+| `js/console-chrome.js` | Console header/footer updates (`refreshConsoleChrome`, `hookConsoleIo`) & `__TAURI__` IPC | `modules/shared` | Move console chrome updates and Tauri IPC into `modules/shared/chrome.js`. |
+| `js/intro.js` | Retro CRT boot animation and `blade-intro-done` event | `modules/shared` | Move startup boot sequence into `modules/shared/intro.js`. |
 
 ---
 
@@ -28,9 +28,9 @@ The current monolithic files in `js/` will be absorbed into specific ESM modules
 
 ### Proposed Single Event Bus
 - **Bus Name:** `EventBus` (a lightweight pub/sub event emitter instance provided by `modules/shared/bus.js`).
-- **Current Status in Repository:** **Not Present**. As shown in `docs/APP-MAP.md`, the app currently relies on direct global object mutations (`window.Scheduler` / `S.*`), direct method attachments, and native DOM CustomEvents (`lines:request-render`).
+- **Current Status in Repository:** **Not Present**. As shown in `docs/APP-MAP.md`, the app currently relies on direct global object mutations (`window.Scheduler` / `S.*`), direct method attachments, and native DOM CustomEvents (`lines:request-render`, `lines:filter-change`, `lines:sort-change`, `lines:coverage-refresh`, `blade-intro-done`, `setup:mounted`).
 - **Target Event Architecture:**
-  Modules will publish typed domain events to the single `EventBus` (e.g. `lines:updated`, `schedule:generated`, `tab:changed`) rather than calling methods directly on `window.Scheduler`.
+  Modules will publish typed domain events to the single `EventBus` (e.g. `lines:updated`, `schedule:generated`, `tab:changed`) rather than attaching methods to `window.Scheduler`.
 
 ---
 
