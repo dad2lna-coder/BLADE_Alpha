@@ -660,3 +660,72 @@ test('Half-1 Test 4: Weekend patterns are proposed ahead of midweek-only pattern
   const firstPropNote = res.proposals[0].note;
   assert.ok(firstPropNote.includes('0-6') || firstPropNote.includes('Sun') || firstPropNote.includes('Sat'), 'Weekend pattern proposed first');
 });
+
+test('Half-3 Test 1: Swapping 2M on Fri-Sat and 2F on Sun-Mon leaves both patterns at 1M and 1F on same shift', () => {
+  const S = createMockScheduler();
+  S.state.shifts = [
+    { id: 'S1', name: '0330', start: '03:30', end: '12:00', paid: 8 },
+    { id: 'S2', name: '1200', start: '12:00', end: '20:30', paid: 8 }
+  ];
+
+  // S1 has 2 Men on Fri-Sat [5, 6] and 2 Women on Sun-Mon [0, 1]
+  // S2 has 2 Men on Fri-Sat [5, 6] and 2 Women on Sun-Mon [0, 1]
+  S.state.lines = [
+    { id: 101, lineCode: 'LTSO 101', shiftId: 'S1', empClass: 'LTSO', isLtso: true, sex: 'M', rdoDays: [5, 6] },
+    { id: 102, lineCode: 'LTSO 102', shiftId: 'S1', empClass: 'LTSO', isLtso: true, sex: 'M', rdoDays: [5, 6] },
+    { id: 103, lineCode: 'LTSO 103', shiftId: 'S1', empClass: 'LTSO', isLtso: true, sex: 'F', rdoDays: [0, 1] },
+    { id: 104, lineCode: 'LTSO 104', shiftId: 'S1', empClass: 'LTSO', isLtso: true, sex: 'F', rdoDays: [0, 1] },
+
+    { id: 201, lineCode: 'LTSO 201', shiftId: 'S2', empClass: 'LTSO', isLtso: true, sex: 'M', rdoDays: [5, 6] },
+    { id: 202, lineCode: 'LTSO 202', shiftId: 'S2', empClass: 'LTSO', isLtso: true, sex: 'M', rdoDays: [5, 6] },
+    { id: 203, lineCode: 'LTSO 203', shiftId: 'S2', empClass: 'LTSO', isLtso: true, sex: 'F', rdoDays: [0, 1] },
+    { id: 204, lineCode: 'LTSO 204', shiftId: 'S2', empClass: 'LTSO', isLtso: true, sex: 'F', rdoDays: [0, 1] }
+  ];
+
+  const res = S.checkParity('LTSO', []);
+  assert.equal(res.proposals.length, 2, '2 proposals generated (1 for S1 AM half, 1 for S2 PM half)');
+
+  // Verify before-swap IDs and sexes
+  const prop1 = res.proposals[0];
+  assert.equal(prop1.lineA.sex, 'F', 'Line A is Female');
+  assert.equal(prop1.lineB.sex, 'M', 'Line B is Male');
+  assert.deepEqual(prop1.rdoA_after, [5, 6], 'Female line A gains Fri-Sat [5, 6] pattern');
+  assert.deepEqual(prop1.rdoB_after, [0, 1], 'Male line B gains Sun-Mon [0, 1] pattern');
+
+  // Verify failure if both donors are assigned to Fri-Sat [5, 6]
+  assert.notDeepEqual(prop1.rdoB_after, [5, 6], 'Male donor is NOT written onto Fri-Sat [5, 6]');
+
+  // Approve parity swaps
+  S.approveParitySwaps(res.proposals.map(p => ({
+    lineAId: p.lineA.id,
+    lineBId: p.lineB.id,
+    rdoA_after: p.rdoA_after,
+    rdoB_after: p.rdoB_after
+  })));
+
+  const patKey = (rdo) => (rdo || []).slice().map(Number).sort((a, b) => a - b).join('-');
+
+  // Verify S1 counts after swap
+  const s1Lines = S.state.lines.filter(l => l.shiftId === 'S1');
+  const s1FriSatM = s1Lines.filter(l => patKey(l.rdoDays) === '5-6' && l.sex === 'M').length;
+  const s1FriSatF = s1Lines.filter(l => patKey(l.rdoDays) === '5-6' && l.sex === 'F').length;
+  const s1SunMonM = s1Lines.filter(l => patKey(l.rdoDays) === '0-1' && l.sex === 'M').length;
+  const s1SunMonF = s1Lines.filter(l => patKey(l.rdoDays) === '0-1' && l.sex === 'F').length;
+
+  assert.equal(s1FriSatM, 1, 'S1 Fri-Sat has 1 Male');
+  assert.equal(s1FriSatF, 1, 'S1 Fri-Sat has 1 Female');
+  assert.equal(s1SunMonM, 1, 'S1 Sun-Mon has 1 Male');
+  assert.equal(s1SunMonF, 1, 'S1 Sun-Mon has 1 Female');
+
+  // Verify S2 counts after swap
+  const s2Lines = S.state.lines.filter(l => l.shiftId === 'S2');
+  const s2FriSatM = s2Lines.filter(l => patKey(l.rdoDays) === '5-6' && l.sex === 'M').length;
+  const s2FriSatF = s2Lines.filter(l => patKey(l.rdoDays) === '5-6' && l.sex === 'F').length;
+  const s2SunMonM = s2Lines.filter(l => patKey(l.rdoDays) === '0-1' && l.sex === 'M').length;
+  const s2SunMonF = s2Lines.filter(l => patKey(l.rdoDays) === '0-1' && l.sex === 'F').length;
+
+  assert.equal(s2FriSatM, 1, 'S2 Fri-Sat has 1 Male');
+  assert.equal(s2FriSatF, 1, 'S2 Fri-Sat has 1 Female');
+  assert.equal(s2SunMonM, 1, 'S2 Sun-Mon has 1 Male');
+  assert.equal(s2SunMonF, 1, 'S2 Sun-Mon has 1 Female');
+});
