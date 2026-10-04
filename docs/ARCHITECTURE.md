@@ -35,12 +35,12 @@ Every module directory in `modules/` is registered in `modules/manifest.json`:
 | :--- | :--- | :--- | :--- | :--- |
 | `shared-utils`<br>`shared-chrome`<br>`shared-lines` | `modules/shared/` | Shared Host Runtime (No Tab Mount) | `modules/shared/utils/index.js`<br>`modules/shared/chrome.js`<br>`modules/shared/lines/helpers.js` | Shared date/DOM primitives (`initSharedUtils`), console status updates (`initSharedChrome`), and line helpers (`initLineHelpers`). |
 | `setup-panel` | `modules/setup-panel/` | `#tab-setup`<br>SETUP | `modules/setup-panel/index.js` | Setup tab UI for start date, week count, FTE headcount by role/sex, shifts table, DFO rebalance, sex swap, schedule locks, and shift generation. |
-| `function-coverage` | `modules/function-coverage/` | Engine Service & Modal | `modules/function-coverage/index.js` | Certified pool math, function coverage matrix logic, and interactive modal management. |
+| `function-coverage` | `modules/function-coverage/` | Engine Service & Modal | `modules/function-coverage/index.js` | Certified pool math, function coverage matrix logic, and interactive `#func-coverage-modal` management. |
 | `lines-table` | `modules/lines-table/` | `#tab-lines`<br>LINES | `modules/lines-table/index.js` | Virtualized bid-line table (Svelte 4 island using TanStack Virtual) with filtering, cell toggles, and row model transformations. |
 | `coverage` | `modules/coverage/` | `#tab-coverage`<br>COVERAGE | `modules/coverage/index.js` | 30-minute headcount heatmap matrix, shift mix summary, and weekday coverage cut rules. |
 | `reports` | `modules/reports/` | `#tab-reports`<br>#report-sub-management | `modules/reports/index.js` | Management reports shell, executive summary dashboard, gender mix metrics, shift deviation, and capacity math. |
 | `team-builder` | `modules/team-builder/` | `#tab-teams`<br>#report-sub-cohesion | `modules/team-builder/index.js` | Drag-and-drop team assignment boards, team filters, team stats, floating dock controls, and Team Cohesion report view. |
-| `demand-capacity` | `modules/demand-capacity/` | `#report-sub-demand` | `modules/demand-capacity/index.js` | Flight schedule aggregation and passenger demand vs TSO/LTSO staffing capacity chart. |
+| `demand-capacity` | `modules/demand-capacity/` | `#report-sub-demand` | `modules/demand-capacity/index.js` | Flight schedule aggregation and passenger demand vs TSO/LTSO staffing capacity chart. Mounted under Reports in `manifest.json`. |
 | `bid-planner` | `modules/bid-planner/` | `#tab-bid-planner`<br>BID PLANNER | `modules/bid-planner/index.js` | Shift bid window scheduling, seniority-based bidding rules, conflict validation, and calendar rendering. |
 
 ---

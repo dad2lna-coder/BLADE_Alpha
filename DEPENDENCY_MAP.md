@@ -28,7 +28,7 @@ The host owns the shared runtime state object (`window.Scheduler`) and file Impo
 | `shared-chrome` | Shell chrome sub-tab helpers | `modules/shared/dist/shared-chrome.js` | `initSharedChrome` |
 | `shared-lines` | Line helpers | `modules/shared/dist/shared-lines.js` | `initLineHelpers` |
 | `setup-panel` | Setup tab UI, shifts table, allocation & generate engine | `modules/setup-panel/dist/setup-panel.js` | `initSetupPanel` |
-| `function-coverage` | Engine & modal function coverage assignment | `modules/function-coverage/dist/function-coverage.js` | `initFunctionCoverage` |
+| `function-coverage` | Engine & `#func-coverage-modal` function coverage assignment | `modules/function-coverage/dist/function-coverage.js` | `initFunctionCoverage` |
 | `lines-table` | Virtualized bid line table (Svelte 4 island) + row model | `modules/lines-table/dist/lines-table.js` | `initLinesTable` |
 | `coverage` | 30-min heatmap matrix, shift mix, coverage cuts | `modules/coverage/dist/coverage.js` | `initCoverage` |
 | `reports` | Management reports, gender equity, capacity math & mod-set board | `modules/reports/dist/reports.js` | `initReportsShell` |
@@ -42,7 +42,7 @@ The host owns the shared runtime state object (`window.Scheduler`) and file Impo
 
 - **Source Code**: All module development takes place in module source directories (`modules/<name>/`).
 - **Vite Build**: Executing `npm run build:modules` runs per-module Vite configurations (`vite.<module-name>.config.mjs`) to produce standalone single-file ESM bundles in `modules/<name>/dist/`.
-- **Git Tracking**: `.gitignore` ignores `modules/*/dist/` by default, with tracked overrides for `modules/bid-planner/dist/bid-planner.js`, `modules/function-coverage/dist/function-coverage.js`, `modules/lines-table/dist/lines-table.css`, and `modules/lines-table/dist/lines-table.js`.
+- **Git Tracking**: `.gitignore` ignores `modules/*/dist/` by default, with an un-ignore rule for `!modules/lines-table/dist/`. `modules/bid-planner/dist/bid-planner.js` and `modules/function-coverage/dist/function-coverage.js` are tracked in git without a gitignore exception.
 - **Actions Workflow**: `.github/workflows/pages.yml` executes `npm install` and `npm run build:modules` before assembling the site artifact for GitHub Pages.
 
 ---

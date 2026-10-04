@@ -42,9 +42,8 @@ That URL is GitHub Pages from **bright-garden** (see `.github/workflows/pages.ym
 | **Setup** | Weeks, FTE by role/sex, BAG + DFO pools, shifts, Generate |
 | **Lines** | Virtualized bid-line table (Svelte island); Excel export |
 | **Coverage** | 30-minute headcount matrix, coverage cuts, shift mix |
-| **Reports** | Management, passenger / bag-DFO / total / pool dashboards & capacity math |
+| **Reports** | Management, passenger / bag-DFO / total / pool dashboards, capacity math, and Demand capacity chart |
 | **Teams** | Architecture, auto-form by RDO, drag-drop boards |
-| **Demand** | Import flight-volume xlsx vs PAX staffing capacity |
 | **Bid Planner** | Milestone calculators, seniority rules, calendar & conflict visualization |
 
 ### Core capabilities

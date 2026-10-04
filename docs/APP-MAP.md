@@ -48,7 +48,7 @@ These classic scripts are loaded globally via `<script>` tags in `index.html` be
 - **Entry / Type:** Global script loaded in `index.html`.
 - **Owns:** RETRO terminal console UI status updates (`#console-airport`, `#console-operator`, `#console-date`, `#console-time`, `#console-weeks`, `#console-staff`), F-key keyboard shortcuts (F1–F12 tab switching), operator detection, and Tauri desktop shell integration (`__TAURI__`).
 - **Imports:** Desktop IPC via `window.__TAURI__.core.invoke` when running inside Tauri shell (`src-tauri`).
-- **Exports / Connections:** Attaches `S.hookConsoleIo`, `S.getAirportCode`, `S.setAirportCode`, `S.getOperator`, `S.setOperator`, `S.exportDateStamp`, `S.exportFileName`, `S.isTauri`, `S.detectOperator`, `S.writeSharedFile`, and `S.refreshConsoleChrome` to `window.Scheduler`. Hooks `#btn-export` and `#btn-export-lines-excel` click handlers.
+- **Exports / Connections:** Attaches `S.hookConsoleIo`, `S.getAirportCode`, `S.setAirportCode`, `S.getOperator`, `S.setOperator`, `S.exportDateStamp`, `S.exportFileName`, `S.isTauri`, `S.detectOperator`, `S.writeSharedFile`, and `S.refreshConsoleChrome` to `window.Scheduler`. Hooks `#btn-export` and `#btn-export-lines-excel` click handlers. Listens for `setup:mounted` event on `window` to hook IO handlers.
 
 ### 1.8 `js/intro.js`
 - **Entry / Type:** Global script loaded in `index.html`.
@@ -87,7 +87,7 @@ At the bottom of `index.html`, an inline `<script type="module">` block acts as 
   - `modules/shared/utils/index.js`, `dates.js`, `dayLabel.js`, `dom.js`, `status.js`, `time.js`
   - `modules/shared/lines/helpers.js`, `excel.js`, `exportStyle.js`
 - **Imports:** `lib/exceljs.min.js` (global `ExcelJS`), `lib/luxon.min.js` (global `luxon`).
-- **Connections:** Attaches functions directly to `Scheduler` (such as `Scheduler.exportLinesExcel`, `Scheduler.getLineRowModels`, `Scheduler.formatTime`).
+- **Connections:** Attaches functions directly to `Scheduler` (such as `Scheduler.exportLinesExcel` and `Scheduler.getLineRowModels`).
 
 ### 3.2 `setup-panel`
 - **Build / Config:** `npm run build:setup-panel` (runs `vite build --config vite.setup-panel.config.mjs`).
@@ -113,7 +113,7 @@ At the bottom of `index.html`, an inline `<script type="module">` block acts as 
   - `modules/lines-table/row-model.js`
   - `modules/lines-table/line-colors.js`
 - **Imports:** `@tanstack/svelte-virtual`, `svelte`, `modules/shared/lines/helpers.js`.
-- **Connections:** Mounted into DOM `#tab-lines`. Instantiates Svelte component `LinesTable` on `#lines-table-root`. Listens on `window` for events: `lines:request-render`, `lines:filter-change`, `lines:sort-change`, `lines:coverage-refresh`, `blade-intro-done`, `setup:mounted`. (Note: `Scheduler.on` and `linesChanged` do not exist).
+- **Connections:** Mounted into DOM `#tab-lines`. Instantiates Svelte component `LinesTable` on `#lines-table-root`. Listens on `window` for events: `lines:request-render`, `lines:filter-change`, `lines:sort-change`, and `lines:coverage-refresh`.
 
 ### 3.4 `coverage`
 - **Build / Config:** `npm run build:coverage` (runs `vite build --config vite.coverage.config.mjs`).
@@ -124,7 +124,7 @@ At the bottom of `index.html`, an inline `<script type="module">` block acts as 
   - `modules/coverage/index.js`
   - `modules/coverage/actions/bind.js`, `render.js`
   - `modules/coverage/components/cuts.js`
-  - `modules/coverage/utils/hourly.js` (Note: despite the directory/filename `hourly.js`, calculations operate on 30-minute time slots / 48 slots per day).
+  - `modules/coverage/utils/hourly.js` (Note: despite the filename `hourly.js`, calculations operate on 30-minute time slots running from operating open to close).
 - **Imports:** `modules/shared/utils/dom.js`, `modules/shared/utils/time.js`.
 - **Connections:** Mounted into DOM `#tab-coverage`. Attaches rendering functions directly to `Scheduler`.
 
@@ -156,7 +156,7 @@ At the bottom of `index.html`, an inline `<script type="module">` block acts as 
 ### 3.7 `demand-capacity`
 - **Build / Config:** `npm run build:demand-capacity` (runs `vite build --config vite.demand-capacity.config.mjs`).
 - **Entry File:** `modules/demand-capacity/index.js` → `modules/demand-capacity/dist/demand-capacity.js` (`initDemandCapacity`).
-- **Owns:** Passenger demand vs staffing capacity chart rendering, flight schedule aggregation, and staffing requirement curve parsing (`#report-sub-demand`).
+- **Owns:** Passenger demand vs staffing capacity chart rendering, flight schedule aggregation, and staffing requirement curve parsing (`#report-sub-demand`). Mounted under Reports as a sub-tab in `manifest.json`.
 - **Files Included:**
   - `modules/demand-capacity/panel.html`
   - `modules/demand-capacity/index.js`
@@ -167,12 +167,12 @@ At the bottom of `index.html`, an inline `<script type="module">` block acts as 
 ### 3.8 `function-coverage`
 - **Build / Config:** `npm run build:function-coverage` (runs `vite build --config vite.function-coverage.config.mjs`).
 - **Entry File:** `modules/function-coverage/index.js` → `modules/function-coverage/dist/function-coverage.js` (`initFunctionCoverage`).
-- **Owns:** Function-level staffing band math, duty assignment rules, certified pool math, and function coverage matrix logic. Contains interactive UI modals (`#function-coverage-modal`).
+- **Owns:** Function-level staffing band math, duty assignment rules, certified pool math, and function coverage matrix logic. Contains interactive UI modals (`#func-coverage-modal`).
 - **Files Included:**
   - `modules/function-coverage/index.js`
   - `modules/function-coverage/lib/assign.js`, `bands.js`, `certifiedPools.js`, `coverage.js`, `duty.js`, `extras.js`, `migrate.js`, `pools.js`, `shifts.js`
 - **Imports:** `modules/shared/lines/helpers.js`.
-- **Connections:** Attaches functions directly to `window.Scheduler` (`S.generateFunctionAssignments`, `S.openFunctionCoverageModal`, `S.ensureFunctionCoverage`). Not a headless service; opens and manages DOM modals.
+- **Connections:** Attaches functions directly to `window.Scheduler` (`S.generateFunctionAssignments`, `S.openFunctionCoverageModal`, `S.ensureFunctionCoverage`). Opens and manages DOM modal `#func-coverage-modal`.
 
 ### 3.9 `bid-planner`
 - **Build / Config:** `npm run build:bid-planner` (runs `vite build --config vite.bid-planner.config.mjs`).
@@ -203,11 +203,7 @@ At the bottom of `index.html`, an inline `<script type="module">` block acts as 
 - `npm run build:modules`: Executes all individual module build commands in sequence.
 
 ### Git Dist Tracking (`.gitignore`)
-In `.gitignore`, `modules/*/dist/` is ignored by default except `!modules/lines-table/dist/`. However, explicit overrides track specific build artifacts in git:
-- `modules/bid-planner/dist/bid-planner.js`
-- `modules/function-coverage/dist/function-coverage.js`
-- `modules/lines-table/dist/lines-table.css`
-- `modules/lines-table/dist/lines-table.js`
+In `.gitignore`, `modules/*/dist/` is ignored by default except `!modules/lines-table/dist/`. `modules/bid-planner/dist/bid-planner.js` and `modules/function-coverage/dist/function-coverage.js` are tracked in git without a gitignore exception rule.
 
 ---
 
@@ -231,12 +227,12 @@ The repository includes a Tauri desktop shell under `src-tauri/`.
 | `js/console-chrome.js` | `window.Scheduler` & `__TAURI__` | `S.*` Attachment & Tauri IPC | Console chrome updates, operator detection, shared folder write via `__TAURI__` |
 | `js/intro.js` | `window` & `__TAURI__` | CustomEvent & Tauri IPC | Runs retro boot sequence; dispatches `blade-intro-done` on `window` |
 | `modules/setup-panel` | `window.Scheduler` | `S.*` Attachment / CustomEvent | Attaches setup actions directly to `Scheduler`; dispatches `setup:mounted` |
-| `modules/lines-table` | `window` Events | `window.addEventListener` | Subscribes to `lines:request-render`, `lines:filter-change`, `lines:sort-change`, `lines:coverage-refresh`, `blade-intro-done`, `setup:mounted` |
+| `modules/lines-table` | `window` Events | `window.addEventListener` | Subscribes to `lines:request-render`, `lines:filter-change`, `lines:sort-change`, and `lines:coverage-refresh` |
 | `modules/team-builder` | `window.Scheduler` | `S.*` Attachment / DOM Event | Attaches team methods to `Scheduler`, manages drag-and-drop in `#tab-teams` |
 | `modules/coverage` | `window.Scheduler` | `S.*` Attachment | Attaches coverage methods directly to `Scheduler` |
 | `modules/reports` | `window.Scheduler` | `S.*` Attachment | Attaches report methods directly to `Scheduler` |
 | `modules/demand-capacity` | `window.Scheduler` | `S.*` Attachment | Attaches demand-capacity rendering directly to `Scheduler` |
-| `modules/function-coverage` | `window.Scheduler` & DOM | `S.*` Attachment & Modal DOM | Attaches function coverage methods to `Scheduler` and opens `#function-coverage-modal` |
+| `modules/function-coverage` | `window.Scheduler` & DOM | `S.*` Attachment & Modal DOM | Attaches function coverage methods to `Scheduler` and opens `#func-coverage-modal` |
 | `modules/bid-planner` | `window.Scheduler` | `S.*` Attachment | Attaches bid planner methods directly to `Scheduler` |
 
 ---
