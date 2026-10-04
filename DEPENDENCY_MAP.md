@@ -1,7 +1,7 @@
 # BLADE Alpha — Technical Dependency & Runtime Map
 
-> **Note:** For the primary, canonical system architecture map, module inventories, end-to-end data flow, and codebase file structures, please see:
-> 👉 **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**
+> **Note:** For the primary application mapping detailing all modules, files, imports, package scripts, and caller-callee connections, see:
+> 👉 **[docs/APP-MAP.md](docs/APP-MAP.md)**
 
 This document details low-level boot flow contracts, DOM mounting protocols, module manifest bindings, host script inventories, and verification procedures for **BLADE Alpha** on **bright-garden**.
 
@@ -16,7 +16,7 @@ The host shell (`index.html`) is a renderer and runtime host:
 4. Dynamically imports each module's Vite-built single-file ESM bundle (`modules/<name>/dist/<name>.js`).
 5. Executes the module's initializer function (`init*(Scheduler)`).
 
-The host owns **one** shared runtime state object (`window.Scheduler`) and file Import/Export (`js/io.js`). It does **not** house feature boards, domain logic, or tab rendering in classic `js/`.
+The host owns the shared runtime state object (`window.Scheduler`) and file Import/Export (`js/io.js`).
 
 ---
 
@@ -34,13 +34,14 @@ The host owns **one** shared runtime state object (`window.Scheduler`) and file 
 | `reports` | Management reports, gender equity, capacity math & mod-set board | `modules/reports/dist/reports.js` | `initReportsShell` |
 | `team-builder` | Team architecture, auto-form, drag-drop boards | `modules/team-builder/dist/team-builder.js` | `initTeamBuilder` |
 | `demand-capacity` | Flight volume xlsx parser & pax capacity chart | `modules/demand-capacity/dist/demand-capacity.js` | `initDemandCapacity` |
+| `bid-planner` | Shift bid window scheduling, calendar rules, conflicts | `modules/bid-planner/dist/bid-planner.js` | `initBidPlanner` |
 
 ---
 
 ## 3. Build & Deployment Pipeline
 
 - **Source Code**: All module development takes place in module source directories (`modules/<name>/`).
-- **Vite Build**: Executing `npm run build:modules` runs per-module Vite configurations (`vite.<module-name>.config.mjs`) to produce standalone single-file ESM bundles in `modules/<name>/dist/<name>.js`.
+- **Vite Build**: Executing `npm run build:modules` runs per-module Vite configurations (`vite.<module-name>.config.mjs`) to produce standalone single-file ESM bundles in `modules/<name>/dist/`.
 - **Git Tracking**: Compiled `dist/*.js` files are git-ignored (`.gitignore`), letting Vite in GitHub Actions (`.github/workflows/pages.yml`) build production bundles automatically on push.
 - **Actions Workflow**: `.github/workflows/pages.yml` executes `npm install` and `npm run build:modules` before assembling the site artifact for GitHub Pages.
 
@@ -48,25 +49,21 @@ The host owns **one** shared runtime state object (`window.Scheduler`) and file 
 
 ## 4. Host Script Inventory (`js/`)
 
-Classic `js/` contains only host shell runtime and chrome:
+Classic `js/` contains host shell runtime and chrome:
 
 | File | Purpose |
 |------|---------|
-| `constants.js` | Core enums and constants (`ROLES`, `DAYS`, `SEXES`) |
-| `utils.js` | Cross-module primitives (`S.$`, `S.timeToMin`, `S.slotLabel`) |
+| `constants.js` | Core constants (`DEFAULT_SHIFTS`, `DEFAULT_COVERAGE`, `CREW_FUNCTIONS`) |
+| `utils.js` | Cross-module primitives (`parseTime`, `formatTime`, `getShiftHours`, `cloneDeep`) |
 | `utils/theme.js` | Theme toggle (Dark / Presentation) |
-| `io.js` | File Import/Export (`exportState`, `importState`, `exportExcel`) |
-| `instructions.js` | Help modal markdown text |
-| `main.js` | Thin shell DOM tab switcher & help modal listener |
+| `io.js` | File Import/Export (`exportSchedule`, `importSchedule`) |
+| `instructions.js` | Help modal markdown text and renderer |
+| `main.js` | Shell DOM tab switcher & help modal listener |
 | `console-chrome.js` | Console status header/footer update |
 | `intro.js` | Retro splash overlay animation |
-
-All legacy feature scripts (`allocation.js`, `capacity.js`, `export-board.js`, `line-colors.js`, `lines-row-model.js`, `modset-board.js`, `reports.js`, `rotation-join.js`, `schedule.js`, `shifts.js`) have been removed from `js/` and absorbed into their respective owner modules.
 
 ---
 
 ## 5. Verification & Testing
 
-- `node test-task1.js`: Verifies `lineToRowModel` and `getLineRowModels` exports in `modules/lines-table/row-model.js`.
-- `node test-function-coverage.mjs`: Verifies function coverage engine and pool initialization.
-- `node test-demand-capacity.mjs`: Verifies flight volume parser and staffing capacity calculations.
+- Run `npm test` to execute all unit tests across modules and utilities.
