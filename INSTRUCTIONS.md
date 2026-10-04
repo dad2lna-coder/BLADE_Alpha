@@ -1,13 +1,11 @@
 # BLADE Alpha — User Instructions
 
-> **Note:** For overall system architecture, module relationships, and system data flow, see **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
+> **Note:** For the primary application mapping detailing all modules, files, imports, package scripts, and caller-callee connections, see **[docs/APP-MAP.md](docs/APP-MAP.md)**.
 
 ## Overview
 BLADE Alpha is a browser staffing scheduler for TSO, LTSO, and STSO bid lines. It runs from this repo (or the GitHub Pages build). Schedule data stays in the page until you Export.
 
-Use a local web server or the live demo. Opening `index.html` as a `file://` page loads the classic scripts, but tab modules (Setup, Coverage, Demand, Teams) need `fetch` and will not mount.
-
-Nav keys shown in the chrome: **[F1] SETUP**, **[F2] COVERAGE**, **[F7] DEMAND**, **[F3] LINES**, **[F4] TEAMS**, **[F5] REPORTS**, **[F6] CAPACITY**.
+Use a local web server or the live demo. Opening `index.html` as a `file://` page loads the classic scripts, but tab modules (Setup, Coverage, Demand, Teams, Reports, Bid Planner) need `fetch` and will not mount.
 
 ---
 
@@ -15,7 +13,7 @@ Nav keys shown in the chrome: **[F1] SETUP**, **[F2] COVERAGE**, **[F7] DEMAND**
 
 ### 1.1 Schedule period
 - Set **Schedule start** and **Weeks** (1–8). Default is **1 week** (7 days).
-- Operating open/close default to **03:30–23:00**. Those fields are hidden on Setup; change airport hours in **[CFG] AIRFIELD**.
+- Operating open/close default to **03:30–23:00**. Change airport hours in **[CFG] AIRFIELD**.
 
 ### 1.2 Staffing (FTE)
 Open the **FTE** fold and set headcount by sex:
@@ -85,18 +83,19 @@ To force the older DOM table: `?lines=classic` or `localStorage.setItem('blade:l
 
 ---
 
-## Step 6: Reports and Capacity
+## Step 6: Reports, Capacity, and Bid Planner
 
 - **Reports** — passenger / baggage-DFO / total / DFO-pool views, gender mix, team cohesion.
 - **Capacity** — checkpoint lane math from Airfield config (TSO per program, lanes, supervisor seats). Open **[CFG] AIRFIELD** first.
+- **Bid Planner** — bid milestone scheduling, seniority rules, conflict validation, and calendar rules.
 
 ---
 
 ## Import / Export
 
-- **[EXP] EXPORT** / **[IMP] IMPORT** — full config + lines as JSON.
+- **[EXP] EXPORT** / **[IMP] IMPORT** — full config + lines as JSON (`exportJson`, `importJsonFile`).
 - Lines tab **Export Excel** — spreadsheet only.
-- **[CLR] CLEAR** wipes the current session.
+- **[CLR] CLEAR** wipes the current session (`clearAll`).
 
 On the Windows/Tauri work install, files go under the shared Schedule Builder folder. See **TEAM-SETUP.md**. GitHub Pages is the web preview, not the official work copy.
 
@@ -116,18 +115,9 @@ Coverage — heatmap, cuts, shift mix
 Demand — optional volume xlsx vs PAX capacity
 Teams — architecture, Auto-form, drag from Unassigned pool
 Lines — review, edit, Export Excel
-Reports / Capacity — management views
+Reports / Capacity / Bid Planner — management and bidding tools
 Export JSON if you need to reload later
 ```
-
----
-
-## Tips
-
-- Generate after changing FTE, shifts, pools, or coverage cuts.
-- BAG and DFO pools are carved from the same FTE; leftover ops lines are PAX.
-- Unassigned pool cards are not built until you expand that section.
-- Compact team boards do not paint member cards until expanded; that is intentional.
 
 ---
 
