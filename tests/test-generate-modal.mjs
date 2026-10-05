@@ -377,6 +377,27 @@ test('Class-generated TSO/STSO/LTSO lines count in Coverage (opsFte is unset)', 
   assert.ok(dayTotal > 0, `Coverage matrix includes generated TSO lines (got ${dayTotal})`);
 });
 
+test('Generate TSO Only runs DFO/BAG assign matching function coverage pools', () => {
+  const S = createMockScheduler();
+  S.state.functionCoverage = {
+    poolTsoDfoM: 1,
+    poolTsoDfoF: 1,
+    poolTsoBagM: 1,
+    poolTsoBagF: 1
+  };
+
+  S.generateClass('TSO');
+
+  const tsoLines = S.state.lines.filter(l => S.belongsToClass(l, 'TSO'));
+  assert.equal(tsoLines.length, 4, 'Generated 4 TSO lines');
+
+  const dfoLines = tsoLines.filter(l => l.function === 'DFO' || (l.functionEligible && l.functionEligible.dfo));
+  const bagLines = tsoLines.filter(l => l.function === 'BAG' || (l.functionEligible && l.functionEligible.bag));
+
+  assert.equal(dfoLines.length, 2, 'Assigned 2 DFO pool lines (1 M, 1 F)');
+  assert.equal(bagLines.length, 2, 'Assigned 2 BAG pool lines (1 M, 1 F)');
+});
+
 test('Fix 4: Shortfall line (duty "-") is excluded from DFO cert pool assignment', () => {
   const S = createMockScheduler();
   S.generate();

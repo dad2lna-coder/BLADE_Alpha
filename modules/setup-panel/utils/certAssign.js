@@ -164,6 +164,10 @@ export function assignCertPoolsToLines(lines, cfg, shiftStartMin) {
 
   list.forEach(function (line) {
     if (!line) return;
+    if (line.isShortfall || line.function === "-") {
+      line.certPool = "A";
+      return;
+    }
     if (line.isExtra || line.extraPositionId) {
       if (!line.opsFte) {
         line.certPool = "";

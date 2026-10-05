@@ -314,7 +314,7 @@ export function generateClass(S, classKey, perShiftTargets) {
     S.state.functionRotation[lineId] = savedRotation[lineId];
   });
 
-  // Populate duties for new class lines
+  // Populate duties for new shortfall & training class lines
   newClassLines.forEach(function (line) {
     var rot = [];
     var sched = S.state.schedule[line.id] || [];
@@ -325,23 +325,14 @@ export function generateClass(S, classKey, perShiftTargets) {
       for (var d = 0; d < days; d++) {
         rot[d] = sched[d] === "WORK" ? "-" : "OFF";
       }
+      S.state.functionRotation[line.id] = rot;
     } else if (isTrain) {
       line.function = "TRAINING";
       for (var dt = 0; dt < days; dt++) {
         rot[dt] = sched[dt] === "WORK" ? "TRAINING" : "OFF";
       }
-    } else {
-      line.function = line.function || "PAX";
-      for (var dp = 0; dp < days; dp++) {
-        rot[dp] = sched[dp] === "WORK" ? (line.function || "PAX") : "OFF";
-      }
+      S.state.functionRotation[line.id] = rot;
     }
-    S.state.functionRotation[line.id] = rot;
-  });
-
-  // Assign cert pools for non-shortfall new lines without overwriting untouched lines
-  var assignableNewLines = newClassLines.filter(function (l) {
-    return !l.isShortfall && l.function !== "-";
   });
 
   // Shortfall lines explicitly get certPool A (non-DFO)
@@ -352,22 +343,13 @@ export function generateClass(S, classKey, perShiftTargets) {
     }
   });
 
-  if (S.assignCertPoolsToLines && assignableNewLines.length) {
-    assignCertPoolsToLines(assignableNewLines, S.state.certPool, {
-      startMinOf: function (line) {
-        if (S.getShift && S.timeToMin) {
-          var sh = S.getShift(line.shiftId);
-          return sh ? S.timeToMin(sh.start) : 0;
-        }
-        return 0;
-      },
-      getShift: S.getShift,
-      timeToMin: S.timeToMin,
-      schedule: S.state.schedule || {},
-      openMin: openMin,
-      closeMin: closeMin
-    });
+  if (S.readFunctionBandsFromDom) S.readFunctionBandsFromDom();
+  if (S.generateFunctionAssignments) {
+    S.generateFunctionAssignments({ fromGenerate: true });
+  } else if (S.clearLineFunctions) {
+    S.clearLineFunctions();
   }
+  if (S.assignCertPools) S.assignCertPools();
 
   // Refresh UI
   try {

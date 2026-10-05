@@ -18,7 +18,7 @@ export function buildCertifiedPools(fc, scheduler) {
   fc = fc || (api && api.ensureFunctionCoverage ? api.ensureFunctionCoverage() : {});
   var lines = api.state.lines || [];
   lines.forEach(function (l) {
-    if (l.isExtra || l.extraPositionId) return;
+    if (l.isExtra || l.extraPositionId || l.isShortfall || l.function === "-") return;
     l.functionEligible = { dfo: false, bag: false, pax: false };
     l.function = "";
   });
@@ -32,7 +32,7 @@ export function buildCertifiedPools(fc, scheduler) {
 
   function unused(role, sex) {
     return lines.filter(function (l) {
-      if (l.isExtra || l.extraPositionId) return false;
+      if (l.isExtra || l.extraPositionId || l.isShortfall || l.function === "-") return false;
       var el = ensureEligible(l);
       return api.lineRoleKey(l) === role && l.sex === sex && !el.bag && !el.dfo;
     });
