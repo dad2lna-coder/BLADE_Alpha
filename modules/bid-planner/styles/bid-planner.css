@@ -69,6 +69,17 @@
   font-weight: bold;
 }
 
+.bp-field .console-input,
+.bp-field .console-select {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.bp-field-event {
+  grid-column: 1 / -1;
+}
+
 .bp-field-align-bottom {
   justify-content: flex-end;
 }

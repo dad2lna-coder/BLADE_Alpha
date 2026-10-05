@@ -254,4 +254,14 @@ assert.equal(jsonRows.rows[0].bidLineId, "1001");
 const noTeam = runQa([mapped({}, { teamResolver: () => null, teams: [] })]);
 assert.ok(noTeam.issues.some((i) => i.code === "team" && i.level === "warn"));
 
+const longName = "DFW October 2026 Shift Bid";
+const named = mapped({}, { bidEventId: longName });
+assert.equal(named.bidEventId, longName);
+assert.equal(rowToCells(named)[1], longName);
+assert.match(toCsv([named]), /DFW October 2026 Shift Bid/);
+const namedQa = runQa([named]);
+assert.equal(namedQa.errors, 0);
+const tooLong = mapped({}, { bidEventId: "X".repeat(101) });
+assert.ok(runQa([tooLong]).issues.some((i) => i.code === "event" && i.level === "error"));
+
 console.log("ebid upload tests passed");

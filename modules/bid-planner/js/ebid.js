@@ -35,7 +35,7 @@ export const EBID_HEADERS = [
 
 export const EBID_COLUMNS = [
   { id: 1, header: "Airport Code", values: "3-letter airport code", desc: "3 letter airport code (e.g. ANC, LAX, SFO)." },
-  { id: 2, header: "Shift Bid Event ID", values: "Text, up to 10 characters", desc: "Same value on every line. Identifies this shift bid at the airport. Often AIRPORT + YYYY-MM." },
+  { id: 2, header: "Shift Bid Event ID", values: "Full bid event name, up to 100 characters", desc: "Same value on every line. Must match the Bid Event name in eBid. The v3 sheet says 10 characters; this export keeps the full name you type." },
   { id: 3, header: "Schedule Start Date", values: "YYYY-MM-DD", desc: "Date the schedule becomes effective. D01 is this calendar day, not a hard-coded Sunday." },
   { id: 4, header: "Schedule End Date", values: "YYYY-MM-DD", desc: "Date through which the schedule stays in effect (the bid season, not the 14-day pattern)." },
   { id: 5, header: "Bid Line ID", values: "Text, up to 8 characters", desc: "Unique within the airport. Default Alpha line numbers are exported as 1000 + id (Line 001 → 1001) so eBid does not sort on leading zeros. A custom line code is kept, truncated to 8." },
@@ -799,7 +799,7 @@ export function runQa(rows) {
       pushIssue(issues, "error", "airport", "Airport code must be 3 letters.", id);
     }
     if (!row.bidEventId) pushIssue(issues, "error", "event", "Shift Bid Event ID is blank.", id);
-    else if (row.bidEventId.length > 10) pushIssue(issues, "error", "event", "Shift Bid Event ID is longer than 10 characters.", id);
+    else if (row.bidEventId.length > 100) pushIssue(issues, "error", "event", "Shift Bid Event ID is longer than 100 characters.", id);
     if (!row.startDate) pushIssue(issues, "error", "start", "Schedule start date is blank.", id);
     if (!row.endDate) pushIssue(issues, "error", "end", "Schedule end date is blank.", id);
     else if (row.startDate && row.endDate < row.startDate) {
