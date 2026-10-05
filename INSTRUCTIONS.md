@@ -87,7 +87,7 @@ To force the older DOM table: `?lines=classic` or `localStorage.setItem('blade:l
 
 - **Reports** — passenger / baggage-DFO / total / DFO-pool views, gender mix, team cohesion.
 - **Capacity** — checkpoint lane math from Airfield config (TSO per program, lanes, supervisor seats). Open **[CFG] AIRFIELD** first.
-- **Bid Planner** — bid milestone scheduling, seniority rules, conflict validation, and calendar rules.
+- **Bid Planner** — eBid 45-column upload (A–AS) from the lines already in the session, plus bid milestone scheduling. Cert pool is column 13. Export CSV after Quality Check is clean.
 
 ---
 

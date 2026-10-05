@@ -2,10 +2,21 @@
 
 > **Note:** For canonical system architecture and component map, see **[docs/ARCHITECTURE.md](../../docs/ARCHITECTURE.md)**.
 
-## Overview
-The **Bid Planner** module is a deterministic, config-driven bid scheduling engine integrated into BLADE. It calculates key milestone dates for bid operations (e.g. Leave Bids, Shift Bids) based on structured JSON rule sets and calendar configurations.
+## eBid upload (primary view)
 
-The engine operates independently of staffing lines, setup configs, function coverage, or team states.
+The Bid Planner tab opens on **eBid Upload**. It builds the v3 **45-column BidLines CSV (A–AS)** from `Scheduler.state.lines`, plus the session schedule, shifts, teams, and cert pools. It does not keep a second line store.
+
+- Cert pool is written to **column 13 / M** (`Public Bid Line Comments`) as `Pool A` / `Pool B`. It is not treated as the BAG certification.
+- D01 is the schedule start date, not a hard-coded Sunday.
+- Default bid line ids are `1000 + line id` (`Line 001` → `1001`) so eBid does not sort on leading zeros. Custom line codes are kept (8 characters max).
+- DFO exports as certification **DUAL**. Training lines use shift type Training.
+- An empty session stays empty. JSON or a lines CSV (Team / Line / Sun–Sat) is a fallback only. An already-exported 45-column eBid file is rejected.
+- **Milestone Calendar** (announcement / execution anchors) remains the second view on this tab.
+
+## Overview
+The **milestone calendar** is a deterministic, config-driven bid scheduling engine integrated into BLADE. It calculates key milestone dates for bid operations (e.g. Leave Bids, Shift Bids) based on structured JSON rule sets and calendar configurations.
+
+The milestone engine operates independently of staffing lines. The eBid upload path reads the live lines.
 
 ---
 

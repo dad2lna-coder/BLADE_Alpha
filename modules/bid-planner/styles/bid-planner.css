@@ -268,3 +268,119 @@
   flex-direction: column;
   gap: 0.75rem;
 }
+
+.bp-view-switch {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.bp-view-btn {
+  background: transparent;
+  color: var(--muted, #8b9bb4);
+  border: 1px solid var(--border, #2d3a4f);
+  padding: 0.45rem 0.85rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.bp-view-btn.active {
+  color: var(--text, #e7ecf3);
+  border-color: var(--amber, #f0a500);
+  box-shadow: inset 0 -2px 0 var(--amber, #f0a500);
+}
+
+.ebid-search-row .console-input {
+  min-width: min(100%, 22rem);
+  flex: 1;
+}
+
+.ebid-scroll {
+  max-height: 28rem;
+  overflow: auto;
+}
+
+.ebid-scroll th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel, #1a2332);
+}
+
+.ebid-rdo-type {
+  color: var(--muted, #8b9bb4);
+}
+
+.ebid-stat-grid,
+.ebid-distinct-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ebid-stat,
+.ebid-distinct {
+  border: 1px solid var(--border, #2d3a4f);
+  padding: 0.75rem;
+  background: var(--bg, #0f1419);
+}
+
+.ebid-stat-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted, #8b9bb4);
+}
+
+.ebid-stat-value {
+  margin-top: 0.35rem;
+  font-size: 1.15rem;
+  color: var(--text, #e7ecf3);
+}
+
+.ebid-issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+.ebid-issue {
+  display: flex;
+  gap: 0.6rem;
+  align-items: baseline;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border, #2d3a4f);
+}
+
+.ebid-issue-level {
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  flex: 0 0 auto;
+}
+
+.ebid-issue-error .ebid-issue-level { color: var(--red, #f07178); }
+.ebid-issue-warn .ebid-issue-level { color: var(--amber, #f0a500); }
+.ebid-pass { color: var(--green, #3dd68c); }
+
+.ebid-subhead {
+  margin: 0.25rem 0 0.6rem;
+  font-size: 0.95rem;
+}
+
+.ebid-distinct h4 {
+  margin: 0 0 0.45rem;
+  font-size: 0.85rem;
+  color: var(--amber, #f0a500);
+}
+
+.ebid-distinct-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  padding: 0.15rem 0;
+}
+
+#tab-bid-planner [hidden] { display: none !important; }

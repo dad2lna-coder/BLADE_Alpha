@@ -1,4 +1,112 @@
 <div class="bid-planner-container">
+  <div class="bp-view-switch" role="tablist" aria-label="Bid Planner views">
+    <button type="button" class="bp-view-btn active" data-bp-view="ebid">eBid Upload</button>
+    <button type="button" class="bp-view-btn" data-bp-view="miles">Milestone Calendar</button>
+  </div>
+
+  <div id="bp-ebid-root">
+    <div class="bp-header card">
+      <div class="bp-title-bar">
+        <h2>EBID UPLOAD — 45 COLUMNS (A–AS)</h2>
+        <div class="bp-badge" id="ebid-source-badge">LIVE LINES</div>
+      </div>
+      <p class="bp-subtitle">Built from the lines in this session. Cert pool is column 13, Public Bid Line Comments. End date defaults to Dec 31 of the start year — change it if this bid season ends sooner.</p>
+    </div>
+
+    <div class="bp-controls-card card">
+      <div class="bp-form-grid">
+        <div class="bp-field">
+          <label for="ebid-airport">Airport Code (Col 1)</label>
+          <input id="ebid-airport" class="console-input" maxlength="3" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="bp-field">
+          <label for="ebid-event">Shift Bid Event ID (Col 2)</label>
+          <input id="ebid-event" class="console-input" maxlength="10" autocomplete="off" spellcheck="false" />
+        </div>
+        <div class="bp-field">
+          <label for="ebid-start">Schedule Start (Col 3)</label>
+          <input id="ebid-start" class="console-input" type="date" />
+        </div>
+        <div class="bp-field">
+          <label for="ebid-end">Schedule End (Col 4)</label>
+          <input id="ebid-end" class="console-input" type="date" />
+        </div>
+        <div class="bp-field">
+          <label for="ebid-shift-type">Workday Shift Type</label>
+          <select id="ebid-shift-type" class="console-select">
+            <option value="Airport">Airport</option>
+            <option value="Admin/Avail">Admin/Avail</option>
+            <option value="Training">Training</option>
+            <option value="PandemicMix">Pandemic mix</option>
+          </select>
+        </div>
+      </div>
+      <div class="bp-button-bar">
+        <button type="button" id="ebid-apply" class="btn btn-amber">Apply & Refresh</button>
+        <button type="button" id="ebid-live" class="btn">Use Live Lines</button>
+        <button type="button" id="ebid-export" class="btn btn-amber">Export 45-Col CSV</button>
+        <input type="file" id="ebid-file" accept=".json,.csv,.txt,text/csv,application/json" hidden />
+        <button type="button" id="ebid-import" class="btn">Import JSON / Lines CSV</button>
+      </div>
+      <p class="bp-subtitle">Import is a fallback only. Day to day, this table is the current session — not a re-upload of an old eBid CSV.</p>
+      <p class="bp-subtitle" id="ebid-status"></p>
+    </div>
+
+    <div class="bp-config-tabs">
+      <button type="button" class="bp-tab-btn active" data-ebid-tab="lines">BidLines (45)</button>
+      <button type="button" class="bp-tab-btn" data-ebid-tab="qa">Quality Check</button>
+      <button type="button" class="bp-tab-btn" data-ebid-tab="info">Info Rules</button>
+    </div>
+
+    <div id="ebid-tab-lines" class="card">
+      <div class="bp-card-header">
+        <h3>BIDLINES PREVIEW</h3>
+        <span class="bp-chip" id="ebid-row-count">0</span>
+      </div>
+      <div class="bp-button-bar ebid-search-row">
+        <input id="ebid-search" class="console-input" type="search" placeholder="Search line, team, cert pool, shift" />
+      </div>
+      <div class="bp-table-wrapper ebid-scroll">
+        <table class="data-table bp-table" id="ebid-table">
+          <thead><tr id="ebid-head"></tr></thead>
+          <tbody id="ebid-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="ebid-tab-qa" class="card" hidden>
+      <div class="bp-card-header">
+        <h3>QUALITY CHECK</h3>
+      </div>
+      <div id="ebid-qa-summary"></div>
+      <div id="ebid-qa-list" class="ebid-issue-list"></div>
+      <h3 class="ebid-subhead">Distinct values</h3>
+      <div id="ebid-qa-distinct" class="ebid-distinct-grid"></div>
+    </div>
+
+    <div id="ebid-tab-info" class="card" hidden>
+      <div class="bp-card-header">
+        <h3>INFO TAB RULES</h3>
+        <span class="bp-chip">A–AS ONLY</span>
+      </div>
+      <p class="bp-subtitle">Every cell needs a value except the 14 shift-type columns, which stay blank on RDO. Columns after AS on the template workbook are calculations and are not exported.</p>
+      <div class="bp-table-wrapper ebid-scroll">
+        <table class="data-table bp-table">
+          <thead>
+            <tr>
+              <th>Col</th>
+              <th>Field</th>
+              <th>Accepted</th>
+              <th>Rule</th>
+            </tr>
+          </thead>
+          <tbody id="ebid-rules"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div id="bp-miles-root" hidden>
   <div class="bp-header card">
     <div class="bp-title-bar">
       <h2>BID PLANNER — DETERMINISTIC BID SCHEDULER</h2>
@@ -153,5 +261,6 @@
         <button type="button" id="bp-btn-upload-calendar" class="btn">Upload Calendar JSON</button>
       </div>
     </div>
+  </div>
   </div>
 </div>
