@@ -38,7 +38,7 @@ export const EBID_COLUMNS = [
   { id: 2, header: "Shift Bid Event ID", values: "Full bid event name, up to 100 characters", desc: "Same value on every line. Must match the Bid Event name in eBid. The v3 sheet says 10 characters; this export keeps the full name you type." },
   { id: 3, header: "Schedule Start Date", values: "YYYY-MM-DD", desc: "Date the schedule becomes effective. D01 is this calendar day, not a hard-coded Sunday." },
   { id: 4, header: "Schedule End Date", values: "YYYY-MM-DD", desc: "Date through which the schedule stays in effect (the bid season, not the 14-day pattern)." },
-  { id: 5, header: "Bid Line ID", values: "Text, up to 8 characters", desc: "Unique within the airport. Default Alpha line numbers are exported as 1000 + id (Line 001 → 1001) so eBid does not sort on leading zeros. A custom line code is kept, truncated to 8." },
+  { id: 5, header: "Bid Line ID", values: "Text, up to 8 characters", desc: "The Line column from the lines table, unchanged (Line 001 stays Line 001). Unique within the airport. eBid allows 8 characters." },
   { id: 6, header: "Location/Workgroup", values: "Text, up to 30 characters", desc: "Team or checkpoint. Numeric Alpha teams export as Team 01. Blank if the line is not on a team — not a sample name." },
   { id: 7, header: "Patdown Req", values: "Female, Male, None", desc: "Sex required for pat downs on this bid line." },
   { id: 8, header: "Title", values: "TSO, LTSO, ETSO, STSO, ESTI, MSTI, STI, SSA, SSTI, EMT, Single Group", desc: "Rank required. Emp class PT/FT is not a title." },
@@ -239,29 +239,11 @@ function resolveShift(line, ctx) {
 }
 
 export function bidLineIdFromLine(line, index) {
-  const code = String((line && (line.lineCode || line.id)) || "").trim();
-  const stripped = code.replace(/^line\s+/i, "").trim();
-  const idRaw = line && line.id != null ? line.id : "";
-  const idNum = Number(idRaw);
-  const idIsNum = idRaw !== "" && idRaw != null && Number.isInteger(idNum);
-  const padded = idIsNum ? String(idNum).padStart(3, "0") : "";
-  const looksDefault = !stripped || (idIsNum && (
-    stripped === String(idNum) ||
-    stripped === padded ||
-    code.toLowerCase() === ("line " + padded).toLowerCase() ||
-    code.toLowerCase() === ("line " + String(idNum)).toLowerCase()
-  ));
-  if (looksDefault && idIsNum) {
-    if (idNum >= 1000 && idNum <= 99999999) return String(idNum).slice(0, 8);
-    if (idNum >= 0 && idNum < 1000) return String(1000 + idNum);
-  }
-  if (!looksDefault && stripped) return stripped.slice(0, 8);
-  if (/^\d+$/.test(stripped)) {
-    const n = Number(stripped);
-    if (stripped.length >= 4) return stripped.slice(0, 8);
-    if (n >= 0 && n < 1000) return String(1000 + n);
-  }
-  return String(1001 + (index || 0)).slice(0, 8);
+  const code = String((line && line.lineCode) || "").trim();
+  if (code) return code;
+  const idRaw = line && line.id != null ? String(line.id).trim() : "";
+  if (idRaw) return idRaw;
+  return String((index || 0) + 1);
 }
 
 export function titleFromLine(line) {

@@ -8,7 +8,7 @@ The Bid Planner tab opens on **eBid Upload**. It builds the v3 **45-column BidLi
 
 - Cert pool is written to **column 13 / M** (`Public Bid Line Comments`) as `Pool A` / `Pool B`. It is not treated as the BAG certification.
 - D01 is the schedule start date, not a hard-coded Sunday.
-- Default bid line ids are `1000 + line id` (`Line 001` → `1001`) so eBid does not sort on leading zeros. Custom line codes are kept (8 characters max).
+- Bid Line ID is the Line column from the lines table (`Line 001` stays `Line 001`). eBid allows 8 characters.
 - DFO exports as certification **DUAL**. Training lines use shift type Training.
 - An empty session stays empty. JSON or a lines CSV (Team / Line / Sun–Sat) is a fallback only. An already-exported 45-column eBid file is rejected.
 - **Milestone Calendar** (announcement / execution anchors) remains the second view on this tab.

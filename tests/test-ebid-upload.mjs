@@ -83,14 +83,15 @@ assert.equal(hoursFromSpan("1000-1400"), 4);
 assert.equal(hoursFromSpan("0900-1300 1500-1900"), 7.5);
 assert.equal(hoursFromSpan("2200-0630"), 8);
 
-assert.equal(bidLineIdFromLine({ id: 1, lineCode: "Line 001" }), "1001");
+assert.equal(bidLineIdFromLine({ id: 1, lineCode: "Line 001" }), "Line 001");
 assert.equal(bidLineIdFromLine({ id: 14, lineCode: "ESTI 014" }), "ESTI 014");
 assert.equal(bidLineIdFromLine({ id: 1001, lineCode: "1001" }), "1001");
+assert.equal(bidLineIdFromLine({ id: 7 }), "7");
 
 const row = mapped();
 const cells = rowToCells(row);
 assert.equal(cells.length, 45);
-assert.equal(cells[4], "1001");
+assert.equal(cells[4], "Line 001");
 assert.equal(cells[5], "Team 01");
 assert.equal(cells[6], "Male");
 assert.equal(cells[7], "TSO");
@@ -249,7 +250,7 @@ assert.equal(jsonRows.error, "");
 assert.equal(jsonRows.rows[0].certification, "PAX");
 assert.equal(jsonRows.rows[0].publicComments, "Pool B");
 assert.equal(jsonRows.rows[0].workgroup, "Team 02");
-assert.equal(jsonRows.rows[0].bidLineId, "1001");
+assert.equal(jsonRows.rows[0].bidLineId, "Line 001");
 
 const noTeam = runQa([mapped({}, { teamResolver: () => null, teams: [] })]);
 assert.ok(noTeam.issues.some((i) => i.code === "team" && i.level === "warn"));

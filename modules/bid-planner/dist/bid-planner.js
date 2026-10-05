@@ -384,7 +384,7 @@ function be(e, t) {
 function Xe(e, t) {
   return be(e, -t);
 }
-function Ne(e, t) {
+function Re(e, t) {
   const n = H(e);
   if (!n) return !1;
   const r = n.getUTCDay();
@@ -393,14 +393,14 @@ function Ne(e, t) {
 function Se(e, t) {
   return !t || !Array.isArray(t.holidays) ? !1 : t.holidays.some((n) => typeof n == "string" ? n === e : n && n.date === e);
 }
-function Re(e, t) {
+function Ne(e, t) {
   return !t || !Array.isArray(t.blackoutDates) ? !1 : t.blackoutDates.some((n) => typeof n == "string" ? n === e : n && n.date === e);
 }
 function de(e, t) {
-  return !(!H(e) || Ne(e, t) || Se(e, t) || Re(e, t));
+  return !(!H(e) || Re(e, t) || Se(e, t) || Ne(e, t));
 }
 function mt(e, t) {
-  return !(!H(e) || Ne(e, t) || Se(e, t));
+  return !(!H(e) || Re(e, t) || Se(e, t));
 }
 function Ke(e, t, n) {
   let r = e;
@@ -414,13 +414,13 @@ function Ke(e, t, n) {
 function ht(e, t, n) {
   return Ke(e, -t, n);
 }
-function ze(e, t) {
+function Qe(e, t) {
   let n = e;
   for (; !de(n, t); )
     n = Xe(n, 1);
   return n;
 }
-function Qe(e, t) {
+function ze(e, t) {
   let n = e;
   for (; !de(n, t); )
     n = be(n, 1);
@@ -428,11 +428,11 @@ function Qe(e, t) {
 }
 function we(e, t) {
   const n = [];
-  if (Ne(e, t) && n.push("weekend"), Se(e, t)) {
+  if (Re(e, t) && n.push("weekend"), Se(e, t)) {
     const r = (t.holidays || []).find((i) => typeof i == "string" ? i === e : i && i.date === e), s = typeof r == "object" && r.name ? `holiday (${r.name})` : "holiday";
     n.push(s);
   }
-  if (Re(e, t)) {
+  if (Ne(e, t)) {
     const r = (t.blackoutDates || []).find((i) => typeof i == "string" ? i === e : i && i.date === e), s = typeof r == "object" && r.name ? `blackout date (${r.name})` : "blackout date";
     n.push(s);
   }
@@ -453,7 +453,7 @@ function Be(e, t, n, r = "previous") {
     let p = f, a = !1, u = "";
     if (!de(f, n)) {
       const g = we(f, n);
-      p = r === "next" ? Qe(f, n) : ze(f, n), a = !0, u = `Calculated raw date ${f} falls on ${g}. Adjusted to ${r} valid business day ${p}.`;
+      p = r === "next" ? ze(f, n) : Qe(f, n), a = !0, u = `Calculated raw date ${f} falls on ${g}. Adjusted to ${r} valid business day ${p}.`;
     }
     o.set(d.id, p), i.push({
       sequence: d.sequence,
@@ -488,7 +488,7 @@ function Ue(e, t, n, r = "previous") {
     let p = f, a = !1, u = "";
     if (!de(f, n)) {
       const g = we(f, n);
-      p = r === "next" ? Qe(f, n) : ze(f, n), a = !0, u = `Calculated raw date ${f} falls on ${g}. Adjusted to ${r} valid business day ${p}.`;
+      p = r === "next" ? ze(f, n) : Qe(f, n), a = !0, u = `Calculated raw date ${f} falls on ${g}. Adjusted to ${r} valid business day ${p}.`;
     }
     o.set(d.id, p), i[l] = {
       sequence: d.sequence,
@@ -584,7 +584,7 @@ function je(e, t = [], n = {}) {
           message: `Falls on configured holiday (${a})`
         });
       }
-      if (Re(d, n)) {
+      if (Ne(d, n)) {
         const p = (n.blackoutDates || []).find((u) => typeof u == "string" ? u === d : u && u.date === d), a = typeof p == "object" && p.name ? p.name : "Blackout Date";
         l.push({
           type: "blackout",
@@ -790,7 +790,7 @@ function Ct(e) {
       return;
     }
     const fe = je(re.schedule, pe, h);
-    _ = fe.schedule, K(_), z(fe.conflicts), fe.conflictCount > 0 ? M("conflict", `Schedule generated with ${fe.conflictCount} calendar conflict(s). Review conflict panel below.`) : re.overallStatus === "DATE CONFLICT" ? M("conflict", re.message) : M("consistent", re.message), p && (p.disabled = !1), a && (a.disabled = !1), rt();
+    _ = fe.schedule, K(_), Q(fe.conflicts), fe.conflictCount > 0 ? M("conflict", `Schedule generated with ${fe.conflictCount} calendar conflict(s). Review conflict panel below.`) : re.overallStatus === "DATE CONFLICT" ? M("conflict", re.message) : M("consistent", re.message), p && (p.disabled = !1), a && (a.disabled = !1), rt();
   }
   l && l.addEventListener("click", te), d && d.addEventListener("click", () => {
     s && (s.value = ""), i && (i.value = ""), _ = [], K([]), u && (u.style.display = "none"), g && (g.style.display = "none"), p && (p.disabled = !0), a && (a.disabled = !0);
@@ -805,21 +805,21 @@ function Ct(e) {
         const S = document.createElement("tr"), T = `<span class="bp-status-tag ${(h.status || "VALID").toLowerCase()}">${h.status}</span>`, j = h.adjusted ? '<span style="color:#d97706;font-weight:bold;">Yes</span>' : "No";
         S.innerHTML = `
         <td>${h.sequence}</td>
-        <td><strong>${Q(h.action)}</strong></td>
-        <td><code style="font-weight:bold;color:#2563eb;">${Q(h.requiredDate)}</code></td>
-        <td>${Q(h.calculatedFrom)}</td>
-        <td>${Q(h.rule)}</td>
-        <td>${Q(h.direction)}</td>
+        <td><strong>${z(h.action)}</strong></td>
+        <td><code style="font-weight:bold;color:#2563eb;">${z(h.requiredDate)}</code></td>
+        <td>${z(h.calculatedFrom)}</td>
+        <td>${z(h.rule)}</td>
+        <td>${z(h.direction)}</td>
         <td>${j}</td>
-        <td style="font-size:0.8rem;">${Q(h.adjustmentReason)}</td>
-        <td style="color:${h.conflict && h.conflict !== "None" ? "#dc2626" : "inherit"};">${Q(h.conflict || "None")}</td>
+        <td style="font-size:0.8rem;">${z(h.adjustmentReason)}</td>
+        <td style="color:${h.conflict && h.conflict !== "None" ? "#dc2626" : "inherit"};">${z(h.conflict || "None")}</td>
         <td>${T}</td>
-        <td style="font-size:0.8rem;">${Q(h.notes || "")}</td>
+        <td style="font-size:0.8rem;">${z(h.notes || "")}</td>
       `, C.appendChild(S);
       });
     }
   }
-  function z(y) {
+  function Q(y) {
     if (!(!g || !k)) {
       if (k.innerHTML = "", !Array.isArray(y) || y.length === 0) {
         g.style.display = "none";
@@ -831,7 +831,7 @@ function Ct(e) {
         const v = h.conflicts.map((T) => T.message).join("<br>");
         S.innerHTML = `
         <div class="bp-conflict-desc">
-          <strong>Seq ${h.sequence} - ${Q(h.action)}</strong> (Required Date: <code>${h.requiredDate}</code>)<br>
+          <strong>Seq ${h.sequence} - ${z(h.action)}</strong> (Required Date: <code>${h.requiredDate}</code>)<br>
           ${v}
         </div>
         <div class="bp-button-bar">
@@ -866,7 +866,7 @@ function Ct(e) {
   }
   function oe() {
     const y = le(), h = je(_, pe, y);
-    _ = h.schedule, K(_), z(h.conflicts);
+    _ = h.schedule, K(_), Q(h.conflicts);
   }
   function rt() {
     O && (O.innerHTML = "", _.forEach((y) => {
@@ -958,7 +958,7 @@ function Ct(e) {
   }
   E(), P();
 }
-function Q(e) {
+function z(e) {
   return e == null ? "" : String(e).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 function me(e, t, n) {
@@ -1016,7 +1016,7 @@ const Ze = [
   { id: 2, header: "Shift Bid Event ID", values: "Full bid event name, up to 100 characters", desc: "Same value on every line. Must match the Bid Event name in eBid. The v3 sheet says 10 characters; this export keeps the full name you type." },
   { id: 3, header: "Schedule Start Date", values: "YYYY-MM-DD", desc: "Date the schedule becomes effective. D01 is this calendar day, not a hard-coded Sunday." },
   { id: 4, header: "Schedule End Date", values: "YYYY-MM-DD", desc: "Date through which the schedule stays in effect (the bid season, not the 14-day pattern)." },
-  { id: 5, header: "Bid Line ID", values: "Text, up to 8 characters", desc: "Unique within the airport. Default Alpha line numbers are exported as 1000 + id (Line 001 → 1001) so eBid does not sort on leading zeros. A custom line code is kept, truncated to 8." },
+  { id: 5, header: "Bid Line ID", values: "Text, up to 8 characters", desc: "The Line column from the lines table, unchanged (Line 001 stays Line 001). Unique within the airport. eBid allows 8 characters." },
   { id: 6, header: "Location/Workgroup", values: "Text, up to 30 characters", desc: "Team or checkpoint. Numeric Alpha teams export as Team 01. Blank if the line is not on a team — not a sample name." },
   { id: 7, header: "Patdown Req", values: "Female, Male, None", desc: "Sex required for pat downs on this bid line." },
   { id: 8, header: "Title", values: "TSO, LTSO, ETSO, STSO, ESTI, MSTI, STI, SSA, SSTI, EMT, Single Group", desc: "Rank required. Emp class PT/FT is not a title." },
@@ -1053,12 +1053,12 @@ function qt(e, t) {
   const r = new Date(Date.UTC(n[0], n[1] - 1, n[2]));
   return r.setUTCDate(r.getUTCDate() + t), r.toISOString().slice(0, 10);
 }
-function Nt(e) {
+function Rt(e) {
   const t = String(e || "").split("-").map(Number);
   return t.length !== 3 || t.some((n) => !Number.isFinite(n)) ? 0 : new Date(Date.UTC(t[0], t[1] - 1, t[2])).getUTCDay();
 }
 function he(e, t) {
-  return e && /^\d{4}-\d{2}-\d{2}$/.test(e) ? Nt(qt(e, t)) : t % 7;
+  return e && /^\d{4}-\d{2}-\d{2}$/.test(e) ? Rt(qt(e, t)) : t % 7;
 }
 function We(e) {
   if (e == null) return "";
@@ -1085,7 +1085,7 @@ function Te(e) {
   }
   return t.join(" ");
 }
-function Rt(e) {
+function Nt(e) {
   if (!e || e === "RDO" || !ve.test(e)) return 0;
   let t = 0;
   e.split(" ").forEach((s) => {
@@ -1156,18 +1156,10 @@ function $t(e, t) {
   return (t && t.shifts || []).find((r) => r && r.id === e.shiftId) || null;
 }
 function Ft(e, t) {
-  const n = String(e && (e.lineCode || e.id) || "").trim(), r = n.replace(/^line\s+/i, "").trim(), s = e && e.id != null ? e.id : "", i = Number(s), o = s !== "" && s != null && Number.isInteger(i), l = o ? String(i).padStart(3, "0") : "", d = !r || o && (r === String(i) || r === l || n.toLowerCase() === ("line " + l).toLowerCase() || n.toLowerCase() === ("line " + String(i)).toLowerCase());
-  if (d && o) {
-    if (i >= 1e3 && i <= 99999999) return String(i).slice(0, 8);
-    if (i >= 0 && i < 1e3) return String(1e3 + i);
-  }
-  if (!d && r) return r.slice(0, 8);
-  if (/^\d+$/.test(r)) {
-    const f = Number(r);
-    if (r.length >= 4) return r.slice(0, 8);
-    if (f >= 0 && f < 1e3) return String(1e3 + f);
-  }
-  return String(1001 + (t || 0)).slice(0, 8);
+  const n = String(e && e.lineCode || "").trim();
+  if (n) return n;
+  const r = e && e.id != null ? String(e.id).trim() : "";
+  return r || String((t || 0) + 1);
 }
 function xt(e) {
   if (!e) return "TSO";
@@ -1271,7 +1263,7 @@ function Vt(e, t, n) {
     }), a = Object.keys(D).sort((U, W) => D[W] - D[U] || U.localeCompare(W))[0];
   }
   a || (a = p.length ? "" : "RDO");
-  const u = Rt(a), g = l.filter((D) => D !== "RDO").length;
+  const u = Nt(a), g = l.filter((D) => D !== "RDO").length;
   let k = Math.round(g * u * 100) / 100, L = !1;
   k > 80 && (k = 80, L = !0, r.push("Hours/PP capped at 80."));
   const C = l.slice(0, 7).filter((D) => D !== "RDO").length, $ = l.slice(7).filter((D) => D !== "RDO").length, O = Bt(e);
@@ -1374,11 +1366,11 @@ function Kt(e, t) {
     teamResolver: typeof n.teamMetaForLine == "function" ? n.teamMetaForLine : null
   };
 }
-function zt(e, t) {
+function Qt(e, t) {
   const n = e && e.state || {}, r = Array.isArray(n.lines) ? n.lines : [];
   return Oe(r, Kt(e, t));
 }
-function Qt(e) {
+function zt(e) {
   const t = (r) => '"' + (r == null ? "" : String(r)).replace(/"/g, '""') + '"', n = [Ze.map(t).join(",")];
   return (e || []).forEach((r) => {
     n.push(Ce(r).map(t).join(","));
@@ -1508,7 +1500,7 @@ function ge(e, t) {
   };
   return { error: "", rows: Oe(s, f) };
 }
-function N(e, t, n, r, s) {
+function R(e, t, n, r, s) {
   e.push({ level: t, code: n, message: r, lineId: s });
 }
 function Ye(e) {
@@ -1547,14 +1539,14 @@ function Ye(e) {
   }
   t.forEach((a) => {
     const u = a.bidLineId || "(no id)";
-    a.schedType === "FT" ? s += 1 : a.schedType === "PT" && (i += 1), a.patDown === "Male" ? o += 1 : a.patDown === "Female" && (l += 1), f("Airport Code", a.airportCode), f("Schedule Type", a.schedType), f("Title", a.title), f("Patdown Req", a.patDown), f("Certification", a.certification), f("Public Comments (Cert Pool)", a.publicComments), f("Shift Time", a.shiftTime), f("RDOs", a.rdos), f("Hours/Day", ye(a.hoursPerDay)), f("Hours/PP", ye(a.hoursPerPP)), f("Days/Week", a.daysPerWeek), /^[A-Z]{3}$/.test(a.airportCode || "") || N(n, "error", "airport", "Airport code must be 3 letters.", u), a.bidEventId ? a.bidEventId.length > 100 && N(n, "error", "event", "Shift Bid Event ID is longer than 100 characters.", u) : N(n, "error", "event", "Shift Bid Event ID is blank.", u), a.startDate || N(n, "error", "start", "Schedule start date is blank.", u), a.endDate ? a.startDate && a.endDate < a.startDate && N(n, "error", "end", "Schedule end date is before the start date.", u) : N(n, "error", "end", "Schedule end date is blank.", u), a.bidLineId ? String(a.bidLineId).length > 8 ? N(n, "error", "line-id", "Bid Line ID is longer than 8 characters.", u) : r[a.bidLineId] && N(n, "error", "line-id", "Bid Line ID " + a.bidLineId + " is duplicated.", u) : N(n, "error", "line-id", "Bid Line ID is blank.", u), a.bidLineId && (r[a.bidLineId] = !0), a.workgroup ? a.workgroup.length > 30 && N(n, "error", "team", "Location/Workgroup is longer than 30 characters.", u) : N(n, "warn", "team", "Location/Workgroup is blank.", u), ["Female", "Male", "None"].indexOf(a.patDown) < 0 && N(n, "error", "patdown", "Patdown Req must be Female, Male, or None.", u), kt.indexOf(a.title) < 0 && N(n, "error", "title", "Title " + a.title + " is not an eBid title.", u), ["PAX", "BAG", "DUAL"].indexOf(a.certification) < 0 && N(n, "error", "cert", "Certification must be PAX, BAG, or DUAL.", u), a.schedType !== "FT" && a.schedType !== "PT" && N(n, "error", "sched", "Schedule type must be FT or PT.", u), a.shiftTime !== "RDO" && !ve.test(a.shiftTime || "") && N(n, "error", "shift", "Shift time must be 9 or 19 military characters, or RDO.", u), String(a.privateComments || "").length > 255 && N(n, "error", "private", "Private comments exceed 255 characters.", u), String(a.publicComments || "").length > 255 && N(n, "error", "public", "Public comments exceed 255 characters.", u);
+    a.schedType === "FT" ? s += 1 : a.schedType === "PT" && (i += 1), a.patDown === "Male" ? o += 1 : a.patDown === "Female" && (l += 1), f("Airport Code", a.airportCode), f("Schedule Type", a.schedType), f("Title", a.title), f("Patdown Req", a.patDown), f("Certification", a.certification), f("Public Comments (Cert Pool)", a.publicComments), f("Shift Time", a.shiftTime), f("RDOs", a.rdos), f("Hours/Day", ye(a.hoursPerDay)), f("Hours/PP", ye(a.hoursPerPP)), f("Days/Week", a.daysPerWeek), /^[A-Z]{3}$/.test(a.airportCode || "") || R(n, "error", "airport", "Airport code must be 3 letters.", u), a.bidEventId ? a.bidEventId.length > 100 && R(n, "error", "event", "Shift Bid Event ID is longer than 100 characters.", u) : R(n, "error", "event", "Shift Bid Event ID is blank.", u), a.startDate || R(n, "error", "start", "Schedule start date is blank.", u), a.endDate ? a.startDate && a.endDate < a.startDate && R(n, "error", "end", "Schedule end date is before the start date.", u) : R(n, "error", "end", "Schedule end date is blank.", u), a.bidLineId ? String(a.bidLineId).length > 8 ? R(n, "error", "line-id", "Bid Line ID is longer than 8 characters.", u) : r[a.bidLineId] && R(n, "error", "line-id", "Bid Line ID " + a.bidLineId + " is duplicated.", u) : R(n, "error", "line-id", "Bid Line ID is blank.", u), a.bidLineId && (r[a.bidLineId] = !0), a.workgroup ? a.workgroup.length > 30 && R(n, "error", "team", "Location/Workgroup is longer than 30 characters.", u) : R(n, "warn", "team", "Location/Workgroup is blank.", u), ["Female", "Male", "None"].indexOf(a.patDown) < 0 && R(n, "error", "patdown", "Patdown Req must be Female, Male, or None.", u), kt.indexOf(a.title) < 0 && R(n, "error", "title", "Title " + a.title + " is not an eBid title.", u), ["PAX", "BAG", "DUAL"].indexOf(a.certification) < 0 && R(n, "error", "cert", "Certification must be PAX, BAG, or DUAL.", u), a.schedType !== "FT" && a.schedType !== "PT" && R(n, "error", "sched", "Schedule type must be FT or PT.", u), a.shiftTime !== "RDO" && !ve.test(a.shiftTime || "") && R(n, "error", "shift", "Shift time must be 9 or 19 military characters, or RDO.", u), String(a.privateComments || "").length > 255 && R(n, "error", "private", "Private comments exceed 255 characters.", u), String(a.publicComments || "").length > 255 && R(n, "error", "public", "Public comments exceed 255 characters.", u);
     const g = a.dayShiftTimes || [], k = a.dayShiftTypes || [];
-    (g.length !== 14 || k.length !== 14) && N(n, "error", "days", "Expected 14 day times and 14 day types.", u);
+    (g.length !== 14 || k.length !== 14) && R(n, "error", "days", "Expected 14 day times and 14 day types.", u);
     for (let L = 0; L < 14; L++) {
       const C = g[L], $ = k[L], O = "D" + String(L + 1).padStart(2, "0");
-      C !== "RDO" && !ve.test(C || "") && N(n, "error", "day-time", O + " shift time is not RDO or a 9/19-character military span.", u), C === "RDO" && $ ? N(n, "error", "rdo-type", O + " is RDO but shift type is not blank.", u) : C !== "RDO" && !$ ? N(n, "error", "rdo-type", O + " is a work day but shift type is blank.", u) : $ && Lt.indexOf($) < 0 && N(n, "error", "day-type", O + " shift type " + $ + " is not Airport, Training, or Admin/Avail.", u);
+      C !== "RDO" && !ve.test(C || "") && R(n, "error", "day-time", O + " shift time is not RDO or a 9/19-character military span.", u), C === "RDO" && $ ? R(n, "error", "rdo-type", O + " is RDO but shift type is not blank.", u) : C !== "RDO" && !$ ? R(n, "error", "rdo-type", O + " is a work day but shift type is blank.", u) : $ && Lt.indexOf($) < 0 && R(n, "error", "day-type", O + " shift type " + $ + " is not Airport, Training, or Admin/Avail.", u);
     }
-    Number(a.hoursPerPP) > 80 && N(n, "error", "hours", "Hours/PP is over 80.", u), (a.warnings || []).forEach((L) => N(n, "warn", "line", L, u));
+    Number(a.hoursPerPP) > 80 && R(n, "error", "hours", "Hours/PP is over 80.", u), (a.warnings || []).forEach((L) => R(n, "warn", "line", L, u));
   });
   const m = n.filter((a) => a.level === "error").length, p = n.filter((a) => a.level === "warn").length;
   return {
@@ -1570,7 +1562,7 @@ function Ye(e) {
     empty: !1
   };
 }
-function R(e, t, n) {
+function N(e, t, n) {
   const r = document.createElement(e);
   return t && Object.keys(t).forEach((s) => {
     s === "className" ? r.className = t[s] : s === "hidden" ? r.hidden = !!t[s] : r.setAttribute(s, t[s]);
@@ -1605,18 +1597,18 @@ function rn(e) {
     p.textContent = c || "";
   }
   function ne() {
-    u.textContent = "", Ze.forEach((c) => u.appendChild(R("th", null, c)));
+    u.textContent = "", Ze.forEach((c) => u.appendChild(N("th", null, c)));
   }
   function V(c) {
     if (g.textContent = "", a.textContent = String(A.length) + (D ? " · " + c.length + " match" : ""), !c.length) {
-      const b = R("tr"), w = R("td", { colspan: "45", className: "bp-empty-msg" });
+      const b = N("tr"), w = N("td", { colspan: "45", className: "bp-empty-msg" });
       w.textContent = A.length ? "No lines match that search." : "No lines in this session. Generate on Setup, then come back — or import a JSON / lines CSV as a fallback. Sample rows are not loaded.", b.appendChild(w), g.appendChild(b);
       return;
     }
     c.forEach((b) => {
-      const w = R("tr");
+      const w = N("tr");
       Ce(b).forEach((q, E) => {
-        const I = R("td", null, q == null ? "" : String(q));
+        const I = N("td", null, q == null ? "" : String(q));
         E >= 27 && E <= 40 && Ce(b)[E - 14] === "RDO" && !q && (I.className = "ebid-rdo-type"), w.appendChild(I);
       }), g.appendChild(w);
     });
@@ -1637,7 +1629,7 @@ function rn(e) {
   }
   function ue(c) {
     if (L.textContent = "", C.textContent = "", $.textContent = "", c.empty) {
-      L.appendChild(R("p", { className: "bp-empty-msg" }, "No lines to check. Totals stay at zero until this session has lines."));
+      L.appendChild(N("p", { className: "bp-empty-msg" }, "No lines to check. Totals stay at zero until this session has lines."));
       return;
     }
     const b = [
@@ -1645,29 +1637,29 @@ function rn(e) {
       ["Schedule", c.ft + " FT / " + c.pt + " PT"],
       ["Pat down", c.male + " M / " + c.female + " F"],
       ["Rule breaks", c.errors + " error / " + c.warnings + " warn"]
-    ], w = R("div", { className: "ebid-stat-grid" });
+    ], w = N("div", { className: "ebid-stat-grid" });
     b.forEach((E) => {
-      const I = R("div", { className: "ebid-stat" });
-      I.appendChild(R("div", { className: "ebid-stat-label" }, E[0])), I.appendChild(R("div", { className: "ebid-stat-value" }, E[1])), w.appendChild(I);
+      const I = N("div", { className: "ebid-stat" });
+      I.appendChild(N("div", { className: "ebid-stat-label" }, E[0])), I.appendChild(N("div", { className: "ebid-stat-value" }, E[1])), w.appendChild(I);
     }), L.appendChild(w);
     const q = c.issues.slice(0, 80);
     q.length ? (q.forEach((E) => {
-      const I = R("div", { className: "ebid-issue ebid-issue-" + E.level });
-      I.appendChild(R("span", { className: "ebid-issue-level" }, E.level === "error" ? "FAIL" : "WARN"));
+      const I = N("div", { className: "ebid-issue ebid-issue-" + E.level });
+      I.appendChild(N("span", { className: "ebid-issue-level" }, E.level === "error" ? "FAIL" : "WARN"));
       const P = (E.lineId ? "Line " + E.lineId + " — " : "") + E.message;
-      I.appendChild(R("span", null, P)), C.appendChild(I);
-    }), c.issues.length > q.length && C.appendChild(R("p", { className: "bp-subtitle" }, c.issues.length - q.length + " more not shown."))) : C.appendChild(R("p", { className: "ebid-pass" }, "No rule breaks. RDO shift types are blank, cert pools sit in column 13, and the row is 45 columns (A–AS).")), Object.keys(c.distinct).forEach((E) => {
-      const I = R("div", { className: "ebid-distinct" }), P = c.distinct[E], te = Object.keys(P);
-      I.appendChild(R("h4", null, E + " · " + te.length)), te.sort((K, z) => P[z] - P[K] || K.localeCompare(z)).forEach((K) => {
-        const z = R("div", { className: "ebid-distinct-row" });
-        z.appendChild(R("span", null, K)), z.appendChild(R("span", null, String(P[K]))), I.appendChild(z);
+      I.appendChild(N("span", null, P)), C.appendChild(I);
+    }), c.issues.length > q.length && C.appendChild(N("p", { className: "bp-subtitle" }, c.issues.length - q.length + " more not shown."))) : C.appendChild(N("p", { className: "ebid-pass" }, "No rule breaks. RDO shift types are blank, cert pools sit in column 13, and the row is 45 columns (A–AS).")), Object.keys(c.distinct).forEach((E) => {
+      const I = N("div", { className: "ebid-distinct" }), P = c.distinct[E], te = Object.keys(P);
+      I.appendChild(N("h4", null, E + " · " + te.length)), te.sort((K, Q) => P[Q] - P[K] || K.localeCompare(Q)).forEach((K) => {
+        const Q = N("div", { className: "ebid-distinct-row" });
+        Q.appendChild(N("span", null, K)), Q.appendChild(N("span", null, String(P[K]))), I.appendChild(Q);
       }), $.appendChild(I);
     });
   }
   function ie() {
     O.dataset.ready !== "1" && (O.dataset.ready = "1", At.forEach((c) => {
-      const b = R("tr");
-      b.appendChild(R("td", null, String(c.id))), b.appendChild(R("td", null, c.header)), b.appendChild(R("td", null, c.values)), b.appendChild(R("td", null, c.desc)), O.appendChild(b);
+      const b = N("tr");
+      b.appendChild(N("td", null, String(c.id))), b.appendChild(N("td", null, c.header)), b.appendChild(N("td", null, c.values)), b.appendChild(N("td", null, c.desc)), O.appendChild(b);
     }));
   }
   function Z(c, b) {
@@ -1678,7 +1670,7 @@ function rn(e) {
     B.kind === "live" && F(A.length ? A.length + " line(s) from this session." : "Session has " + q + " line(s).");
   }
   function X() {
-    B.kind === "live" && (W(), Z(zt(t, U()), "LIVE LINES"));
+    B.kind === "live" && (W(), Z(Qt(t, U()), "LIVE LINES"));
   }
   function ee(c) {
     ["lines", "qa", "info"].forEach((b) => {
@@ -1718,7 +1710,7 @@ function rn(e) {
       F("Nothing to export. Generate lines or import a fallback file.");
       return;
     }
-    const c = Ye(A), b = Qt(A), w = new Blob([b], { type: "text/csv;charset=utf-8;" }), q = URL.createObjectURL(w), E = document.createElement("a"), I = (o.value.trim() || "eBid") + "_45Col_Import.csv";
+    const c = Ye(A), b = zt(A), w = new Blob([b], { type: "text/csv;charset=utf-8;" }), q = URL.createObjectURL(w), E = document.createElement("a"), I = (o.value.trim() || "eBid") + "_45Col_Import.csv";
     E.href = q, E.download = I, document.body.appendChild(E), E.click(), document.body.removeChild(E), URL.revokeObjectURL(q), F("Exported " + A.length + " line(s), 45 columns A–AS." + (c.errors ? " QA still has " + c.errors + " error(s)." : ""));
   }), r.querySelector("#ebid-import").addEventListener("click", () => J.click()), J.addEventListener("change", () => {
     const c = J.files && J.files[0];
