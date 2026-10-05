@@ -398,7 +398,7 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
   var linePaid = isPt ? ptPaid : (shift.paid || 8);
 
   var lineCode = position + " " + String(id).padStart(3, "0");
-  var opsFte = false;
+  var opsFte;
   if (isExtra) {
     var extraId = classKey.substring(6);
     position = extraId;
@@ -409,7 +409,11 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
       if (S && S.opsFteYes) opsFte = S.opsFteYes(posDef);
       else opsFte = String(posDef.opsFte).toLowerCase() === "yes" || posDef.opsFte === true || posDef.opsFte === 1;
       if (posDef.name) position = posDef.name;
+    } else {
+      opsFte = false;
     }
+  } else if (isTrain) {
+    opsFte = false;
   }
 
   var workDays = S.targetWorkDays ? S.targetWorkDays(shift.id, empClass) : ((+shift.paid || 8) >= 10 ? 4 : 5);
@@ -424,7 +428,7 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
     }
   }
 
-  return {
+  var line = {
     id: id,
     lineCode: lineCode,
     shiftId: shift.id,
@@ -439,7 +443,6 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
     trainingClass: isTrain ? classKey : null,
     extraPositionId: isExtra ? classKey.substring(6) : null,
     extraName: isExtra ? classKey.substring(6) : null,
-    opsFte: opsFte,
     sex: isTrain ? "" : sex,
     function: isShortfall ? "-" : (isTrain ? "TRAINING" : "PAX"),
     isShortfall: !!isShortfall,
@@ -447,6 +450,10 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
     rdoHard: hard.length > 0,
     paid: linePaid
   };
+  if (opsFte !== undefined) {
+    line.opsFte = opsFte;
+  }
+  return line;
 }
 
 export function attachClassGenerate(S) {

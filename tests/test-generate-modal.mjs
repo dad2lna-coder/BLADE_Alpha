@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { bridgeScheduler } from '../modules/setup-panel/actions/bridge.js';
 import { initLineHelpers } from '../modules/shared/lines/helpers.js';
 import { initFunctionCoverage } from '../modules/function-coverage/index.js';
+import { attachHourly } from '../modules/coverage/utils/hourly.js';
 
 function createMockScheduler() {
   const S = {
@@ -347,6 +348,33 @@ test('Fix 3: EXTRA_* position line generation preserves opsFte from extraPositio
   const extraLines = S.state.lines.filter(l => S.belongsToClass(l, 'EXTRA_extra-1'));
   assert.equal(extraLines.length, 1, 'Generated 1 extra line');
   assert.equal(extraLines[0].opsFte, true, 'opsFte is preserved as true');
+});
+
+test('Class-generated TSO/STSO/LTSO lines count in Coverage (opsFte is unset)', () => {
+  const S = createMockScheduler();
+  attachHourly(S);
+
+  const targets = {
+    S1: { M: 3, F: 3 },
+    S2: { M: 1, F: 1 }
+  };
+
+  S.generateClass('TSO', targets);
+
+  const tsoLines = S.state.lines.filter(l => S.belongsToClass(l, 'TSO'));
+  assert.equal(tsoLines.length, 8, 'Generated 8 TSO lines');
+
+  const targetedLines = tsoLines.filter(l => !l.isShortfall);
+  assert.equal(targetedLines.length, 8, 'All 8 lines are targeted non-shortfall lines');
+
+  tsoLines.forEach(l => {
+    assert.equal(l.opsFte, undefined, 'opsFte is undefined (unset) for generated TSO lines');
+    assert.equal(S.lineMatchesCoverageFilter(l, 0), true, 'TSO line matches coverage filter on work day');
+  });
+
+  const { matrix } = S.computeHourlyByDow();
+  const dayTotal = matrix[0][0].t;
+  assert.ok(dayTotal > 0, `Coverage matrix includes generated TSO lines (got ${dayTotal})`);
 });
 
 test('Fix 4: Shortfall line (duty "-") is excluded from DFO cert pool assignment', () => {
