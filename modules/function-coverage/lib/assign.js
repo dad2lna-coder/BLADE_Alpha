@@ -31,7 +31,7 @@ function ensureEligible(line) {
 function unused(role, sex, fc) {
   var lines = api.state.lines || [];
   return lines.filter(function (l) {
-    if (l.isExtra || l.extraPositionId) return false;
+    if (l.isExtra || l.extraPositionId || l.isShortfall || l.function === "-") return false;
     var el = ensureEligible(l);
     return lineRoleKey(l) === role && l.sex === sex && !el.bag && !el.dfo;
   });
@@ -288,9 +288,10 @@ export function generateFunctionAssignments(opts) {
   var fc = ensureFunctionCoverage();
   if (!api.state.issues) api.state.issues = [];
   capFunctionPoolsToFte(fc, api.state.issues);
-  api.state.functionRotation = {};
+  api.state.functionRotation = api.state.functionRotation || {};
   (api.state.lines || []).forEach(function (l) {
-    if (l.isExtra || l.extraPositionId) return;
+    var isTrain = l.isTraining || l.trainingClass || l.empClass === "ESTI" || l.empClass === "MSTI" || l.extraName === "ESTI" || l.extraName === "MSTI";
+    if (l.isExtra || l.extraPositionId || l.isShortfall || l.function === "-" || isTrain) return;
     l.function = "";
     l.functionEligible = { dfo: false, bag: false, pax: false };
   });
@@ -327,7 +328,18 @@ export function generateFunctionAssignments(opts) {
   }
 
   (api.state.lines || []).forEach(function (l) {
+    var isTrain = l.isTraining || l.trainingClass || l.empClass === "ESTI" || l.empClass === "MSTI" || l.extraName === "ESTI" || l.extraName === "MSTI";
     if (l.isExtra || l.extraPositionId) return;
+    if (l.isShortfall || l.function === "-") {
+      l.function = "-";
+      for (var dSf = 0; dSf < days; dSf++) setDuty(l.id, dSf, worksDay(l, dSf) ? "-" : "OFF");
+      return;
+    }
+    if (isTrain) {
+      l.function = "TRAINING";
+      for (var dTr = 0; dTr < days; dTr++) setDuty(l.id, dTr, worksDay(l, dTr) ? "TRAINING" : "OFF");
+      return;
+    }
     if (ensureEligible(l).bag) return;
     if (ensureEligible(l).dfo) {
       for (var di = 0; di < days; di++) {
