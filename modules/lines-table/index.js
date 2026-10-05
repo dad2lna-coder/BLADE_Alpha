@@ -47,6 +47,7 @@ export function initLinesTable(scheduler) {
     if (duty === "DFO") return "DFO";
     if (duty === "PAX") return "PAX";
     if (duty === "TRAINING") return "TRAINING";
+    if (duty === "-") return "-";
     return null;
   }
 
@@ -125,7 +126,7 @@ export function initLinesTable(scheduler) {
     } else if (field === "sex") {
       line.sex = value === "F" ? "F" : "M";
     } else if (field === "function") {
-      line.function = value === "DFO" || value === "PAX" || value === "BAG" || value === "TRAINING" ? value : "";
+      line.function = value === "DFO" || value === "PAX" || value === "BAG" || value === "TRAINING" || value === "-" ? value : "";
     } else if (field === "certPool") {
       var pool = String(value || "").trim().toUpperCase();
       line.certPool = pool === "A" || pool === "B" ? pool : "";
@@ -242,6 +243,7 @@ export function initLinesTable(scheduler) {
       if (duty === "BAG") setRotationDuty(key, dayIndex, "BAG");
       else if (duty === "DFO") setRotationDuty(key, dayIndex, "DFO");
       else if (duty === "TRAINING") setRotationDuty(key, dayIndex, "TRAINING");
+      else if (duty === "-") setRotationDuty(key, dayIndex, "-");
       else setRotationDuty(key, dayIndex, "PAX");
     }
 

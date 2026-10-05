@@ -53,7 +53,8 @@
 
   function dutyKey(text) {
     const t = String(text || '').toUpperCase();
-    if (t === 'RDO' || t === '—' || t === '-' || t === 'OFF') return 'rdo';
+    if (t === 'RDO' || t === '—' || t === 'OFF') return 'rdo';
+    if (t === '-') return 'dash';
     if (t === 'BAG' || t === 'BAGS') return 'bag';
     if (t === 'DFO') return 'dfo';
     if (t === 'PAX') return 'pax';
@@ -203,6 +204,7 @@
             <option value="BAG">BAG</option>
             <option value="PAX">PAX</option>
             <option value="DFO">DFO</option>
+            <option value="-">-</option>
             <option value="TRAINING">TRAINING</option>
             <option value="OFF">OFF / RDO</option>
           </select>
@@ -314,6 +316,7 @@
               <td>
                 <select class="line-edit" data-field="function" data-line-id={row?.id} value={row?.function ?? ''} on:change={(e) => emitEdit(row?.id, 'function', e.target.value)}>
                   <option value="">—</option>
+                  <option value="-">-</option>
                   <option value="DFO">DFO</option>
                   <option value="BAG">BAG</option>
                   <option value="PAX">PAX</option>
@@ -343,6 +346,7 @@
                       <option value="PAX">PAX</option>
                       <option value="BAG">BAG</option>
                       <option value="DFO">DFO</option>
+                      <option value="-">-</option>
                       <option value="TRAINING">Training</option>
                       <option value="OFF">OFF</option>
                     </select>

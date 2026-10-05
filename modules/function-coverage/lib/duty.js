@@ -37,7 +37,7 @@ export function getRotationDuty(lineId, dayIndex) {
       if (String(api.state.lines[i].id) === String(lineId)) { line = api.state.lines[i]; break; }
     }
   }
-  if (line && (line.function === "BAG" || line.function === "DFO" || line.function === "PAX")) return line.function;
+  if (line && (line.function === "BAG" || line.function === "DFO" || line.function === "PAX" || line.function === "-")) return line.function;
   return null;
 }
 export function lineStartMin(line) {

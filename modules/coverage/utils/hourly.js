@@ -31,18 +31,19 @@ export function lineMatchesCoverageFilter(S, line, dayOff) {
   if (role === "TSO" && !cv.tso) return false;
   if (role !== "STSO" && role !== "LTSO" && role !== "TSO" && !cv.tso) return false;
 
-  var fv = cv.funcView || "all";
-  if (fv === "all") return true;
-
   var rawDuty = S.getRotationDuty ? S.getRotationDuty(line.id, dayOff) : null;
   var duty = rawDuty ? String(rawDuty).toUpperCase() : null;
   if (duty === "BAGGAGE") duty = "BAG";
   if (duty === "PASSENGER") duty = "PAX";
   if (!duty) {
-    duty = line.function === "BAG" ? "BAG" : (line.function === "DFO" || line.function === "PAX" ? "PAX" : (line.isTraining || line.trainingClass || line.empClass === "ESTI" || line.empClass === "MSTI" ? "TRAINING" : "PAX"));
+    duty = line.function === "BAG" ? "BAG" : (line.function === "DFO" || line.function === "PAX" ? "PAX" : (line.function === "-" ? "-" : (line.isTraining || line.trainingClass || line.empClass === "ESTI" || line.empClass === "MSTI" ? "TRAINING" : "PAX")));
   }
 
+  if (duty === "-" || line.function === "-") return false;
   if (duty === "TRAINING") return false;
+
+  var fv = cv.funcView || "all";
+  if (fv === "all") return true;
 
   if (fv === "dfo") {
     return line.function === "DFO" || !!(line.functionEligible && (line.functionEligible.dfo || line.functionEligible.DFO));

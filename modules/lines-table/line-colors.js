@@ -100,7 +100,7 @@ export function initLineColors(S) {
       if (!t || t.getAttribute("data-field") !== "function") return;
       var line = S.findLineById ? S.findLineById(t.getAttribute("data-line-id")) : null;
       if (!line) return;
-      line.function = t.value === "DFO" || t.value === "PAX" || t.value === "BAG" ? t.value : "";
+      line.function = t.value === "DFO" || t.value === "PAX" || t.value === "BAG" || t.value === "TRAINING" || t.value === "-" ? t.value : "";
       if (line.function === "BAG") applyBagDutyToWorkDays(line);
       if (line.function === "DFO") applyDfoDutyToWorkDays(line);
       if (S.renderLines) S.renderLines();

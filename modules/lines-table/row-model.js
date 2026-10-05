@@ -28,12 +28,13 @@ export function initRowModel(S) {
 
   function resolveWorkDayDuty(line, duty) {
     if (duty === "TRAINING") return "TRAINING";
-    if (duty === "BAG" || duty === "PAX" || duty === "DFO") return duty;
+    if (duty === "-" || duty === "BAG" || duty === "PAX" || duty === "DFO") return duty;
     if (line.isTraining || line.trainingClass || line.empClass === "ESTI" || line.empClass === "MSTI" || line.extraName === "ESTI" || line.extraName === "MSTI") {
       return "TRAINING";
     }
     if (line.function === "BAG") return "BAG";
     if (line.function === "DFO" || line.function === "PAX") return "PAX";
+    if (line.function === "-") return "-";
     return duty === "BAG" || duty === "PAX" ? duty : null;
   }
 
