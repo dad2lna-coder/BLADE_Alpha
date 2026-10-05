@@ -124,6 +124,11 @@ export function computeRoleMatrixByDow(S, opts) {
       if (scheduleRow(S, line)[off] !== "WORK") continue;
 
       var duty = dutyForDay(rotRow, off);
+      if (!duty) {
+        duty = line.function === "BAG" ? "BAG" : (line.function === "DFO" || line.function === "PAX" ? "PAX" : (line.function === "-" ? "-" : "PAX"));
+      }
+
+      if (duty === "-" || line.function === "-") continue;
 
       if (mode === "baggage") {
         // BAG duty that day only
