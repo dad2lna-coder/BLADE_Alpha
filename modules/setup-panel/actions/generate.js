@@ -31,6 +31,40 @@ export function buildScheduleForLine(S, line, days) {
   return arr.slice(0, days);
 }
 
+/** Split validation of generate inputs.
+ *  Each failure gets its own message so the cause is visible, not collapsed into
+ *  a single "No shifts" status. Returns true when all checks pass.
+ */
+function validateGenerateInputs(S) {
+  var passed = true;
+  function fail(message) {
+    passed = false;
+    if (S.state.issues.indexOf(message) < 0) S.state.issues.push(message);
+  }
+
+  if (!S.state.shifts || !S.state.shifts.length) {
+    fail("No shifts defined. Add at least one shift with a start and end time.");
+  }
+
+  var extraHead = 0;
+  ((S.state && S.state.extraPositions) || []).forEach(function (p) {
+    extraHead += (+p.m || 0) + (+p.f || 0);
+  });
+  var trainingHead = (+S.state.esti || 0) + (+S.state.msti || 0);
+  var total = S.state.ftM + S.state.ftF + S.state.ptM + S.state.ptF;
+  if (total <= 0 && extraHead <= 0 && trainingHead <= 0) {
+    fail("No staff to schedule. Set FT/PT male and female headcounts above zero, or add an extra type with people.");
+  }
+
+  var openMin = S.timeToMin(S.state.open);
+  var closeMin = S.timeToMin(S.state.close);
+  if (closeMin <= openMin) {
+    fail("Close time must be after open time.");
+  }
+
+  return passed;
+}
+
 export function generate(S) {
   S.state.issues = [];
   if (S.collectSetupInputs) S.collectSetupInputs();
@@ -47,6 +81,9 @@ export function generate(S) {
 
   if (!S.state.shifts || !S.state.shifts.length) {
     S.state.issues.push("Add at least one shift with a start and end time.");
+    // Clear lines/schedule to avoid stale data from a previous generate
+    S.state.lines = [];
+    S.state.schedule = {};
     if (S.renderAll) S.renderAll();
     if (S.updateStatus) S.updateStatus("No shifts defined.");
     return;
@@ -64,27 +101,18 @@ export function generate(S) {
   });
 
   if (S.readExtraPositionsFromDom) S.readExtraPositionsFromDom();
-  var extraHead = 0;
-  ((S.state && S.state.extraPositions) || []).forEach(function (p) {
-    extraHead += (+p.m || 0) + (+p.f || 0);
-  });
-  var trainingHead = (+S.state.esti || 0) + (+S.state.msti || 0);
-  var total = S.state.ftM + S.state.ftF + S.state.ptM + S.state.ptF;
-  if (total <= 0 && extraHead <= 0 && trainingHead <= 0) {
-    S.state.issues.push("Set FT/PT male and female headcounts above zero, or add an extra type with people.");
+
+  if (!validateGenerateInputs(S)) {
+    // Clear stale lines/schedule on any validation failure
     S.state.lines = [];
     S.state.schedule = {};
     if (S.renderAll) S.renderAll();
-    if (S.updateStatus) S.updateStatus("No staff to schedule.");
+    if (S.updateStatus) S.updateStatus("Generate validation failed. " + S.state.issues.join(" "));
     return;
   }
+
   var openMin = S.timeToMin(S.state.open);
   var closeMin = S.timeToMin(S.state.close);
-  if (closeMin <= openMin) {
-    S.state.issues.push("Close time must be after open time.");
-    if (S.renderAll) S.renderAll();
-    return;
-  }
 
   var existingLockedLines = [];
   if (S.state.lines && Array.isArray(S.state.lines) && S.isLineScheduleLocked) {

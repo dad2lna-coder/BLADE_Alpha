@@ -45,9 +45,21 @@ export function formExtraTypeTeams() {
       team.name = typeName;
     }
     const want = new Set(byType[typeName].map(Number));
+    // Keep non-extra members; only remove ids that are extras being rebuilt,
+    // matching the trainingClasses pattern: keep unless id is an extra being rebuilt.
     teams.forEach(function (t) {
       if (t === team) return;
-      t.members = (t.members || []).filter(function (m) { return !want.has(+m); });
+      t.members = (t.members || []).filter(function (m) {
+        // Remove member if it's an extra being rebuilt (in the "want" set)
+        // but keep it if it's a non-extra line (matching trainingClasses filter logic)
+        var line = S && S.state && S.state.lines && S.state.lines.find(function (l) { return +l.id === +m; });
+        if (line && (line.isExtra || line.extraPositionId)) {
+          // This is an extra line — remove it only if it's an extra of a different type being rebuilt
+          return !want.has(+m);
+        }
+        // Non-extra member: keep
+        return true;
+      });
     });
     team.members = byType[typeName].map(Number);
   });
