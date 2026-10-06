@@ -94,7 +94,7 @@
         name,
         cfg,
         id: String(tab.id),
-        label: String(tab.label || tab.id).toUpperCase(),
+        label: String(tab.label || tab.id),
         priority: Number(tab.priority) || 99,
         order: Number(tab.order) || 99
       });
@@ -212,8 +212,74 @@
     return out;
   }
 
+  function reviewSubModules(man) {
+    const list = [];
+    for (const [name, raw] of Object.entries(man)) {
+      const cfg = typeof raw === "string" ? {} : (raw || {});
+      const sub = cfg.reviewSubTab;
+      if (!sub || !sub.id) continue;
+      list.push({
+        name,
+        cfg,
+        id: String(sub.id),
+        label: String(sub.label || sub.id),
+        order: Number(sub.order) || 99
+      });
+    }
+    list.sort(function (a, b) {
+      if (a.order !== b.order) return a.order - b.order;
+      return a.name.localeCompare(b.name);
+    });
+    return list;
+  }
+
+  function buildReviewHost(subs) {
+    const tab = document.getElementById("tab-review");
+    if (!tab) return [];
+    tab.innerHTML = "";
+    const nav = document.createElement("nav");
+    nav.className = "tabs report-subtabs";
+    nav.id = "review-subtabs";
+    const panels = document.createElement("div");
+    panels.id = "review-sub-panels";
+    tab.appendChild(nav);
+    tab.appendChild(panels);
+    const out = [];
+    subs.forEach(function (entry, i) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "report-sub-btn" + (i === 0 ? " active" : "");
+      btn.dataset.reviewSub = entry.id;
+      btn.textContent = entry.label;
+      nav.appendChild(btn);
+
+      const panel = document.createElement("section");
+      panel.className = "report-sub-panel" + (i === 0 ? " active" : "");
+      panel.id = entry.id === "reports" ? "tab-reports" : "review-sub-" + entry.id;
+      panels.appendChild(panel);
+      if (!entry.cfg.mount) entry.cfg.mount = "#" + panel.id;
+      out.push({ id: entry.id, label: entry.label });
+    });
+    Scheduler.reviewSubTabs = out;
+    Scheduler.switchReviewSub = function (id) {
+      document.querySelectorAll("#review-subtabs .report-sub-btn").forEach(function (b) {
+        b.classList.toggle("active", b.dataset.reviewSub === id);
+      });
+      const target = id === "reports" ? "tab-reports" : "review-sub-" + id;
+      document.querySelectorAll("#review-sub-panels .report-sub-panel").forEach(function (p) {
+        p.classList.toggle("active", p.id === target);
+      });
+    };
+    nav.addEventListener("click", function (event) {
+      const btn = event.target.closest("[data-review-sub]");
+      if (btn) Scheduler.switchReviewSub(btn.dataset.reviewSub);
+    });
+    return out;
+  }
+
   const ownedTabs = tabModules(manifest);
   buildNav(ownedTabs);
+  buildReviewHost(reviewSubModules(manifest));
   buildReportHost(reportSubModules(manifest));
 
   for (const [name, raw] of Object.entries(manifest)) {

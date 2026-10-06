@@ -20,8 +20,17 @@
     "panel": "modules/team-builder/panel.html",
     "docks": "modules/team-builder/docks.html",
     "mount": "#tab-teams",
-    "tab": { "id": "teams", "label": "TEAMS", "priority": 3, "order": 1 },
-    "reportsSubTab": { "id": "cohesion", "label": "Team Cohesion", "order": 3 },
+    "tab": {
+      "id": "teams",
+      "label": "Teams",
+      "priority": 1,
+      "order": 6
+    },
+    "reportsSubTab": {
+      "id": "cohesion",
+      "label": "Team Cohesion",
+      "order": 3
+    },
     "reportsPanel": "modules/reports/cohesion.html",
     "reportsMount": "#report-sub-cohesion"
   },
@@ -36,16 +45,27 @@
       "modules/setup-panel/styles/setup-panel.css"
     ],
     "panel": "modules/setup-panel/panel.html",
-    "mount": "#tab-setup",
-    "tab": { "id": "setup", "label": "SETUP", "priority": 1, "order": 1 }
+    "mount": "#tab-build",
+    "tab": {
+      "id": "build",
+      "label": "Build",
+      "priority": 1,
+      "order": 2
+    }
   },
   "lines-table": {
     "entry": "modules/lines-table/dist/lines-table.js",
     "init": "initLinesTable",
-    "css": ["modules/lines-table/dist/lines-table.css"],
+    "css": [
+      "modules/lines-table/dist/lines-table.css"
+    ],
     "panel": "modules/lines-table/panel.html",
-    "mount": "#tab-lines",
-    "tab": { "id": "lines", "label": "LINES", "priority": 1, "order": 2 }
+    "mount": "#review-sub-lines",
+    "reviewSubTab": {
+      "id": "lines",
+      "label": "Lines",
+      "order": 1
+    }
   },
   "coverage": {
     "entry": "modules/coverage/dist/coverage.js",
@@ -54,8 +74,12 @@
       "modules/coverage/styles/coverage.css"
     ],
     "panel": "modules/coverage/panel.html",
-    "mount": "#tab-coverage",
-    "tab": { "id": "coverage", "label": "COVERAGE", "priority": 1, "order": 3 }
+    "mount": "#review-sub-coverage",
+    "reviewSubTab": {
+      "id": "coverage",
+      "label": "Coverage",
+      "order": 2
+    }
   },
   "demand-capacity": {
     "entry": "modules/demand-capacity/dist/demand-capacity.js",
@@ -65,7 +89,11 @@
     ],
     "panel": "modules/demand-capacity/panel.html",
     "mount": "#report-sub-demand",
-    "reportsSubTab": { "id": "demand", "label": "Demand", "order": 2 }
+    "reportsSubTab": {
+      "id": "demand",
+      "label": "Demand",
+      "order": 2
+    }
   },
   "reports": {
     "entry": "modules/reports/dist/reports.js",
@@ -74,17 +102,60 @@
       "modules/reports/styles/reports.css",
       "modules/reports/styles/reports-print.css"
     ],
-    "tab": { "id": "reports", "label": "REPORTS", "priority": 2, "order": 1 },
-    "reportsSubTab": { "id": "management", "label": "Management Reports", "order": 1 },
+    "reportsSubTab": {
+      "id": "management",
+      "label": "Management Reports",
+      "order": 1
+    },
     "reportsPanel": "modules/reports/management.html",
-    "reportsMount": "#report-sub-management"
+    "reportsMount": "#report-sub-management",
+    "reviewSubTab": {
+      "id": "reports",
+      "label": "Reports",
+      "order": 3
+    }
   },
   "bid-planner": {
     "entry": "modules/bid-planner/dist/bid-planner.js",
     "init": "initBidPlanner",
-    "css": ["modules/bid-planner/styles/bid-planner.css"],
+    "css": [
+      "modules/bid-planner/styles/bid-planner.css"
+    ],
     "panel": "modules/bid-planner/panel.html",
-    "mount": "#tab-bid-planner",
-    "tab": { "id": "bid-planner", "label": "BID PLANNER", "priority": 2, "order": 2 }
+    "mount": "#tab-plan",
+    "tab": {
+      "id": "plan",
+      "label": "Plan",
+      "priority": 1,
+      "order": 1
+    }
+  },
+  "review": {
+    "tab": {
+      "id": "review",
+      "label": "Review",
+      "priority": 1,
+      "order": 3
+    }
+  },
+  "ship": {
+    "panel": "modules/ship/panel.html",
+    "mount": "#tab-ship",
+    "tab": {
+      "id": "ship",
+      "label": "Ship",
+      "priority": 1,
+      "order": 4
+    }
+  },
+  "present": {
+    "panel": "modules/present/panel.html",
+    "mount": "#tab-present",
+    "tab": {
+      "id": "present",
+      "label": "Present",
+      "priority": 1,
+      "order": 5
+    }
   }
 }
