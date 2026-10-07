@@ -76,12 +76,12 @@
   font-size: 0.85rem;
 }
 
-/* Constraint-day RDO mode — sits beside hard RDO checks */
-.rdo-mode {
+/* One RDO control: block length and optional pin days */
+.rdo-block {
   display: flex;
   flex-direction: column;
   gap: 0.28rem;
-  min-width: 9.2rem;
+  min-width: 8.4rem;
 }
 .rdo-mode-switch {
   display: flex;
@@ -145,6 +145,18 @@
 }
 .rdo-constraint { flex: 1; justify-content: space-between; }
 .rdo-mode[data-on="0"] .rdo-mode-day { opacity: 0.4; }
+.rdo-block[data-missing="1"] .rdo-pin-req span { color: var(--amber); font-weight: 700; }
+.rdo-pin-req {
+  display: flex;
+  align-items: center;
+  gap: 0.28rem;
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.rdo-pin-req input { width: auto; }
 .rdo-constraint .rdo-chk:has(input:checked) span {
   color: var(--amber);
   font-weight: 700;

@@ -1,6 +1,6 @@
 /** Setup owns generate: snapshot inputs, then run allocation + line schedule. */
 import { parseStartDate, addDays, weekdaySun0 } from "../../shared/utils/dates.js";
-import { rdoModeActive } from "../utils/shiftMath.js";
+import { assignBlockRdos, lockedRdoNotes, normalizeRdoBlock } from "../utils/rdoBlock.js";
 
 export function buildScheduleForLine(S, line, days) {
   var arr = [];
@@ -51,10 +51,18 @@ export function generate(S) {
     if (S.updateStatus) S.updateStatus("No shifts defined.");
     return;
   }
+  var rdoFailed = false;
   S.state.shifts.forEach(function (s) {
-    if (rdoModeActive(s)) return;
-    if (s.rdoMode && s.rdoMode !== "off" && (s.rdoConstraint == null || s.rdoConstraint === "")) {
-      S.state.issues.push(s.name + ": RDO mode is on but no constraint day is set. Using legacy RDOs.");
+    if (normalizeRdoBlock(s)) {
+      var needBlock = S.rdoCountForShift(s, "FT");
+      var probe = assignBlockRdos(s, needBlock, 0);
+      if (probe && probe.ok === false) {
+        S.state.issues.push(s.name + ": " + probe.error + ".");
+        rdoFailed = true;
+      } else if (probe && probe.exceeds) {
+        S.state.issues.push(s.name + ": block plus pin is " + probe.rdoDays.length + " day(s), over the " + needBlock + "-day RDO target. Extra days kept.");
+      }
+      return;
     }
     if (!s.rdoHard || !s.rdoHard.length) return;
     var need = S.rdoCountForShift(s, "FT");
@@ -66,6 +74,11 @@ export function generate(S) {
       }
     }
   });
+  if (rdoFailed) {
+    if (S.renderAll) S.renderAll();
+    if (S.updateStatus) S.updateStatus("RDO pin is missing or the block does not fit. Nothing was generated.");
+    return;
+  }
 
   if (S.readExtraPositionsFromDom) S.readExtraPositionsFromDom();
   var extraHead = 0;
@@ -131,6 +144,9 @@ export function generate(S) {
       if (l.start !== undefined) l.start = sh.start;
       if (l.end !== undefined) l.end = sh.end;
     }
+  });
+  lockedRdoNotes(S, existingLockedLines).forEach(function (msg) {
+    S.state.issues.push(msg);
   });
 
   var tsoLines = [];

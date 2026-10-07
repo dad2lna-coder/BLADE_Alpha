@@ -1,60 +1,8 @@
 /** Setup-tab shifts table + day-times modal. */
-import { assignRdoDays, normalizeRdoMode, normalizeConstraintDay, hardDaysMatchingMode } from "../utils/shiftMath.js";
+import { assignRdoDays } from "../utils/shiftMath.js";
+import { rdoConstraintHtml, readRdoConstraint, syncRdoConstraintRow } from "./rdoConstraintUi.js";
 export function attachShiftsTable(S) {
   if (!S) return;
-
-  S.rdoModeHtml = function (shift) {
-    var mode = normalizeRdoMode(shift);
-    var day = normalizeConstraintDay(shift);
-    var on = mode !== "off";
-    var id = String(shift && shift.id || "shift").replace(/[^A-Za-z0-9_-]/g, "");
-    var days = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    var modes = [
-      { value: "off", label: "Off" },
-      { value: "4x10", label: "4×10" },
-      { value: "5x8", label: "5×8" }
-    ];
-    var modeHtml = modes.map(function (opt) {
-      var checked = mode === opt.value ? " checked" : "";
-      return (
-        '<label class="rdo-mode-opt" title="' + (opt.value === "off"
-          ? "Legacy hard RDOs and soft consecutive days"
-          : opt.value === "4x10"
-            ? "Pins the constraint day. Two RDOs form a consecutive pair with that day; the third RDO is a flex day."
-            : "Pins the constraint day. The other RDO is only the day before or the day after.") + '">' +
-        '<input type="radio" name="rdo-mode-' + id + '" data-f="rdoMode" value="' + opt.value + '"' + checked + " />" +
-        "<span>" + opt.label + "</span></label>"
-      );
-    }).join("");
-    var dayHtml = days.map(function (label, d) {
-      var checked = day === d ? " checked" : "";
-      var dis = on ? "" : " disabled";
-      return (
-        '<label class="rdo-chk" title="Constraint day ' + label + '">' +
-        '<input type="radio" name="rdo-c-' + id + '" data-constraint="' + d + '"' + checked + dis + " />" +
-        "<span>" + label.charAt(0) + "</span></label>"
-      );
-    }).join("");
-    return (
-      '<div class="rdo-mode" data-on="' + (on ? "1" : "0") + '">' +
-      '<div class="rdo-mode-switch" role="radiogroup" aria-label="RDO mode">' + modeHtml + "</div>" +
-      '<div class="rdo-mode-day">' +
-      '<span class="rdo-mode-kicker">Day</span>' +
-      '<div class="rdo-row rdo-constraint" role="radiogroup" aria-label="Constraint day">' + dayHtml + "</div>" +
-      "</div></div>"
-    );
-  };
-
-  S.rdoChecksHtml = function (selected, locked) {
-    var set = new Set((selected || []).map(Number));
-    return (S.DAYS || []).map(function (label, d) {
-      return (
-        '<label class="rdo-chk" title="' + label + '">' +
-        '<input type="checkbox" data-rdo="' + d + '"' + (set.has(d) ? " checked" : "") + (locked ? " disabled" : "") + " />" +
-        "<span>" + label.charAt(0) + "</span></label>"
-      );
-    }).join("");
-  };
 
   S.readShiftsFromDom = function () {
     if (typeof document === "undefined") return S.state.shifts;
@@ -98,17 +46,7 @@ export function attachShiftsTable(S) {
       var force = Math.max(0, Math.floor(+(tr.querySelector("[data-f=force]") && tr.querySelector("[data-f=force]").value) || 0));
       var ltsoForce = Math.max(0, Math.floor(+(tr.querySelector("[data-f=ltsoForce]") && tr.querySelector("[data-f=ltsoForce]").value) || 0));
       var stsoForce = Math.max(0, Math.floor(+(tr.querySelector("[data-f=stsoForce]") && tr.querySelector("[data-f=stsoForce]").value) || 0));
-      var rdoHard = [];
-      for (var d = 0; d < 7; d++) {
-        var cb = tr.querySelector('[data-rdo="' + d + '"]');
-        if (cb && cb.checked) rdoHard.push(d);
-      }
-      var modeEl = tr.querySelector('input[data-f="rdoMode"]:checked');
-      var rdoMode = normalizeRdoMode(modeEl ? modeEl.value : (existing && existing.rdoMode));
-      var cEl = tr.querySelector("input[data-constraint]:checked");
-      var rdoConstraint = cEl ? Number(cEl.getAttribute("data-constraint")) : normalizeConstraintDay(existing);
-      var pinnedHard = hardDaysMatchingMode({ rdoMode: rdoMode, rdoConstraint: rdoConstraint });
-      if (pinnedHard) rdoHard = pinnedHard;
+      var rdo = readRdoConstraint(tr);
       var dayTimes = existing && existing.dayTimes ? existing.dayTimes : null;
       var phaseEl = tr.querySelector("[data-f=phase]");
       var phase = (phaseEl && phaseEl.value) || (existing && existing.phase) || "auto";
@@ -117,8 +55,8 @@ export function attachShiftsTable(S) {
 
       var sObj = {
         id: id, name: name, start: segments ? segments[0].start : start, end: segments ? segments[1].end : end, paid: paid,
-        force: force, ltsoForce: ltsoForce, stsoForce: stsoForce, rdoHard: rdoHard,
-        rdoMode: rdoMode, rdoConstraint: rdoConstraint,
+        force: force, ltsoForce: ltsoForce, stsoForce: stsoForce, rdoHard: rdo.rdoHard,
+        rdoBlock: rdo.rdoBlock, rdoPins: rdo.rdoPins, rdoPinRequired: rdo.rdoPinRequired,
         dayTimes: dayTimes, phase: phase, crewGroupId: crewGroupId
       };
       if (segments) sObj.segments = segments;
@@ -209,8 +147,6 @@ export function attachShiftsTable(S) {
       var start2 = isSplit ? s.segments[1].start : "";
       var end2 = isSplit ? s.segments[1].end : "";
 
-      var pinned = hardDaysMatchingMode(s);
-      var hardShown = pinned || s.rdoHard;
       return (
         '<tr data-shift-id="' + s.id + '">' +
         '<td><input type="text" data-f="name" value="' + String(s.name).replace(/"/g, "&quot;") + '" style="width:5.5rem" /></td>' +
@@ -229,8 +165,7 @@ export function attachShiftsTable(S) {
         '<td><input type="number" data-f="force" min="0" value="' + (s.force || 0) + '" style="width:4rem" title="TSO force" /></td>' +
         '<td><input type="number" data-f="ltsoForce" min="0" value="' + (s.ltsoForce || 0) + '" style="width:4rem" title="LTSO force" /></td>' +
         '<td><input type="number" data-f="stsoForce" min="0" value="' + (s.stsoForce || 0) + '" style="width:4rem" title="STSO force" /></td>' +
-        '<td><div class="rdo-row' + (pinned ? " rdo-hard-locked" : "") + '"' + (pinned ? ' title="Hard RDOs follow the constraint day while a mode is on"' : "") + ">" + S.rdoChecksHtml(hardShown, !!pinned) + "</div></td>" +
-        "<td>" + S.rdoModeHtml(s) + "</td>" +
+        '<td>' + rdoConstraintHtml(S, s) + '</td>' +
         '<td style="white-space:nowrap">' +
           '<button type="button" class="' + daysCls + '" data-day-times="' + s.id + '" title="' + daysTitle + '">Day times…</button> ' +
           '<button type="button" class="btn btn-red" data-remove="' + s.id + '">✕</button>' +
@@ -240,38 +175,9 @@ export function attachShiftsTable(S) {
       );
     }).join("");
 
-    function syncRdoModeRow(tr) {
-      if (!tr) return;
-      var modeEl = tr.querySelector('input[data-f="rdoMode"]:checked');
-      var on = !!(modeEl && modeEl.value !== "off");
-      var wrap = tr.querySelector(".rdo-mode");
-      if (wrap) wrap.setAttribute("data-on", on ? "1" : "0");
-      tr.querySelectorAll("input[data-constraint]").forEach(function (c) { c.disabled = !on; });
-      var cEl = tr.querySelector("input[data-constraint]:checked");
-      var c = cEl ? Number(cEl.getAttribute("data-constraint")) : null;
-      var lock = on && c != null && c >= 0 && c <= 6;
-      var hardRow = tr.querySelector(".rdo-row:not(.rdo-constraint)");
-      if (hardRow) {
-        hardRow.classList.toggle("rdo-hard-locked", lock);
-        hardRow.title = lock ? "Hard RDOs follow the constraint day while a mode is on" : "";
-      }
-      tr.querySelectorAll("input[data-rdo]").forEach(function (cb) {
-        var d = Number(cb.getAttribute("data-rdo"));
-        cb.disabled = lock;
-        if (lock) cb.checked = d === c;
-      });
-    }
-
-    tbody.querySelectorAll('input[data-f="rdoMode"]').forEach(function (radio) {
-      radio.addEventListener("change", function () {
-        if (!radio.checked) return;
-        syncRdoModeRow(radio.closest("tr"));
-      });
-    });
-    tbody.querySelectorAll("input[data-constraint]").forEach(function (radio) {
-      radio.addEventListener("change", function () {
-        if (!radio.checked) return;
-        syncRdoModeRow(radio.closest("tr"));
+    tbody.querySelectorAll('input[data-f="rdoPinRequired"], input[data-pin]').forEach(function (el) {
+      el.addEventListener("change", function () {
+        syncRdoConstraintRow(el.closest("tr"));
       });
     });
 
@@ -307,7 +213,7 @@ export function attachShiftsTable(S) {
     S.state.shifts.push({
       id: id, name: "Shift", start: "08:00", end: "16:30", paid: 8,
       force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [],
-      rdoMode: "off", rdoConstraint: null
+      rdoBlock: 2, rdoPins: [], rdoPinRequired: false
     });
     S.renderShiftsTable();
   };
@@ -683,7 +589,8 @@ export function attachShiftsTable(S) {
         var rdoCount = Math.max(1, 7 - workDays);
         var sh = S.getShift ? S.getShift(l.shiftId) : null;
         var placed = assignRdoDays(S, sh || {}, rdoCount, rdoSeed);
-        if (placed.mode !== "off") {
+        if (placed && placed.ok === false) return;
+        if (placed && placed.mode === "block") {
           l.rdoDays = placed.rdoDays;
           l.rdoHard = false;
         } else {

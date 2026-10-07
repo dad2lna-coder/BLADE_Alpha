@@ -1,4 +1,5 @@
 /** Shift lookup, coverage windows, RDO counts, normalize. */
+import { assignBlockRdos, normalizeRdoBlock, normalizeRdoPins } from "./rdoBlock.js";
 export function getShift(S, id) {
   return (S.state.shifts || []).find(function (x) { return x.id === id; });
 }
@@ -134,99 +135,6 @@ export function rdoModeActive(shift) {
   return normalizeRdoMode(shift) !== "off" && normalizeConstraintDay(shift) != null;
 }
 
-/** Days the hard-RDO checks may show. Mode on: only the pin, so the row cannot claim extra days. */
-export function hardDaysMatchingMode(shift) {
-  if (!rdoModeActive(shift)) return null;
-  return [normalizeConstraintDay(shift)];
-}
-
-function sortDays(days) {
-  return days.slice().sort(function (a, b) { return a - b; });
-}
-
-/** Consecutive blocks of `length` that do not contain the constraint day. Wraps Sat–Sun. */
-export function consecutiveBlocksDisjoint(constraint, length) {
-  var n = Math.max(1, Math.min(6, length || 1));
-  var blocks = [];
-  for (var start = 0; start < 7; start++) {
-    var block = [];
-    var hits = false;
-    for (var i = 0; i < n; i++) {
-      var d = (start + i) % 7;
-      if (d === constraint) { hits = true; break; }
-      block.push(d);
-    }
-    if (!hits) blocks.push(block);
-  }
-  return blocks;
-}
-
-/**
- * 5×8 pairs that keep the constraint day off.
- * Before+pin, or pin+after. Never before+after (that works the pin).
- */
-export function adjacentRdoPatterns(constraint) {
-  var prev = (constraint + 6) % 7;
-  var next = (constraint + 1) % 7;
-  return [
-    [prev, constraint],
-    [constraint, next]
-  ];
-}
-
-function daysFor4x10(constraint, rdoCount, seed) {
-  var n = Math.max(1, Math.min(6, rdoCount || 3));
-  var prev = (constraint + 6) % 7;
-  var next = (constraint + 1) % 7;
-  var s = Math.abs(seed) || 0;
-  if (n === 1) return [constraint];
-  var side = s % 2 === 0 ? prev : next;
-  var days = [constraint, side];
-  if (n === 2) return sortDays(days);
-  var flex = [];
-  for (var d = 0; d < 7; d++) {
-    if (d !== constraint && days.indexOf(d) < 0) flex.push(d);
-  }
-  var step = Math.floor(s / 2);
-  var guard = 0;
-  while (days.length < n && flex.length && guard < 14) {
-    var pick = flex[(step + guard) % flex.length];
-    if (days.indexOf(pick) < 0) days.push(pick);
-    guard++;
-    if (days.length >= n) break;
-    if (guard >= flex.length) break;
-  }
-  return sortDays(days);
-}
-
-function daysFor5x8(constraint, rdoCount, seed) {
-  var prev = (constraint + 6) % 7;
-  var next = (constraint + 1) % 7;
-  var n = Math.max(1, Math.min(6, rdoCount || 2));
-  var s = Math.abs(seed) || 0;
-  if (n === 1) return [constraint];
-  if (n === 2) {
-    var patterns = adjacentRdoPatterns(constraint);
-    return sortDays(patterns[s % patterns.length]);
-  }
-  var days = [prev, constraint, next];
-  if (n === 3) return sortDays(days);
-  var left = prev;
-  var right = next;
-  var step = 0;
-  while (days.length < n && days.length < 7 && step < 14) {
-    if ((s + step) % 2 === 0) {
-      right = (right + 1) % 7;
-      if (days.indexOf(right) < 0) days.push(right);
-    } else {
-      left = (left + 6) % 7;
-      if (days.indexOf(left) < 0) days.push(left);
-    }
-    step++;
-  }
-  return sortDays(days);
-}
-
 function legacyRdoDays(S, shift, rdoCount, seed) {
   var hard = Array.isArray(shift && shift.rdoHard)
     ? shift.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
@@ -256,25 +164,17 @@ function legacyRdoDays(S, shift, rdoCount, seed) {
 
 /**
  * Place RDOs for one line.
- * Mode off: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
- * 4×10: constraint day is always off. One neighbor makes a consecutive pair;
- * the third RDO is a flex day and is not forced onto that pair.
- * 5×8: constraint day is always off. The other RDO is only the day before or after.
+ * No block: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
+ * Block 2–4: pin days stay off, a rotating consecutive block avoids those days, then flex.
  * Split Start2/End2 is time-only; this does not read segments.
  */
 export function assignRdoDays(S, shift, rdoCount, seed) {
   var count = Math.max(1, Math.min(6, rdoCount || 2));
-  var mode = normalizeRdoMode(shift);
-  var constraint = normalizeConstraintDay(shift);
   var s = Number(seed);
   if (!Number.isFinite(s)) s = 0;
   s = Math.abs(Math.floor(s));
-  if (mode === "4x10" && constraint != null) {
-    return { rdoDays: daysFor4x10(constraint, count, s), hard: false, mode: mode, constraint: constraint };
-  }
-  if (mode === "5x8" && constraint != null) {
-    return { rdoDays: daysFor5x8(constraint, count, s), hard: false, mode: mode, constraint: constraint };
-  }
+  var placed = assignBlockRdos(shift, count, s);
+  if (placed) return placed;
   return legacyRdoDays(S, shift, count, s);
 }
 
@@ -361,11 +261,16 @@ export function normalizeShift(S, raw, index) {
 
   var rdoMode = normalizeRdoMode(raw);
   var rdoConstraint = normalizeConstraintDay(raw);
+  var rdoBlock = normalizeRdoBlock(raw);
+  var rdoPins = normalizeRdoPins(raw);
+  var rdoPinRequired = !!(raw && (raw.rdoPinRequired === true || raw.rdoPinRequired === 1 || raw.rdoPinRequired === "true"));
+  if (rdoBlock) rdoHard = rdoPins.slice();
 
   var result = {
     id: id, name: name, start: start, end: end, paid: paid,
     force: force, ltsoForce: ltsoForce, stsoForce: stsoForce, rdoHard: rdoHard,
     rdoMode: rdoMode, rdoConstraint: rdoConstraint,
+    rdoBlock: rdoBlock, rdoPins: rdoPins, rdoPinRequired: rdoPinRequired,
     dayTimes: dayTimes, phase: phase, crewGroupId: crewGroupId
   };
   if (segments) result.segments = segments;
@@ -399,7 +304,8 @@ export function attachShiftMath(S) {
   S.normalizeRdoMode = normalizeRdoMode;
   S.normalizeConstraintDay = normalizeConstraintDay;
   S.rdoModeActive = rdoModeActive;
-  S.hardDaysMatchingMode = hardDaysMatchingMode;
+  S.normalizeRdoBlock = normalizeRdoBlock;
+  S.normalizeRdoPins = normalizeRdoPins;
   S.assignRdoDays = function (shift, rdoCount, seed) { return assignRdoDays(S, shift, rdoCount, seed); };
   S.rdoCountForShift = function (shift, empClass) { return rdoCountForShift(S, shift, empClass); };
   S.normalizeShift = function (raw, index) { return normalizeShift(S, raw, index); };
