@@ -166,14 +166,15 @@ function legacyRdoDays(S, shift, rdoCount, seed) {
  * Place RDOs for one line.
  * No block: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
  * Block 2–4: checked days sit inside a rotating consecutive block. Flex fills only rdoCount − block length.
+ * opts.avoidDays, when passed, keeps non-pin days off days already taken. Omit it for the legacy pick.
  * Split Start2/End2 is time-only; this does not read segments.
  */
-export function assignRdoDays(S, shift, rdoCount, seed) {
+export function assignRdoDays(S, shift, rdoCount, seed, opts) {
   var count = Math.max(1, Math.min(6, rdoCount || 2));
   var s = Number(seed);
   if (!Number.isFinite(s)) s = 0;
   s = Math.abs(Math.floor(s));
-  var placed = assignBlockRdos(shift, count, s);
+  var placed = assignBlockRdos(shift, count, s, opts);
   if (placed) return placed;
   return legacyRdoDays(S, shift, count, s);
 }
@@ -306,7 +307,7 @@ export function attachShiftMath(S) {
   S.rdoModeActive = rdoModeActive;
   S.normalizeRdoBlock = normalizeRdoBlock;
   S.normalizeRdoPins = normalizeRdoPins;
-  S.assignRdoDays = function (shift, rdoCount, seed) { return assignRdoDays(S, shift, rdoCount, seed); };
+  S.assignRdoDays = function (shift, rdoCount, seed, opts) { return assignRdoDays(S, shift, rdoCount, seed, opts); };
   S.rdoCountForShift = function (shift, empClass) { return rdoCountForShift(S, shift, empClass); };
   S.normalizeShift = function (raw, index) { return normalizeShift(S, raw, index); };
   S.getBandKey = function (shiftId) { return getBandKey(S, shiftId); };

@@ -1,7 +1,7 @@
 import assert from "node:assert";
 import { attachShiftMath, assignRdoDays, consecutiveRdos } from "../modules/setup-panel/utils/shiftMath.js";
-import { lockedRdoNotes, placedRdosOk } from "../modules/setup-panel/utils/rdoBlock.js";
-import { buildLines } from "../modules/setup-panel/utils/buildLines.js";
+import { lockedRdoNotes, placedRdosOk, assignBlockRdos } from "../modules/setup-panel/utils/rdoBlock.js";
+import { buildLines, buildSupervisoryLines } from "../modules/setup-panel/utils/buildLines.js";
 import { buildScheduleForLine } from "../modules/setup-panel/actions/generate.js";
 import { attachGenerate } from "../modules/setup-panel/actions/generate.js";
 import { generateClass } from "../modules/setup-panel/utils/classGenerate.js";
@@ -315,5 +315,141 @@ R.state.shifts[0].rdoPins = [1, 4];
 R.respinSelectedSlices(["5x8 · FT TSO · M"], { keepSeed: true, nonce: 2 });
 assert.deepStrictEqual(R.state.lines[0].rdoDays, keptDays);
 assert.notDeepStrictEqual(R.state.lines[0].rdoDays, []);
+
+function sharedDays(lines) {
+  var acc = lines[0].rdoDays.slice();
+  for (var i = 1; i < lines.length; i++) {
+    acc = acc.filter(function (d) { return lines[i].rdoDays.indexOf(Number(d)) >= 0; });
+  }
+  return acc.map(Number).sort(function (a, b) { return a - b; });
+}
+
+function supHost(shifts, counts) {
+  return {
+    state: {
+      stsoM: counts.stsoM || 0,
+      stsoF: counts.stsoF || 0,
+      ltsoM: counts.ltsoM || 0,
+      ltsoF: counts.ltsoF || 0,
+      issues: [],
+      activeSeed: counts.activeSeed,
+      shifts: shifts,
+      shiftCrewGroups: counts.groups || []
+    },
+    shiftLabel: function (s) { return s.name; },
+    DAYS: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
+  };
+}
+
+function pinShift(id, paid, pin, force) {
+  return {
+    id: id,
+    name: id,
+    start: "06:00",
+    end: paid >= 10 ? "16:30" : "14:30",
+    paid: paid,
+    stsoForce: force,
+    ltsoForce: force,
+    rdoBlock: 2,
+    rdoPins: [pin],
+    rdoPinRequired: true
+  };
+}
+
+function assertStsoPinPair(lines, pin, rdoLen) {
+  assert.strictEqual(lines.length, 2);
+  lines.forEach(function (line) {
+    assert.strictEqual(line.empClass, "STSO");
+    assert.ok(line.rdoDays.indexOf(pin) >= 0, line.lineCode + " missing pin");
+    assert.strictEqual(line.rdoDays.length, rdoLen);
+    var win = containingBlock(line.rdoDays, pin, 2);
+    assert.ok(win, "block missing " + line.rdoDays);
+    assert.ok(isConsecutiveBlock(win));
+    assert.strictEqual(weekendOnly(win), false);
+  });
+  assert.deepStrictEqual(sharedDays(lines), [pin]);
+}
+
+assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 0).block, [1, 2]);
+assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 1).block, [2, 3]);
+assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 0).flex, [5]);
+
+var seededSame = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 0, { avoidDays: [] });
+assert.deepStrictEqual(seededSame.rdoDays, [1, 2]);
+var seededOther = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 0, { avoidDays: seededSame.rdoDays });
+assert.deepStrictEqual(seededOther.rdoDays, [2, 3]);
+var seededNone = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 4, { avoidDays: [1, 2, 3] });
+assert.strictEqual(seededNone.ok, false);
+assert.ok(String(seededNone.error).indexOf("non-pin") >= 0);
+
+var flexA = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 0, { avoidDays: [] });
+assert.ok(flexA.flex.indexOf(3) < 0, "flex ate the complementary day " + flexA.flex);
+var flexB = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 0, { avoidDays: flexA.rdoDays });
+assert.strictEqual(flexB.ok, true);
+assert.deepStrictEqual(
+  flexA.rdoDays.filter(function (d) { return flexB.rdoDays.indexOf(d) >= 0; }).sort(),
+  [2]
+);
+
+var thuA = assignBlockRdos({ rdoBlock: 2, rdoPins: [4] }, 2, 0, { avoidDays: [] });
+var thuB = assignBlockRdos({ rdoBlock: 2, rdoPins: [4] }, 2, 0, { avoidDays: thuA.rdoDays });
+assert.deepStrictEqual(thuA.block, [3, 4]);
+assert.deepStrictEqual(thuB.block, [4, 5]);
+
+function placePair(paid, pin, how) {
+  var force = how === "one" ? 2 : 1;
+  var shifts = how === "one"
+    ? [pinShift("S1", paid, pin, force)]
+    : [pinShift("S1", paid, pin, force), pinShift("S2", paid, pin, force)];
+  if (how === "band") {
+    shifts[0].crewGroupId = "cg";
+    shifts[1].crewGroupId = "cg";
+  }
+  var counts = how === "one" ? { S1: 2 } : { S1: 1, S2: 1 };
+  var host = supHost(shifts, { stsoM: 1, stsoF: 1 });
+  return { host: host, lines: buildSupervisoryLines(host, counts, "STSO") };
+}
+
+["one", "split", "band"].forEach(function (how) {
+  var pair8 = placePair(8, 2, how);
+  assertStsoPinPair(pair8.lines, 2, 2);
+  assert.strictEqual(pair8.host.state.issues.length, 0, how + " 5x8 issues");
+  var pair10 = placePair(10, 2, how);
+  assertStsoPinPair(pair10.lines, 2, 3);
+  assert.strictEqual(pair10.host.state.issues.length, 0, how + " 4x10 issues " + pair10.host.state.issues);
+});
+
+var thuLines = placePair(8, 4, "split").lines;
+assertStsoPinPair(thuLines, 4, 2);
+
+var seenWindows = {};
+for (var sweep = 0; sweep < 24; sweep++) {
+  var shifts = [pinShift("S1", 10, 2, 2)];
+  var host = supHost(shifts, { stsoM: 2, stsoF: 0, activeSeed: sweep });
+  var swept = buildSupervisoryLines(host, { S1: 2 }, "STSO");
+  assertStsoPinPair(swept, 2, 3);
+  swept.forEach(function (line) {
+    seenWindows[keyOf(containingBlock(line.rdoDays, 2, 2))] = true;
+  });
+}
+assert.ok(seenWindows["1-2"] && seenWindows["2-3"], "seeds did not rotate " + Object.keys(seenWindows));
+
+var crowdShifts = [pinShift("S1", 8, 2, 3)];
+var crowd = supHost(crowdShifts, { stsoM: 2, stsoF: 1 });
+var crowdLines = buildSupervisoryLines(crowd, { S1: 3 }, "STSO");
+assert.strictEqual(crowdLines.length, 2);
+assert.deepStrictEqual(sharedDays(crowdLines), [2]);
+assert.ok(crowd.state.issues.some(function (msg) { return msg.indexOf("non-pin") >= 0; }));
+assert.ok(crowdLines.every(function (line) { return line.rdoDays.length === 2; }));
+
+var ltsoHost = supHost(
+  [pinShift("S1", 8, 2, 1), pinShift("S2", 8, 2, 1)],
+  { ltsoM: 2 }
+);
+var ltsoLines = buildSupervisoryLines(ltsoHost, { S1: 1, S2: 1 }, "LTSO");
+assert.strictEqual(ltsoLines.length, 2);
+assert.deepStrictEqual(ltsoLines[0].rdoDays, [1, 2]);
+assert.deepStrictEqual(ltsoLines[1].rdoDays, [1, 2]);
+assert.ok(sharedDays(ltsoLines).length > 1);
 
 console.log("ALL CONSTRAINT-DAY RDO MODE TESTS PASSED");

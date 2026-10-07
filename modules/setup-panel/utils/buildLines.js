@@ -1,6 +1,6 @@
 /** Turn allocated headcounts into bid lines. */
 import { assignRdoDays } from "./shiftMath.js";
-import { placedRdosOk } from "./rdoBlock.js";
+import { placedRdosOk, normalizeRdoPins } from "./rdoBlock.js";
 
 export function createPRNG(seed) {
   var s = (seed >>> 0) || 1;
@@ -332,8 +332,10 @@ export function buildSupervisoryLines(S, supCounts, supType) {
     bands[slot.bandKey].push(slot);
   });
 
-  // Pass 1: Assign RDO seeds per bandKey round-robin using seeded offset
+  // Pass 1: Assign RDO seeds per bandKey round-robin using seeded offset.
+  // STSO pin blocks may share the pin only. Non-pin days stay exclusive across bands.
   var rdoRejects = {};
+  var stsoTaken = [];
   Object.keys(bands).forEach(function (bk) {
     var bSlots = bands[bk];
     var seedOffset = prng ? Math.floor(prng() * 7) : 0;
@@ -343,7 +345,14 @@ export function buildSupervisoryLines(S, supCounts, supType) {
       var rdoCount = 7 - workDays;
       slot.rdoSeed = seedIdx % 7;
       seedIdx++;
-      var placed = assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
+      var exclusive = !isLtso && normalizeRdoPins(slot.def).length > 0;
+      var placed = assignRdoDays(
+        S,
+        slot.def,
+        rdoCount,
+        slot.rdoSeed,
+        exclusive ? { avoidDays: stsoTaken } : undefined
+      );
       if (!placedRdosOk(placed)) {
         noteRejectedRdos(S, placed, slot.def.name || slot.def.id || "shift", rdoRejects);
         slot.rdoDays = null;
@@ -351,6 +360,11 @@ export function buildSupervisoryLines(S, supCounts, supType) {
       }
       slot.rdoDays = placed.rdoDays;
       slot.rdoHard = placed.hard;
+      if (!isLtso) {
+        placed.rdoDays.forEach(function (d) {
+          if (stsoTaken.indexOf(d) < 0) stsoTaken.push(d);
+        });
+      }
     });
   });
 
