@@ -13,12 +13,12 @@ export function attachAllocation(S) {
   S.allocateShiftHeadcounts = function (totalPeople, openMin, closeMin) {
     return allocateShiftHeadcounts(S, totalPeople, openMin, closeMin);
   };
-  S.allocateSupervisoryHeadcounts = function (totalSup, openMin, closeMin, forceField, tsoLines) {
-    return allocateSupervisoryHeadcounts(S, totalSup, openMin, closeMin, forceField, tsoLines);
+  S.allocateSupervisoryHeadcounts = function (totalSup, openMin, closeMin, forceField, tsoLines, partnerLines) {
+    return allocateSupervisoryHeadcounts(S, totalSup, openMin, closeMin, forceField, tsoLines, partnerLines);
   };
   S.buildLines = function (counts) { return buildLines(S, counts); };
-  S.buildSupervisoryLines = function (supCounts, supType) {
-    return buildSupervisoryLines(S, supCounts, supType);
+  S.buildSupervisoryLines = function (supCounts, supType, opts) {
+    return buildSupervisoryLines(S, supCounts, supType, opts);
   };
   S.readCertConfigFromDom = function () { return readCertConfigFromDom(S); };
   S.clearLineFunctions = function () { return clearLineFunctions(S); };

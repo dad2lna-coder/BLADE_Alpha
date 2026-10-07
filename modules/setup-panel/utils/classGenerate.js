@@ -243,8 +243,11 @@ export function generateClass(S, classKey, perShiftTargets) {
       if (ltsoTotal > 0) {
         var origLtsoM = S.state.ltsoM, origLtsoF = S.state.ltsoF;
         S.state.ltsoM = remLtsoM; S.state.ltsoF = remLtsoF;
-        var ltsoAlloc = S.allocateSupervisoryHeadcounts(ltsoTotal, openMin, closeMin, "ltsoForce", allExisting);
-        newClassLines = S.buildSupervisoryLines(ltsoAlloc.counts || {}, "LTSO");
+        var partners = allExisting.filter(function (l) {
+          return l && (l.isStso || l.empClass === "STSO" || l.position === "STSO");
+        });
+        var ltsoAlloc = S.allocateSupervisoryHeadcounts(ltsoTotal, openMin, closeMin, "ltsoForce", allExisting, partners);
+        newClassLines = S.buildSupervisoryLines(ltsoAlloc.counts || {}, "LTSO", { partners: partners });
         S.state.ltsoM = origLtsoM; S.state.ltsoF = origLtsoF;
       }
     } else if (classKey === "TSO") {

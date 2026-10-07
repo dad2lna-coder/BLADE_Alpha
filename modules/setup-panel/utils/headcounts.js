@@ -54,7 +54,7 @@ export function allocateShiftHeadcounts(S, totalPeople, openMin, closeMin) {
   return { counts: counts, mode: "heuristic" };
 }
 
-export function allocateSupervisoryHeadcounts(S, totalSup, openMin, closeMin, forceField, tsoLines) {
+export function allocateSupervisoryHeadcounts(S, totalSup, openMin, closeMin, forceField, tsoLines, partnerLines) {
   var slots = operatingSlots(openMin, closeMin);
   var eligible = (S.state.shifts || []).filter(function (s) {
     return S.shiftOverlapsWindow(s, openMin, closeMin);
@@ -86,7 +86,16 @@ export function allocateSupervisoryHeadcounts(S, totalSup, openMin, closeMin, fo
       if (l.isStso || l.isLtso) return;
       tsoOn[l.shiftId] = (tsoOn[l.shiftId] || 0) + 1;
     });
+    var partnerOn = {};
+    if (partnerLines && partnerLines.length) {
+      partnerLines.forEach(function (l) {
+        if (!l || !l.shiftId) return;
+        partnerOn[l.shiftId] = (partnerOn[l.shiftId] || 0) + 1;
+      });
+    }
+    var usePartners = partnerLines && partnerLines.length && freeShifts.some(function (s) { return partnerOn[s.id]; });
     var weights = freeShifts.map(function (s) {
+      if (usePartners) return partnerOn[s.id] || 0;
       if (tsoOn[s.id] > 0) return tsoOn[s.id];
       var w = 0;
       slots.forEach(function (slot) { if (S.shiftCoversSlot(s.id, slot)) w++; });
@@ -94,8 +103,11 @@ export function allocateSupervisoryHeadcounts(S, totalSup, openMin, closeMin, fo
     });
     var wsum = weights.reduce(function (a, b) { return a + b; }, 0) || 1;
     var assigned = 0;
+    var lastPositive = 0;
+    weights.forEach(function (w, i) { if (w > 0) lastPositive = i; });
     freeShifts.forEach(function (s, i) {
-      if (i === freeShifts.length - 1) counts[s.id] = (counts[s.id] || 0) + (freePool - assigned);
+      if (weights[i] <= 0) return;
+      if (i === lastPositive) counts[s.id] = (counts[s.id] || 0) + (freePool - assigned);
       else {
         var n = Math.floor((freePool * weights[i]) / wsum);
         counts[s.id] = (counts[s.id] || 0) + n;

@@ -149,6 +149,19 @@ export function generate(S) {
     S.state.issues.push(msg);
   });
 
+  var stsoTotal = Math.max(0, (S.state.stsoM + S.state.stsoF) - lockedStso.length);
+  var stsoLines = [];
+  if (stsoTotal > 0) {
+    var stsoAlloc = S.allocateSupervisoryHeadcounts(stsoTotal, openMin, closeMin, "stsoForce", []);
+    stsoLines = S.buildSupervisoryLines(stsoAlloc.counts || {}, "STSO");
+  }
+  var ltsoTotal = Math.max(0, (S.state.ltsoM + S.state.ltsoF) - lockedLtso.length);
+  var ltsoLines = [];
+  var stsoPartners = lockedStso.concat(stsoLines);
+  if (ltsoTotal > 0) {
+    var ltsoAlloc = S.allocateSupervisoryHeadcounts(ltsoTotal, openMin, closeMin, "ltsoForce", [], stsoPartners);
+    ltsoLines = S.buildSupervisoryLines(ltsoAlloc.counts || {}, "LTSO", { partners: stsoPartners });
+  }
   var tsoLines = [];
   var mode = "extras";
   if (total > 0) {
@@ -158,19 +171,6 @@ export function generate(S) {
     tsoLines = S.buildLines(counts);
   }
   S.state.mode = mode;
-
-  var ltsoTotal = Math.max(0, (S.state.ltsoM + S.state.ltsoF) - lockedLtso.length);
-  var ltsoLines = [];
-  if (ltsoTotal > 0) {
-    var ltsoAlloc = S.allocateSupervisoryHeadcounts(ltsoTotal, openMin, closeMin, "ltsoForce", tsoLines);
-    ltsoLines = S.buildSupervisoryLines(ltsoAlloc.counts || {}, "LTSO");
-  }
-  var stsoTotal = Math.max(0, (S.state.stsoM + S.state.stsoF) - lockedStso.length);
-  var stsoLines = [];
-  if (stsoTotal > 0) {
-    var stsoAlloc = S.allocateSupervisoryHeadcounts(stsoTotal, openMin, closeMin, "stsoForce", tsoLines);
-    stsoLines = S.buildSupervisoryLines(stsoAlloc.counts || {}, "STSO");
-  }
   var extraLines = S.buildExtraPositionLines ? S.buildExtraPositionLines() : [];
   var trainingLines = S.buildTrainingClassLines ? S.buildTrainingClassLines() : [];
 

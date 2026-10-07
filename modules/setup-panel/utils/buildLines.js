@@ -2,6 +2,100 @@
 import { assignRdoDays } from "./shiftMath.js";
 import { placedRdosOk, normalizeRdoPins } from "./rdoBlock.js";
 
+function dutySpread(counts) {
+  var lo = counts[0], hi = counts[0];
+  for (var i = 1; i < 7; i++) {
+    if (counts[i] < lo) lo = counts[i];
+    if (counts[i] > hi) hi = counts[i];
+  }
+  return hi - lo;
+}
+
+function addDutyDays(counts, rdoDays) {
+  var next = counts.slice();
+  var off = {};
+  (rdoDays || []).forEach(function (d) { off[Number(d)] = true; });
+  for (var d = 0; d < 7; d++) if (!off[d]) next[d]++;
+  return next;
+}
+
+/** Try the seed and the next six. Keep the pattern that flattens weekday coverage. Seed wins ties. */
+function pickBalancedRdos(S, def, rdoCount, seed, avoid, scoreOf) {
+  var best = null;
+  var bestScore = Infinity;
+  var bestK = 99;
+  var lastFail = null;
+  for (var k = 0; k < 7; k++) {
+    var placed = assignRdoDays(
+      S,
+      def,
+      rdoCount,
+      (seed + k) % 7,
+      avoid ? { avoidDays: avoid } : undefined
+    );
+    if (!placedRdosOk(placed)) { lastFail = placed; continue; }
+    var score = scoreOf(placed.rdoDays);
+    if (score < bestScore || (score === bestScore && k < bestK)) {
+      best = placed;
+      bestScore = score;
+      bestK = k;
+    }
+  }
+  return best || lastFail;
+}
+
+function hourGrid(S, shifts) {
+  if (!S || typeof S.shiftCoversSlot !== "function" || typeof S.timeToMin !== "function") return null;
+  if (!S.state || !S.state.open || !S.state.close) return null;
+  var openMin = S.timeToMin(S.state.open);
+  var closeMin = S.timeToMin(S.state.close);
+  if (!(closeMin > openMin)) return null;
+  var slots = [];
+  for (var t = openMin; t < closeMin; t += 30) slots.push(t);
+  var coverable = [];
+  for (var i = 0; i < slots.length; i++) {
+    var hit = false;
+    for (var s = 0; s < shifts.length; s++) {
+      if (S.shiftCoversSlot(shifts[s].id, slots[i])) { hit = true; break; }
+    }
+    coverable.push(hit);
+  }
+  if (!coverable.some(function (h) { return h; })) return null;
+  var grid = [];
+  for (var d = 0; d < 7; d++) {
+    grid[d] = [];
+    for (var j = 0; j < slots.length; j++) grid[d][j] = 0;
+  }
+  return { slots: slots, coverable: coverable, grid: grid };
+}
+
+function paintHourGrid(S, hg, shiftId, rdoDays, sign) {
+  var off = {};
+  (rdoDays || []).forEach(function (d) { off[Number(d)] = true; });
+  for (var d = 0; d < 7; d++) {
+    if (off[d]) continue;
+    for (var i = 0; i < hg.slots.length; i++) {
+      if (!hg.coverable[i]) continue;
+      if (S.shiftCoversSlot(shiftId, hg.slots[i], d)) hg.grid[d][i] += sign;
+    }
+  }
+}
+
+function hourSpread(hg, shiftId, covers) {
+  var lo = Infinity, hi = -Infinity;
+  for (var d = 0; d < 7; d++) {
+    for (var i = 0; i < hg.slots.length; i++) {
+      if (!hg.coverable[i]) continue;
+      if (shiftId && covers && !covers(shiftId, hg.slots[i])) continue;
+      var v = hg.grid[d][i];
+      if (v < lo) lo = v;
+      if (v > hi) hi = v;
+    }
+  }
+  if (lo === Infinity) return 0;
+  return hi - lo;
+}
+
 export function createPRNG(seed) {
   var s = (seed >>> 0) || 1;
   return function () {
@@ -161,6 +255,7 @@ export function buildLines(S, counts) {
 
   var lines = [], id = 1;
   var rdoRejects = {};
+  var hourCov = hourGrid(S, shifts);
 
   // Interleave slots by RDO seeds within each band using seeded bucket shuffle
   Object.keys(bands).forEach(function (bk) {
@@ -229,7 +324,14 @@ export function buildLines(S, counts) {
       // Compute correct workDays and rdoDays based on assigned empClass (FT vs PT)
       var workDays = S.targetWorkDays(slot.def.id, person.empClass);
       var rdoCount = 7 - workDays;
-      var placed = assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
+      var placed = hourCov
+        ? pickBalancedRdos(S, slot.def, rdoCount, slot.rdoSeed, null, function (rdoDays) {
+            paintHourGrid(S, hourCov, slot.def.id, rdoDays, 1);
+            var spread = hourSpread(hourCov, slot.def.id, S.shiftCoversSlot);
+            paintHourGrid(S, hourCov, slot.def.id, rdoDays, -1);
+            return spread;
+          })
+        : assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
       if (!placedRdosOk(placed)) {
         noteRejectedRdos(S, placed, def.name || def.id || "shift", rdoRejects);
         slot.person = null;
@@ -237,6 +339,7 @@ export function buildLines(S, counts) {
       }
       slot.rdoDays = placed.rdoDays;
       slot.rdoHard = placed.hard;
+      if (hourCov) paintHourGrid(S, hourCov, slot.def.id, placed.rdoDays, 1);
     });
   });
 
@@ -268,11 +371,15 @@ export function buildLines(S, counts) {
   return lines;
 }
 
-function takeSupervisoryFromPools(pools, targetFShare, placed) {
+function takeSupervisoryFromPools(pools, targetFShare, placed, preferSex) {
   placed = placed || { M: 0, F: 0 };
   function take(sex) {
     if (pools[sex] > 0) { pools[sex]--; return sex; }
     return null;
+  }
+  if (preferSex === "M" || preferSex === "F") {
+    var preferred = take(preferSex);
+    if (preferred) return preferred;
   }
   if (pools.M <= 0 && pools.F <= 0) return null;
   if (pools.M <= 0) return take("F");
@@ -285,8 +392,9 @@ function takeSupervisoryFromPools(pools, targetFShare, placed) {
   return pools.M >= pools.F ? take("M") : take("F");
 }
 
-export function buildSupervisoryLines(S, supCounts, supType) {
+export function buildSupervisoryLines(S, supCounts, supType, opts) {
   var isLtso = supType === "LTSO";
+  var partners = (opts && opts.partners) || [];
   var pools = {
     M: isLtso ? (S.state.ltsoM || 0) : (S.state.stsoM || 0),
     F: isLtso ? (S.state.ltsoF || 0) : (S.state.stsoF || 0)
@@ -332,10 +440,11 @@ export function buildSupervisoryLines(S, supCounts, supType) {
     bands[slot.bandKey].push(slot);
   });
 
-  // Pass 1: Assign RDO seeds per bandKey round-robin using seeded offset.
+  // Pass 1: RDOs that keep this class's on-duty count even across the week.
   // STSO pin blocks may share the pin only. Non-pin days stay exclusive across bands.
   var rdoRejects = {};
   var stsoTaken = [];
+  var duty = [0, 0, 0, 0, 0, 0, 0];
   Object.keys(bands).forEach(function (bk) {
     var bSlots = bands[bk];
     var seedOffset = prng ? Math.floor(prng() * 7) : 0;
@@ -346,12 +455,13 @@ export function buildSupervisoryLines(S, supCounts, supType) {
       slot.rdoSeed = seedIdx % 7;
       seedIdx++;
       var exclusive = !isLtso && normalizeRdoPins(slot.def).length > 0;
-      var placed = assignRdoDays(
+      var placed = pickBalancedRdos(
         S,
         slot.def,
         rdoCount,
         slot.rdoSeed,
-        exclusive ? { avoidDays: stsoTaken } : undefined
+        exclusive ? stsoTaken : null,
+        function (rdoDays) { return dutySpread(addDutyDays(duty, rdoDays)); }
       );
       if (!placedRdosOk(placed)) {
         noteRejectedRdos(S, placed, slot.def.name || slot.def.id || "shift", rdoRejects);
@@ -360,6 +470,7 @@ export function buildSupervisoryLines(S, supCounts, supType) {
       }
       slot.rdoDays = placed.rdoDays;
       slot.rdoHard = placed.hard;
+      duty = addDutyDays(duty, placed.rdoDays);
       if (!isLtso) {
         placed.rdoDays.forEach(function (d) {
           if (stsoTaken.indexOf(d) < 0) stsoTaken.push(d);
@@ -394,14 +505,35 @@ export function buildSupervisoryLines(S, supCounts, supType) {
       }
     }
 
+    var ltsoSexOnShift = {};
     orderedSlots.forEach(function (slot) {
-      var sex = takeSupervisoryFromPools(pools, targetFShare, placedGlobal);
+      var prefer = null;
+      if (isLtso && partners.length) {
+        var mates = partners.filter(function (l) { return l && l.shiftId === slot.def.id; });
+        var mStso = 0, fStso = 0;
+        mates.forEach(function (l) {
+          if (l.sex === "F") fStso++;
+          else if (l.sex === "M") mStso++;
+        });
+        var have = ltsoSexOnShift[slot.def.id] || { M: 0, F: 0 };
+        var wantF = mStso - have.F;
+        var wantM = fStso - have.M;
+        if (wantF > wantM && pools.F > 0) prefer = "F";
+        else if (wantM > wantF && pools.M > 0) prefer = "M";
+        else if (wantF > 0 && pools.F > 0 && wantM <= 0) prefer = "F";
+        else if (wantM > 0 && pools.M > 0 && wantF <= 0) prefer = "M";
+      }
+      var sex = takeSupervisoryFromPools(pools, targetFShare, placedGlobal, prefer);
       if (!sex) {
         S.state.issues.push(slot.def.name + ": " + supType + " pool empty.");
         return;
       }
       placedGlobal[sex]++;
       slot.sex = sex;
+      if (isLtso) {
+        if (!ltsoSexOnShift[slot.def.id]) ltsoSexOnShift[slot.def.id] = { M: 0, F: 0 };
+        ltsoSexOnShift[slot.def.id][sex]++;
+      }
     });
   });
 

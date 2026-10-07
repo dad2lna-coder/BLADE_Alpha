@@ -333,15 +333,94 @@ test('Grouped shift crew shares RDO and sex balance pool for STSO/LTSO', () => {
 
   assert.equal(lines.length, 4);
 
-  // Round robin RDOs across the crew group: 0, 1, 2, 3
-  const rdo0 = lines.map(l => l.rdoDays[0]);
-  assert.deepEqual(rdo0, [0, 1, 2, 3]);
+  var onDuty = [0, 0, 0, 0, 0, 0, 0];
+  lines.forEach(function (l) {
+    var off = {};
+    (l.rdoDays || []).forEach(function (d) { off[d] = true; });
+    for (var d = 0; d < 7; d++) if (!off[d]) onDuty[d]++;
+  });
+  var lo = Math.min.apply(null, onDuty);
+  var hi = Math.max.apply(null, onDuty);
+  assert.ok(hi - lo <= 1, "STSO on-duty by day " + onDuty.join(","));
 
   // Sexes balanced across group
   const mCount = lines.filter(l => l.sex === 'M').length;
   const fCount = lines.filter(l => l.sex === 'F').length;
   assert.equal(mCount, 2);
   assert.equal(fCount, 2);
+});
+
+test('LTSO sex is the opposite of the STSO on the same shift', () => {
+  const partners = [
+    { shiftId: 'S1', sex: 'M', isStso: true },
+    { shiftId: 'S2', sex: 'F', isStso: true }
+  ];
+  const S = {
+    state: {
+      shifts: [
+        { id: 'S1', name: 'AM', paid: 8 },
+        { id: 'S2', name: 'PM', paid: 8 }
+      ],
+      ltsoM: 1,
+      ltsoF: 1,
+      issues: []
+    },
+    shiftLabel: (s) => s.name,
+    consecutiveRdos: (count, seed) => [seed % 7, (seed + 1) % 7]
+  };
+  const lines = buildSupervisoryLines(S, { S1: 1, S2: 1 }, 'LTSO', { partners: partners });
+  assert.equal(lines.length, 2);
+  const am = lines.find(l => l.shiftId === 'S1');
+  const pm = lines.find(l => l.shiftId === 'S2');
+  assert.equal(am.sex, 'F');
+  assert.equal(pm.sex, 'M');
+});
+
+test('TSO RDOs flatten coverage across hours and weekdays', () => {
+  function timeToMin(t) {
+    const p = String(t).split(':').map(Number);
+    return p[0] * 60 + (p[1] || 0);
+  }
+  const S = {
+    state: {
+      open: '06:00',
+      close: '22:00',
+      shifts: [
+        { id: 'S1', name: 'AM', start: '06:00', end: '14:00', paid: 8 },
+        { id: 'S2', name: 'PM', start: '14:00', end: '22:00', paid: 8 }
+      ],
+      ftM: 4,
+      ftF: 0,
+      ptM: 0,
+      ptF: 0,
+      issues: []
+    },
+    targetWorkDays: () => 5,
+    shiftLabel: (s) => s.name,
+    timeToMin: timeToMin,
+    shiftCoversSlot: (id, slot) => {
+      const sh = id === 'S1' ? [6 * 60, 14 * 60] : [14 * 60, 22 * 60];
+      return slot >= sh[0] && slot < sh[1];
+    },
+    consecutiveRdos: (count, seed) => [seed % 7, (seed + 1) % 7]
+  };
+  const lines = buildLines(S, { S1: 2, S2: 2 });
+  assert.equal(lines.length, 4);
+  const slots = [];
+  for (let t = 6 * 60; t < 22 * 60; t += 30) slots.push(t);
+  let lo = Infinity, hi = -Infinity;
+  for (let d = 0; d < 7; d++) {
+    slots.forEach((slot) => {
+      let n = 0;
+      lines.forEach((l) => {
+        if ((l.rdoDays || []).indexOf(d) >= 0) return;
+        if (S.shiftCoversSlot(l.shiftId, slot)) n++;
+      });
+      if (n < lo) lo = n;
+      if (n > hi) hi = n;
+    });
+  }
+  assert.ok(hi - lo <= 1, 'hour-day spread ' + (hi - lo));
 });
 
 test('Proportional PT placement distributes PT across multiple non-long shifts and keeps long shifts FT-only', () => {
