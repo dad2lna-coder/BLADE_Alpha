@@ -108,6 +108,157 @@ export function consecutiveRdos(count, start) {
   return out;
 }
 
+
+/** "off" | "4x10" | "5x8". Unknown values stay off so legacy hard RDOs keep working. */
+export function normalizeRdoMode(raw) {
+  var m = "";
+  if (raw && typeof raw === "object") m = raw.rdoMode != null ? String(raw.rdoMode) : "";
+  else if (raw != null) m = String(raw);
+  m = m.trim().toLowerCase();
+  if (m === "4x10" || m === "4\u00d710" || m === "pair" || m === "consecutive") return "4x10";
+  if (m === "5x8" || m === "5\u00d78" || m === "adjacent" || m === "adj") return "5x8";
+  return "off";
+}
+
+/** Sun=0 … Sat=6, or null when unset. */
+export function normalizeConstraintDay(raw) {
+  var v = raw;
+  if (raw && typeof raw === "object") v = raw.rdoConstraint;
+  if (v == null || v === "") return null;
+  var n = Number(v);
+  if (Number.isInteger(n) && n >= 0 && n <= 6) return n;
+  return null;
+}
+
+export function rdoModeActive(shift) {
+  return normalizeRdoMode(shift) !== "off" && normalizeConstraintDay(shift) != null;
+}
+
+function sortDays(days) {
+  return days.slice().sort(function (a, b) { return a - b; });
+}
+
+/** Consecutive blocks of `length` that do not contain the constraint day. Wraps Sat–Sun. */
+export function consecutiveBlocksDisjoint(constraint, length) {
+  var n = Math.max(1, Math.min(6, length || 1));
+  var blocks = [];
+  for (var start = 0; start < 7; start++) {
+    var block = [];
+    var hits = false;
+    for (var i = 0; i < n; i++) {
+      var d = (start + i) % 7;
+      if (d === constraint) { hits = true; break; }
+      block.push(d);
+    }
+    if (!hits) blocks.push(block);
+  }
+  return blocks;
+}
+
+/**
+ * 5×8 valid pairs inside {day before, constraint, day after}.
+ * Stable order so a line seed rotates them: before+pin, pin+after, before+after.
+ */
+export function adjacentRdoPatterns(constraint) {
+  var prev = (constraint + 6) % 7;
+  var next = (constraint + 1) % 7;
+  return [
+    [prev, constraint],
+    [constraint, next],
+    [prev, next]
+  ];
+}
+
+function daysFor4x10(constraint, rdoCount, seed) {
+  var n = Math.max(1, Math.min(6, rdoCount || 3));
+  if (n === 1) return [constraint];
+  var blocks = consecutiveBlocksDisjoint(constraint, n - 1);
+  var block = blocks.length ? blocks[Math.abs(seed) % blocks.length] : [];
+  var days = [constraint];
+  block.forEach(function (d) {
+    if (days.indexOf(d) < 0) days.push(d);
+  });
+  return sortDays(days);
+}
+
+function daysFor5x8(constraint, rdoCount, seed) {
+  var prev = (constraint + 6) % 7;
+  var next = (constraint + 1) % 7;
+  var n = Math.max(1, Math.min(6, rdoCount || 2));
+  var s = Math.abs(seed) || 0;
+  if (n === 1) return [constraint];
+  if (n === 2) {
+    var patterns = adjacentRdoPatterns(constraint);
+    return sortDays(patterns[s % patterns.length]);
+  }
+  var days = [prev, constraint, next];
+  if (n === 3) return sortDays(days);
+  var left = prev;
+  var right = next;
+  var step = 0;
+  while (days.length < n && days.length < 7 && step < 14) {
+    if ((s + step) % 2 === 0) {
+      right = (right + 1) % 7;
+      if (days.indexOf(right) < 0) days.push(right);
+    } else {
+      left = (left + 6) % 7;
+      if (days.indexOf(left) < 0) days.push(left);
+    }
+    step++;
+  }
+  return sortDays(days);
+}
+
+function legacyRdoDays(S, shift, rdoCount, seed) {
+  var hard = Array.isArray(shift && shift.rdoHard)
+    ? shift.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
+    : [];
+  var rdoDays;
+  if (hard.length > 0) {
+    rdoDays = hard.slice();
+    if (rdoDays.length < rdoCount) {
+      for (var d = 0; d < 7 && rdoDays.length < rdoCount; d++) {
+        if (rdoDays.indexOf(d) < 0) rdoDays.push(d);
+      }
+    }
+  } else if (S && S.consecutiveRdos) {
+    rdoDays = S.consecutiveRdos(rdoCount, seed);
+  } else {
+    rdoDays = consecutiveRdos(rdoCount, seed);
+  }
+  while (rdoDays.length < rdoCount) {
+    var before = rdoDays.length;
+    for (var e = 0; e < 7 && rdoDays.length < rdoCount; e++) {
+      if (rdoDays.indexOf(e) < 0) rdoDays.push(e);
+    }
+    if (rdoDays.length === before) break;
+  }
+  return { rdoDays: rdoDays, hard: hard.length > 0, mode: "off" };
+}
+
+/**
+ * Place RDOs for one line.
+ * Mode off: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
+ * 4×10: constraint day is always off; the other days are one rotating consecutive block.
+ * 5×8: both days are a valid pair around the constraint (before / after / both).
+ * Split Start2/End2 is time-only; this does not read segments.
+ */
+export function assignRdoDays(S, shift, rdoCount, seed) {
+  var count = Math.max(1, Math.min(6, rdoCount || 2));
+  var mode = normalizeRdoMode(shift);
+  var constraint = normalizeConstraintDay(shift);
+  var s = Number(seed);
+  if (!Number.isFinite(s)) s = 0;
+  s = Math.abs(Math.floor(s));
+  if (mode === "4x10" && constraint != null) {
+    return { rdoDays: daysFor4x10(constraint, count, s), hard: false, mode: mode, constraint: constraint };
+  }
+  if (mode === "5x8" && constraint != null) {
+    return { rdoDays: daysFor5x8(constraint, count, s), hard: false, mode: mode, constraint: constraint };
+  }
+  return legacyRdoDays(S, shift, count, s);
+}
+
 export function rdoCountForShift(S, shift, empClass) {
   var work = targetWorkDays(S, shift && shift.id, empClass || "FT");
   return Math.max(1, 7 - work);
@@ -189,9 +340,13 @@ export function normalizeShift(S, raw, index) {
   if (["auto", "opening", "am", "pm", "closing"].indexOf(phase) < 0) phase = "auto";
   var crewGroupId = raw && raw.crewGroupId ? String(raw.crewGroupId) : "";
 
+  var rdoMode = normalizeRdoMode(raw);
+  var rdoConstraint = normalizeConstraintDay(raw);
+
   var result = {
     id: id, name: name, start: start, end: end, paid: paid,
     force: force, ltsoForce: ltsoForce, stsoForce: stsoForce, rdoHard: rdoHard,
+    rdoMode: rdoMode, rdoConstraint: rdoConstraint,
     dayTimes: dayTimes, phase: phase, crewGroupId: crewGroupId
   };
   if (segments) result.segments = segments;
@@ -222,6 +377,10 @@ export function attachShiftMath(S) {
   S.shiftOverlapsWindow = function (s, openMin, closeMin) { return shiftOverlapsWindow(S, s, openMin, closeMin); };
   S.targetWorkDays = function (shiftId, empClass) { return targetWorkDays(S, shiftId, empClass); };
   S.consecutiveRdos = consecutiveRdos;
+  S.normalizeRdoMode = normalizeRdoMode;
+  S.normalizeConstraintDay = normalizeConstraintDay;
+  S.rdoModeActive = rdoModeActive;
+  S.assignRdoDays = function (shift, rdoCount, seed) { return assignRdoDays(S, shift, rdoCount, seed); };
   S.rdoCountForShift = function (shift, empClass) { return rdoCountForShift(S, shift, empClass); };
   S.normalizeShift = function (raw, index) { return normalizeShift(S, raw, index); };
   S.getBandKey = function (shiftId) { return getBandKey(S, shiftId); };

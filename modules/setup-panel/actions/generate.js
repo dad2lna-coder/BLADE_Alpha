@@ -1,5 +1,6 @@
 /** Setup owns generate: snapshot inputs, then run allocation + line schedule. */
 import { parseStartDate, addDays, weekdaySun0 } from "../../shared/utils/dates.js";
+import { rdoModeActive } from "../utils/shiftMath.js";
 
 export function buildScheduleForLine(S, line, days) {
   var arr = [];
@@ -51,6 +52,10 @@ export function generate(S) {
     return;
   }
   S.state.shifts.forEach(function (s) {
+    if (rdoModeActive(s)) return;
+    if (s.rdoMode && s.rdoMode !== "off" && (s.rdoConstraint == null || s.rdoConstraint === "")) {
+      S.state.issues.push(s.name + ": RDO mode is on but no constraint day is set. Using legacy RDOs.");
+    }
     if (!s.rdoHard || !s.rdoHard.length) return;
     var need = S.rdoCountForShift(s, "FT");
     if (s.rdoHard.length !== need) {

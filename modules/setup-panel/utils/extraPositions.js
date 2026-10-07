@@ -1,4 +1,5 @@
 /** Extra / add-on types — Setup owns cards, shift parking, and line build. */
+import { assignRdoDays } from "./shiftMath.js";
 
 function num0(v) {
   var n = Number(v);
@@ -180,28 +181,8 @@ function extraEmpClass(def, S) {
 
 function rdoDaysFor(S, def, workDays, seed) {
   var rdoCount = Math.max(1, 7 - workDays);
-  var hard = Array.isArray(def && def.rdoHard)
-    ? def.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
-    : [];
-  var rdoDays;
-  if (hard.length > 0) {
-    rdoDays = hard.slice();
-    if (rdoDays.length < rdoCount) {
-      for (var d = 0; d < 7 && rdoDays.length < rdoCount; d++) {
-        if (rdoDays.indexOf(d) < 0) rdoDays.push(d);
-      }
-    }
-  } else if (S && S.consecutiveRdos) {
-    rdoDays = S.consecutiveRdos(rdoCount, seed);
-  } else {
-    rdoDays = [0, 6];
-  }
-  while (rdoDays.length < rdoCount) {
-    for (var e = 0; e < 7 && rdoDays.length < rdoCount; e++) {
-      if (rdoDays.indexOf(e) < 0) rdoDays.push(e);
-    }
-  }
-  return { rdoDays: rdoDays, hard: hard.length > 0 };
+  var placed = assignRdoDays(S, def, rdoCount, seed);
+  return { rdoDays: placed.rdoDays, hard: placed.hard };
 }
 
 import { getBandKey, createPRNG, seededShuffle } from "./buildLines.js";

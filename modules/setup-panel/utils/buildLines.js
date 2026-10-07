@@ -1,4 +1,5 @@
 /** Turn allocated headcounts into bid lines. */
+import { assignRdoDays } from "./shiftMath.js";
 
 export function createPRNG(seed) {
   var s = (seed >>> 0) || 1;
@@ -68,18 +69,7 @@ function makeLineFromPerson(S, def, person, id) {
   var workDays = S.targetWorkDays(def.id, person.empClass);
   var rdoCount = 7 - workDays;
   var seed = (id - 1) % 7;
-  var hard = Array.isArray(def.rdoHard)
-    ? def.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
-    : [];
-  var rdoDays;
-  if (hard.length > 0) {
-    rdoDays = hard.slice();
-    if (rdoDays.length < rdoCount) {
-      for (var d = 0; d < 7 && rdoDays.length < rdoCount; d++) {
-        if (rdoDays.indexOf(d) < 0) rdoDays.push(d);
-      }
-    }
-  } else rdoDays = S.consecutiveRdos(rdoCount, seed);
+  var placed = assignRdoDays(S, def, rdoCount, seed);
   return {
     id: id,
     lineCode: "Line " + String(id).padStart(3, "0"),
@@ -89,8 +79,8 @@ function makeLineFromPerson(S, def, person, id) {
     empClass: person.empClass,
     sex: person.sex,
     function: "",
-    rdoDays: rdoDays,
-    rdoHard: hard.length > 0,
+    rdoDays: placed.rdoDays,
+    rdoHard: placed.hard,
     paid: person.empClass === "PT"
       ? (function () {
           var hours = +(S.state && S.state.ptHoursPerDay);
@@ -226,21 +216,9 @@ export function buildLines(S, counts) {
       // Compute correct workDays and rdoDays based on assigned empClass (FT vs PT)
       var workDays = S.targetWorkDays(slot.def.id, person.empClass);
       var rdoCount = 7 - workDays;
-      var hard = Array.isArray(slot.def.rdoHard)
-        ? slot.def.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
-        : [];
-      if (hard.length > 0) {
-        slot.rdoDays = hard.slice();
-        if (slot.rdoDays.length < rdoCount) {
-          for (var d = 0; d < 7 && slot.rdoDays.length < rdoCount; d++) {
-            if (slot.rdoDays.indexOf(d) < 0) slot.rdoDays.push(d);
-          }
-        }
-        slot.rdoHard = true;
-      } else {
-        slot.rdoDays = S.consecutiveRdos(rdoCount, slot.rdoSeed);
-        slot.rdoHard = false;
-      }
+      var placed = assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
+      slot.rdoDays = placed.rdoDays;
+      slot.rdoHard = placed.hard;
     });
   });
 
@@ -343,23 +321,11 @@ export function buildSupervisoryLines(S, supCounts, supType) {
     bSlots.forEach(function (slot) {
       var workDays = (+slot.def.paid || 8) >= 10 ? 4 : 5;
       var rdoCount = 7 - workDays;
-      var hard = Array.isArray(slot.def.rdoHard)
-        ? slot.def.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
-        : [];
       slot.rdoSeed = seedIdx % 7;
       seedIdx++;
-      if (hard.length > 0) {
-        slot.rdoDays = hard.slice();
-        if (slot.rdoDays.length < rdoCount) {
-          for (var d = 0; d < 7 && slot.rdoDays.length < rdoCount; d++) {
-            if (slot.rdoDays.indexOf(d) < 0) slot.rdoDays.push(d);
-          }
-        }
-        slot.rdoHard = true;
-      } else {
-        slot.rdoDays = S.consecutiveRdos(rdoCount, slot.rdoSeed);
-        slot.rdoHard = false;
-      }
+      var placed = assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
+      slot.rdoDays = placed.rdoDays;
+      slot.rdoHard = placed.hard;
     });
   });
 

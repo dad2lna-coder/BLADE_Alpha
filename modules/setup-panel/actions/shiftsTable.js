@@ -1,6 +1,49 @@
 /** Setup-tab shifts table + day-times modal. */
+import { assignRdoDays, normalizeRdoMode, normalizeConstraintDay } from "../utils/shiftMath.js";
 export function attachShiftsTable(S) {
   if (!S) return;
+
+  S.rdoModeHtml = function (shift) {
+    var mode = normalizeRdoMode(shift);
+    var day = normalizeConstraintDay(shift);
+    var on = mode !== "off";
+    var id = String(shift && shift.id || "shift").replace(/[^A-Za-z0-9_-]/g, "");
+    var days = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    var modes = [
+      { value: "off", label: "Off" },
+      { value: "4x10", label: "4×10" },
+      { value: "5x8", label: "5×8" }
+    ];
+    var modeHtml = modes.map(function (opt) {
+      var checked = mode === opt.value ? " checked" : "";
+      return (
+        '<label class="rdo-mode-opt" title="' + (opt.value === "off"
+          ? "Legacy hard RDOs and soft consecutive days"
+          : opt.value === "4x10"
+            ? "Pin the constraint day off. Other two RDOs are a rotating consecutive pair."
+            : "Two RDOs stay in the window around the constraint day. Patterns rotate by line.") + '">' +
+        '<input type="radio" name="rdo-mode-' + id + '" data-f="rdoMode" value="' + opt.value + '"' + checked + " />" +
+        "<span>" + opt.label + "</span></label>"
+      );
+    }).join("");
+    var dayHtml = days.map(function (label, d) {
+      var checked = day === d ? " checked" : "";
+      var dis = on ? "" : " disabled";
+      return (
+        '<label class="rdo-chk" title="Constraint day ' + label + '">' +
+        '<input type="radio" name="rdo-c-' + id + '" data-constraint="' + d + '"' + checked + dis + " />" +
+        "<span>" + label.charAt(0) + "</span></label>"
+      );
+    }).join("");
+    return (
+      '<div class="rdo-mode" data-on="' + (on ? "1" : "0") + '">' +
+      '<div class="rdo-mode-switch" role="radiogroup" aria-label="RDO mode">' + modeHtml + "</div>" +
+      '<div class="rdo-mode-day">' +
+      '<span class="rdo-mode-kicker">Day</span>' +
+      '<div class="rdo-row rdo-constraint" role="radiogroup" aria-label="Constraint day">' + dayHtml + "</div>" +
+      "</div></div>"
+    );
+  };
 
   S.rdoChecksHtml = function (selected) {
     var set = new Set((selected || []).map(Number));
@@ -60,6 +103,11 @@ export function attachShiftsTable(S) {
         var cb = tr.querySelector('[data-rdo="' + d + '"]');
         if (cb && cb.checked) rdoHard.push(d);
       }
+      var modeEl = tr.querySelector('input[data-f="rdoMode"]:checked');
+      var rdoMode = normalizeRdoMode(modeEl ? modeEl.value : (existing && existing.rdoMode));
+      var cEl = tr.querySelector("input[data-constraint]:checked");
+      var rdoConstraint = cEl ? Number(cEl.getAttribute("data-constraint")) : normalizeConstraintDay(existing);
+      if (rdoMode !== "off" && rdoConstraint == null) rdoConstraint = 2;
       var dayTimes = existing && existing.dayTimes ? existing.dayTimes : null;
       var phaseEl = tr.querySelector("[data-f=phase]");
       var phase = (phaseEl && phaseEl.value) || (existing && existing.phase) || "auto";
@@ -69,6 +117,7 @@ export function attachShiftsTable(S) {
       var sObj = {
         id: id, name: name, start: segments ? segments[0].start : start, end: segments ? segments[1].end : end, paid: paid,
         force: force, ltsoForce: ltsoForce, stsoForce: stsoForce, rdoHard: rdoHard,
+        rdoMode: rdoMode, rdoConstraint: rdoConstraint,
         dayTimes: dayTimes, phase: phase, crewGroupId: crewGroupId
       };
       if (segments) sObj.segments = segments;
@@ -178,6 +227,7 @@ export function attachShiftsTable(S) {
         '<td><input type="number" data-f="ltsoForce" min="0" value="' + (s.ltsoForce || 0) + '" style="width:4rem" title="LTSO force" /></td>' +
         '<td><input type="number" data-f="stsoForce" min="0" value="' + (s.stsoForce || 0) + '" style="width:4rem" title="STSO force" /></td>' +
         '<td><div class="rdo-row">' + S.rdoChecksHtml(s.rdoHard) + "</div></td>" +
+        "<td>" + S.rdoModeHtml(s) + "</td>" +
         '<td style="white-space:nowrap">' +
           '<button type="button" class="' + daysCls + '" data-day-times="' + s.id + '" title="' + daysTitle + '">Day times…</button> ' +
           '<button type="button" class="btn btn-red" data-remove="' + s.id + '">✕</button>' +
@@ -186,6 +236,22 @@ export function attachShiftsTable(S) {
         '</tr>'
       );
     }).join("");
+
+    tbody.querySelectorAll('input[data-f="rdoMode"]').forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        var tr = radio.closest("tr");
+        if (!tr || !radio.checked) return;
+        var on = radio.value !== "off";
+        var wrap = tr.querySelector(".rdo-mode");
+        if (wrap) wrap.setAttribute("data-on", on ? "1" : "0");
+        var days = tr.querySelectorAll("input[data-constraint]");
+        days.forEach(function (c) { c.disabled = !on; });
+        if (on && !tr.querySelector("input[data-constraint]:checked")) {
+          var tue = tr.querySelector('input[data-constraint="2"]');
+          if (tue) tue.checked = true;
+        }
+      });
+    });
 
     tbody.querySelectorAll("select[data-f=crewGroupId]").forEach(function (sel) {
       sel.addEventListener("change", function () {
@@ -218,7 +284,8 @@ export function attachShiftsTable(S) {
     S.state.shifts = S.state.shifts || [];
     S.state.shifts.push({
       id: id, name: "Shift", start: "08:00", end: "16:30", paid: 8,
-      force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: []
+      force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [],
+      rdoMode: "off", rdoConstraint: null
     });
     S.renderShiftsTable();
   };
@@ -593,6 +660,11 @@ export function attachShiftsTable(S) {
         var workDays = S.targetWorkDays ? S.targetWorkDays(l.shiftId, l.empClass) : ((+l.paid || 8) >= 10 ? 4 : 5);
         var rdoCount = Math.max(1, 7 - workDays);
         var sh = S.getShift ? S.getShift(l.shiftId) : null;
+        var placed = assignRdoDays(S, sh || {}, rdoCount, rdoSeed);
+        if (placed.mode !== "off") {
+          l.rdoDays = placed.rdoDays;
+          l.rdoHard = false;
+        } else {
         var hard = (sh && Array.isArray(sh.rdoHard) && sh.rdoHard.length > 0)
           ? sh.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
           : (l.rdoHard && Array.isArray(l.rdoDays) ? l.rdoDays : []);
@@ -613,6 +685,7 @@ export function attachShiftsTable(S) {
         } else {
           l.rdoDays = [(rdoSeed) % 7, (rdoSeed + 1) % 7];
           l.rdoHard = false;
+        }
         }
 
         // Update schedule array for this line

@@ -3,6 +3,7 @@
  */
 import { buildScheduleForLine } from "../actions/generate.js";
 import { assignCertPoolsToLines } from "./certAssign.js";
+import { assignRdoDays } from "./shiftMath.js";
 
 export function belongsToClass(line, classKey) {
   if (!line) return false;
@@ -400,15 +401,7 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
 
   var workDays = S.targetWorkDays ? S.targetWorkDays(shift.id, empClass) : ((+shift.paid || 8) >= 10 ? 4 : 5);
   var rdoCount = 7 - workDays;
-  var hard = Array.isArray(shift.rdoHard)
-    ? shift.rdoHard.map(Number).filter(function (x) { return x >= 0 && x <= 6; })
-    : [];
-  var rdoDays = hard.length > 0 ? hard.slice() : (S.consecutiveRdos ? S.consecutiveRdos(rdoCount, id % 7) : [0, 6]);
-  while (rdoDays.length < rdoCount) {
-    for (var d = 0; d < 7 && rdoDays.length < rdoCount; d++) {
-      if (rdoDays.indexOf(d) < 0) rdoDays.push(d);
-    }
-  }
+  var placed = assignRdoDays(S, shift, rdoCount, id % 7);
 
   var line = {
     id: id,
@@ -428,8 +421,8 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
     sex: isTrain ? "" : sex,
     function: isShortfall ? "-" : (isTrain ? "TRAINING" : "PAX"),
     isShortfall: !!isShortfall,
-    rdoDays: rdoDays,
-    rdoHard: hard.length > 0,
+    rdoDays: placed.rdoDays,
+    rdoHard: placed.hard,
     paid: linePaid
   };
   if (opsFte !== undefined) {
