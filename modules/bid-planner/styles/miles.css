@@ -1,0 +1,354 @@
+/* Portfolio month grid. Scoped to the miles view so eBid is untouched. */
+
+#tab-bid-planner #bp-miles-root {
+  --miles-ink: #1c2834;
+  --miles-navy: #003366;
+  --miles-navy-deep: #002244;
+  --miles-wash: #e6f0fa;
+  --miles-teal: #0f6e6e;
+  --miles-line: #c5ced6;
+  --miles-paper: #f7f4ee;
+  --miles-card: #fffdf8;
+  --miles-danger: #9f2d16;
+  --miles-ok: #0d6b45;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  color: var(--miles-ink);
+  font-family: "Segoe UI", "Avenir Next", "Trebuchet MS", sans-serif;
+}
+
+#tab-bid-planner #bp-miles-root h2,
+#tab-bid-planner #bp-miles-root h3 {
+  margin: 0;
+  color: var(--miles-navy);
+  letter-spacing: 0.01em;
+}
+
+#tab-bid-planner #bp-miles-root h2 {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+#tab-bid-planner #bp-miles-root h3 {
+  font-size: 1rem;
+  margin-bottom: 10px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-head .bp-subtitle {
+  margin-top: 4px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-status {
+  min-height: 1.2em;
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 650;
+  color: var(--miles-navy);
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-top {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 14px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-panel {
+  background: var(--miles-card);
+  border: 1px solid var(--miles-line);
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 1px 0 rgba(0, 51, 102, 0.04);
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-form,
+#tab-bid-planner #bp-miles-root .bp-miles-dynamic {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-dynamic {
+  grid-column: 1 / -1;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-form {
+  margin-bottom: 12px;
+}
+
+#tab-bid-planner #bp-miles-root label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--miles-navy);
+}
+
+#tab-bid-planner #bp-miles-root input,
+#tab-bid-planner #bp-miles-root select {
+  font: inherit;
+  font-weight: 500;
+  color: var(--miles-ink);
+  background: #fff;
+  border: 1px solid var(--miles-line);
+  border-radius: 4px;
+  padding: 6px 8px;
+  min-width: 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-btn {
+  appearance: none;
+  border: 0;
+  border-radius: 4px;
+  background: var(--miles-navy);
+  color: #fff;
+  font: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-btn:hover {
+  background: var(--miles-navy-deep);
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-btn-teal { background: var(--miles-teal); }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-teal:hover { background: #0a5555; }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-green { background: #1f7a46; }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-green:hover { background: #176338; }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-indigo { background: #3d2a78; }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-indigo:hover { background: #2c1d5c; }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-muted { background: #3d4a55; }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-danger { background: var(--miles-danger); }
+#tab-bid-planner #bp-miles-root .bp-miles-btn-danger:hover { background: #7d2210; }
+
+#tab-bid-planner #bp-miles-root .bp-miles-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 72px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-empty {
+  margin: 0;
+  color: #5c6b76;
+  font-size: 0.9rem;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  background: var(--miles-wash);
+  border-left: 4px solid var(--miles-navy);
+  border-radius: 4px;
+  padding: 8px 10px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-item strong {
+  display: block;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-item span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  color: #4d5d6a;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-item-actions {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-cal-head,
+#tab-bid-planner #bp-miles-root .bp-miles-month {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-cal-head h3,
+#tab-bid-planner #bp-miles-root .bp-miles-month {
+  margin-bottom: 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-cal-head .bp-miles-actions {
+  margin-top: 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-month {
+  justify-content: center;
+  margin: 10px 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-month span {
+  min-width: 140px;
+  text-align: center;
+  font-weight: 750;
+  font-size: 1.05rem;
+  color: var(--miles-navy);
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 3px;
+  background: var(--miles-navy);
+  padding: 3px;
+  border-radius: 6px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-dow {
+  background: var(--miles-wash);
+  color: var(--miles-navy);
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 750;
+  padding: 4px 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-cell {
+  background: #fff;
+  min-height: 88px;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-cell.is-pad {
+  background: #eef2f5;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-day {
+  font-size: 0.72rem;
+  font-weight: 750;
+  color: #6b7780;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-event {
+  display: block;
+  width: 100%;
+  margin-top: 3px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 3px;
+  color: #fff;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 650;
+  line-height: 1.2;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-table-wrap {
+  overflow-x: auto;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.84rem;
+  margin-top: 8px;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-table th,
+#tab-bid-planner #bp-miles-root .bp-miles-table td {
+  padding: 8px;
+  border-bottom: 1px solid #e4e0d8;
+  text-align: left;
+  vertical-align: middle;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-table th {
+  background: var(--miles-navy);
+  color: #fff;
+  font-weight: 700;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-name {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font-weight: 650;
+  padding: 2px 0;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-offset {
+  font-weight: 750;
+  color: var(--miles-navy);
+  white-space: nowrap;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-badge {
+  display: inline-block;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eae6ff;
+  color: #403294;
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-badge.is-ok {
+  background: #e3fcef;
+  color: var(--miles-ok);
+}
+
+#tab-bid-planner #bp-miles-root .bp-miles-badge.is-bad {
+  background: #ffebe6;
+  color: var(--miles-danger);
+}
+
+@media (max-width: 900px) {
+  #tab-bid-planner #bp-miles-root .bp-miles-top {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 720px) {
+  #tab-bid-planner #bp-miles-root .bp-miles-cell {
+    min-height: 58px;
+    padding: 2px;
+  }
+  #tab-bid-planner #bp-miles-root .bp-miles-event {
+    font-size: 0.58rem;
+    padding: 1px 2px;
+  }
+  #tab-bid-planner #bp-miles-root .bp-miles-dow {
+    font-size: 0.62rem;
+  }
+  #tab-bid-planner #bp-miles-root .bp-miles-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media print {
+  #tab-bid-planner #bp-miles-root .bp-miles-panel:not(.bp-miles-printable),
+  #tab-bid-planner #bp-miles-root .bp-miles-btn,
+  #tab-bid-planner #bp-miles-root .bp-miles-form,
+  #tab-bid-planner #bp-miles-root .bp-miles-actions,
+  #tab-bid-planner #bp-miles-root .bp-miles-status {
+    display: none !important;
+  }
+  #tab-bid-planner #bp-miles-root .bp-miles-cell {
+    min-height: 96px;
+  }
+}

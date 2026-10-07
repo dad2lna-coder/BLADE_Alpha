@@ -107,160 +107,103 @@
   </div>
 
   <div id="bp-miles-root" hidden>
-  <div class="bp-header card">
-    <div class="bp-title-bar">
-      <h2>BID PLANNER — DETERMINISTIC BID SCHEDULER</h2>
-      <div class="bp-badge">CONFIG-DRIVEN ENGINE</div>
+    <div class="bp-miles-head">
+      <h2>Portfolio Scheduler & Master Calendar</h2>
+      <p class="bp-subtitle">CHAOS portfolio shell. Add a leave or shift bid and read it on the month grid. This view keeps its own list and does not touch the staffing session.</p>
     </div>
-    <p class="bp-subtitle">Calculate milestone dates for Leave and Shift Bids from Announcement and/or Execution anchor dates.</p>
-  </div>
+    <p class="bp-miles-status" data-miles="status" role="status"></p>
 
-  <!-- CONTROL PANEL CARD -->
-  <div class="bp-controls-card card">
-    <div class="bp-form-grid">
-      <div class="bp-field">
-        <label for="bp-bid-type">Bid Type</label>
-        <select id="bp-bid-type" class="console-select"></select>
+    <div class="bp-miles-top">
+      <section class="bp-miles-panel">
+        <h3>Add Bid Event to Master Shell</h3>
+        <div class="bp-miles-form">
+          <label>Location
+            <input data-miles="location" type="text" value="DAL" maxlength="8" autocomplete="off" spellcheck="false" />
+          </label>
+          <label>Bid Type
+            <select data-miles="bid-type">
+              <option value="Leave Bid">Annual Leave Bid</option>
+              <option value="Shift Bid">Shift Bid</option>
+            </select>
+          </label>
+          <label>Airport Category
+            <select data-miles="airport-cat">
+              <option value="X_I">CAT X & I</option>
+              <option value="III_IV">CAT III & IV</option>
+            </select>
+          </label>
+          <label>Duration (Days)
+            <input data-miles="duration" type="number" value="1" min="1" />
+          </label>
+          <label>Live Bid Start
+            <input data-miles="anchor" type="date" value="2026-10-14" />
+          </label>
+          <label>Planning Start
+            <input data-miles="planning" type="date" />
+          </label>
+          <div data-miles="dynamic" class="bp-miles-dynamic"></div>
+        </div>
+        <button type="button" class="bp-miles-btn" data-miles="add">Add to Portfolio</button>
+      </section>
+
+      <section class="bp-miles-panel">
+        <h3>Active Portfolio Shell</h3>
+        <div data-miles="portfolio" class="bp-miles-list"></div>
+        <div class="bp-miles-actions">
+          <input data-miles="json-file" type="file" accept=".json,application/json" hidden />
+          <button type="button" class="bp-miles-btn bp-miles-btn-muted" data-miles="import-json">Import JSON</button>
+          <button type="button" class="bp-miles-btn bp-miles-btn-teal" data-miles="export-json">Export JSON</button>
+          <input data-miles="excel-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" hidden />
+          <button type="button" class="bp-miles-btn bp-miles-btn-green" data-miles="import-excel">Import Excel</button>
+        </div>
+      </section>
+    </div>
+
+    <section class="bp-miles-panel bp-miles-printable">
+      <div class="bp-miles-cal-head">
+        <h3>Portfolio Master Calendar</h3>
+        <div class="bp-miles-actions">
+          <button type="button" class="bp-miles-btn bp-miles-btn-muted" data-miles="print">Print Dashboard</button>
+          <button type="button" class="bp-miles-btn" data-miles="ics">Export ICS</button>
+        </div>
       </div>
-
-      <div class="bp-field">
-        <label for="bp-rule-set">Rule Set</label>
-        <select id="bp-rule-set" class="console-select"></select>
+      <div class="bp-miles-month">
+        <button type="button" class="bp-miles-btn" data-miles="prev" aria-label="Previous month"><</button>
+        <span data-miles="month"></span>
+        <button type="button" class="bp-miles-btn" data-miles="next" aria-label="Next month">></button>
       </div>
+      <div class="bp-miles-grid" data-miles="grid"></div>
+    </section>
 
-      <div class="bp-field">
-        <label for="bp-announcement-date">Announcement Date (Anchor 1)</label>
-        <input type="date" id="bp-announcement-date" class="console-input" />
+    <section class="bp-miles-panel">
+      <h3>SharePoint & Excel Exports</h3>
+      <div class="bp-miles-actions">
+        <button type="button" class="bp-miles-btn bp-miles-btn-teal" data-miles="copy-features">Copy Features</button>
+        <button type="button" class="bp-miles-btn bp-miles-btn-teal" data-miles="copy-work">Copy Work Items</button>
+        <button type="button" class="bp-miles-btn bp-miles-btn-indigo" data-miles="export-excel">Download Excel (.xlsx)</button>
       </div>
+    </section>
 
-      <div class="bp-field">
-        <label for="bp-execution-date">Execution Date (Anchor 2)</label>
-        <input type="date" id="bp-execution-date" class="console-input" />
+    <section class="bp-miles-panel bp-miles-printable" data-miles="inspect" hidden>
+      <div class="bp-miles-cal-head">
+        <h3 data-miles="inspect-title">Inspecting Milestones</h3>
+        <button type="button" class="bp-miles-btn bp-miles-btn-muted" data-miles="print-list">Print Current List</button>
       </div>
-
-      <div class="bp-field">
-        <label for="bp-adj-strategy">Non-Valid Date Strategy</label>
-        <select id="bp-adj-strategy" class="console-select">
-          <option value="previous">Previous Valid Business Day</option>
-          <option value="next">Next Valid Business Day</option>
-        </select>
+      <div class="bp-miles-table-wrap">
+        <table class="bp-miles-table">
+          <thead>
+            <tr>
+              <th>Work Item Name</th>
+              <th>Type</th>
+              <th>Target Date (Adjustable)</th>
+              <th>Current Day Count Offset</th>
+              <th>Compliance Check</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody data-miles="inspect-body"></tbody>
+        </table>
       </div>
-    </div>
-
-    <div class="bp-button-bar">
-      <button type="button" id="bp-btn-generate" class="btn btn-amber">Generate Schedule</button>
-      <button type="button" id="bp-btn-clear" class="btn">Clear Anchors</button>
-      <input type="file" id="bp-file-import-cal" accept=".csv,.json" style="display: none;" />
-      <button type="button" id="bp-btn-import-cal" class="btn">Import Calendar (CSV/JSON)</button>
-      <button type="button" id="bp-btn-export-csv" class="btn" disabled>Export Schedule (CSV)</button>
-      <button type="button" id="bp-btn-export-json" class="btn" disabled>Export Schedule (JSON)</button>
-    </div>
-  </div>
-
-  <!-- STATUS BANNER -->
-  <div id="bp-status-banner" class="bp-status-banner card" style="display: none;"></div>
-
-  <!-- CONFLICT RESOLUTION SECTION -->
-  <div id="bp-conflict-section" class="card bp-card-conflict" style="display: none;">
-    <div class="bp-card-header">
-      <h3>CALENDAR CONFLICTS DETECTED</h3>
-    </div>
-    <div id="bp-conflict-list" class="bp-conflict-list"></div>
-  </div>
-
-  <!-- MOVE EVENT MODAL / SECTION -->
-  <div id="bp-move-section" class="card bp-card-move" style="display: none;">
-    <div class="bp-card-header">
-      <h3>MOVE REQUIRED EVENT</h3>
-    </div>
-    <div class="bp-form-grid">
-      <div class="bp-field">
-        <label for="bp-move-action-select">Select Event</label>
-        <select id="bp-move-action-select" class="console-select"></select>
-      </div>
-      <div class="bp-field">
-        <label for="bp-move-new-date">New Date</label>
-        <input type="date" id="bp-move-new-date" class="console-input" />
-      </div>
-      <div class="bp-field bp-field-align-bottom">
-        <button type="button" id="bp-btn-validate-move" class="btn btn-cyan">Validate Move Consequences</button>
-      </div>
-    </div>
-    <div id="bp-move-consequences" class="bp-consequences-box" style="display: none;"></div>
-    <div class="bp-button-bar" style="margin-top: 0.5rem;">
-      <button type="button" id="bp-btn-confirm-move" class="btn btn-amber" style="display: none;">Confirm & Accept Move</button>
-      <button type="button" id="bp-btn-cancel-move" class="btn">Cancel</button>
-    </div>
-  </div>
-
-  <!-- SCHEDULE TABLE CARD -->
-  <div class="bp-schedule-card card">
-    <div class="bp-card-header">
-      <h3>CALCULATED BID TIMELINE SCHEDULE</h3>
-      <span id="bp-row-count" class="bp-chip">0 Actions</span>
-    </div>
-    <div class="bp-table-wrapper">
-      <table id="bp-schedule-table" class="data-table bp-table">
-        <thead>
-          <tr>
-            <th>Seq</th>
-            <th>Action</th>
-            <th>Required Date</th>
-            <th>Calculated From</th>
-            <th>Rule</th>
-            <th>Direction</th>
-            <th>Adjusted?</th>
-            <th>Adjustment Reason</th>
-            <th>Conflict</th>
-            <th>Status</th>
-            <th>Notes</th>
-          </tr>
-        </thead>
-        <tbody id="bp-schedule-tbody">
-          <tr>
-            <td colspan="11" class="bp-empty-msg">No schedule generated yet. Enter anchor date(s) above and click "Generate Schedule".</td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-
-  <!-- CONFIGURATION EDITOR CARD -->
-  <div class="bp-config-card card">
-    <div class="bp-card-header">
-      <h3>RULES & CALENDAR CONFIGURATION EDITOR</h3>
-      <span class="bp-chip">JSON SCHEMA VALIDATED</span>
-    </div>
-
-    <div class="bp-config-tabs">
-      <button type="button" id="bp-tab-btn-rules" class="bp-tab-btn active">Rules Config (JSON)</button>
-      <button type="button" id="bp-tab-btn-calendar" class="bp-tab-btn">Calendar Config (JSON)</button>
-    </div>
-
-    <!-- RULES EDITOR PANEL -->
-    <div id="bp-panel-rules-json" class="bp-config-panel active">
-      <textarea id="bp-json-rules" class="console-textarea" rows="12" spellcheck="false"></textarea>
-      <div class="bp-button-bar">
-        <button type="button" id="bp-btn-apply-rules" class="btn btn-amber">Apply Rules JSON</button>
-
-        <button type="button" id="bp-btn-reset-rules" class="btn">Reset to Bundled Defaults</button>
-        <button type="button" id="bp-btn-download-rules" class="btn">Download Rules JSON</button>
-        <input type="file" id="bp-file-upload-rules" accept=".json" style="display: none;" />
-        <button type="button" id="bp-btn-upload-rules" class="btn">Upload Rules JSON</button>
-      </div>
-    </div>
-
-    <!-- CALENDAR EDITOR PANEL -->
-    <div id="bp-panel-calendar-json" class="bp-config-panel" style="display: none;">
-      <textarea id="bp-json-calendar" class="console-textarea" rows="12" spellcheck="false"></textarea>
-      <div class="bp-button-bar">
-        <button type="button" id="bp-btn-apply-calendar" class="btn btn-amber">Apply Calendar JSON</button>
-        <button type="button" id="bp-btn-reset-calendar" class="btn">Reset to Bundled Defaults</button>
-        <button type="button" id="bp-btn-download-calendar" class="btn">Download Calendar JSON</button>
-        <input type="file" id="bp-file-upload-calendar" accept=".json" style="display: none;" />
-        <button type="button" id="bp-btn-upload-calendar" class="btn">Upload Calendar JSON</button>
-      </div>
-    </div>
-  </div>
+    </section>
   </div>
 </div>

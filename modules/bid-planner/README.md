@@ -11,12 +11,12 @@ The Bid Planner tab opens on **eBid Upload**. It builds the v3 **45-column BidLi
 - Bid Line ID is the Line column from the lines table (`Line 001` stays `Line 001`). eBid allows 8 characters.
 - DFO exports as certification **DUAL**. Training lines use shift type Training.
 - An empty session stays empty. JSON or a lines CSV (Team / Line / Sun–Sat) is a fallback only. An already-exported 45-column eBid file is rejected.
-- **Milestone Calendar** (announcement / execution anchors) remains the second view on this tab.
+- **Milestone Calendar** is the CHAOS portfolio and month grid (the dropped spec is `Future_Modules/BIDPLANNER.html`). Bids persist in `localStorage` under `blade.bid-planner.portfolio`. Excel uses the shell ExcelJS library, not a SheetJS CDN.
 
 ## Overview
-The **milestone calendar** is a deterministic, config-driven bid scheduling engine integrated into BLADE. It calculates key milestone dates for bid operations (e.g. Leave Bids, Shift Bids) based on structured JSON rule sets and calendar configurations.
+The **milestone calendar** view is the portfolio shell: add a leave or shift bid, keep the list, and read every milestone on a month grid. Logic is split under `js/miles/` (`portfolio`, `calendar-grid`, `milestones`, `importExport`) and bound by `bindMilesUI`. It does not keep a second staffing session.
 
-The milestone engine operates independently of staffing lines. The eBid upload path reads the live lines.
+The older announcement / execution rule engine (`js/scheduler.js`, `js/calendar.js`, `js/rules.js`, and the siblings tested by `tests/test-bid-planner.mjs`) is still in the module. It is not the miles surface.
 
 ---
 

@@ -2,13 +2,13 @@
  * Bid Planner Module Entry Point
  */
 
-import { bindBidPlannerUI } from "./js/ui.js";
+import { bindMilesUI } from "./js/miles/bind.js";
 import { bindEbidUI } from "./js/ebidUi.js";
 
 export function initBidPlanner(scheduler) {
   const S = scheduler || window.Scheduler;
   bindEbidUI(S);
-  bindBidPlannerUI(S);
+  bindMilesUI(S);
 }
 
 export default initBidPlanner;
