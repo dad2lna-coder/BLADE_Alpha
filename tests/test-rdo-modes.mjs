@@ -96,22 +96,21 @@ for (var pin = 0; pin < 7; pin++) {
   for (var pinSeed = 0; pinSeed < 14; pinSeed++) {
     var pinPlaced = assignRdoDays(S, { rdoBlock: 2, rdoPins: [pin], rdoHard: [0, 6] }, 3, pinSeed);
     assert.strictEqual(pinPlaced.ok, true);
-    assert.ok(pinPlaced.block.indexOf(pin) >= 0, "block includes pin " + pin);
+    assert.ok(pinPlaced.block.indexOf(pin) < 0, "4x10 pair swallowed pin " + pin);
     assert.ok(pinPlaced.rdoDays.indexOf(pin) >= 0, "days include pin " + pin);
     assert.strictEqual(pinPlaced.block.length, 2);
     assert.ok(isConsecutiveBlock(pinPlaced.block));
-    assert.strictEqual(pinPlaced.flex.length, 1);
-    assert.ok(pinPlaced.block.indexOf(pinPlaced.flex[0]) < 0);
+    assert.deepStrictEqual(pinPlaced.flex, []);
     assert.strictEqual(pinPlaced.rdoDays.length, 3);
-    if (pin >= 1 && pin <= 4) {
-      assert.strictEqual(weekendOnly(pinPlaced.block), false, "midweek pin " + pin + " slid " + pinPlaced.block);
-      assert.notStrictEqual(keyOf(pinPlaced.block), "5-6");
-      assert.notStrictEqual(keyOf(pinPlaced.block), "0-6");
-    }
     pinKeys[keyOf(pinPlaced.block)] = true;
   }
   assert.ok(Object.keys(pinKeys).length >= 2, "pin " + pin + " rotates");
 }
+
+var tueFriSat = assignRdoDays(S, { rdoBlock: 2, rdoPins: [2] }, 3, 3);
+assert.deepStrictEqual(tueFriSat.block, [5, 6], "Tue pin seed lands on Fri-Sat");
+assert.deepStrictEqual(tueFriSat.rdoDays, [2, 5, 6]);
+assert.ok(tueFriSat.block.indexOf(1) < 0 && tueFriSat.rdoDays.indexOf(1) < 0, "Tuesday pin does not force Monday off");
 
 var missed = assignRdoDays(S, { rdoBlock: 2, rdoPinRequired: true, rdoPins: [], rdoHard: [1, 2] }, 2, 4);
 assert.strictEqual(missed.ok, false);
@@ -155,7 +154,8 @@ var html = rdoConstraintHtml(S, { id: "S1", rdoBlock: 2, rdoPins: [2] });
 });
 assert.ok(html.indexOf(">S<") < 0 && html.indexOf(">T<") < 0, "single-letter S/T collision");
 assert.ok(html.indexOf("always off") >= 0);
-assert.ok(html.indexOf("must include") >= 0);
+assert.ok(html.indexOf("does not have to") >= 0);
+assert.ok(html.indexOf("must include") < 0);
 assert.strictEqual((html.match(/class="rdo-row/g) || []).length, 1);
 assert.ok(html.indexOf('data-pin="2" checked') >= 0);
 
@@ -180,10 +180,12 @@ function patternLines(paid, block, pin, heads) {
     assert.notDeepStrictEqual(line.rdoDays, []);
     assert.ok(line.rdoDays.indexOf(pin) >= 0, line.lineCode);
     assert.strictEqual(line.rdoDays.length, block + Math.max(0, rdoCount - block));
-    var win = containingBlock(line.rdoDays, pin, block);
+    var rest = line.rdoDays.filter(function (d) { return d !== pin; });
+    var outside = rest.length === block && isConsecutiveBlock(rest);
+    var win = outside ? rest.slice().sort(function (a, b) { return a - b; }) : containingBlock(line.rdoDays, pin, block);
     assert.ok(win, "block missing in " + line.rdoDays);
     assert.ok(isConsecutiveBlock(win));
-    if (pin >= 1 && pin <= 4) {
+    if (!outside && pin >= 1 && pin <= 4) {
       assert.strictEqual(weekendOnly(win), false, "weekend home " + win);
       assert.notStrictEqual(keyOf(win), "5-6");
       assert.notStrictEqual(keyOf(win), "0-6");
@@ -201,7 +203,8 @@ assert.ok(tueBlock2by8["2-3"], "5x8 block 2 missing Tue-Wed");
 var tueBlock3by8 = patternLines(8, 3, tue, 8);
 assert.ok(tueBlock3by8["0-1-2"] && tueBlock3by8["1-2-3"] && tueBlock3by8["2-3-4"], "5x8 block 3 " + Object.keys(tueBlock3by8));
 var tueBlock2by10 = patternLines(10, 2, tue, 8);
-assert.ok(tueBlock2by10["1-2"] && tueBlock2by10["2-3"], "4x10 block 2 " + Object.keys(tueBlock2by10));
+assert.ok(tueBlock2by10["5-6"], "4x10 Tue pin can be Fri-Sat " + Object.keys(tueBlock2by10));
+assert.ok(!tueBlock2by10["1-2"] && !tueBlock2by10["2-3"], "4x10 does not glue Monday or Wednesday to Tuesday");
 var tueBlock3by10 = patternLines(10, 3, tue, 8);
 assert.ok(tueBlock3by10["0-1-2"] && tueBlock3by10["1-2-3"] && tueBlock3by10["2-3-4"], "4x10 block 3 " + Object.keys(tueBlock3by10));
 
@@ -231,10 +234,9 @@ var built = {};
 lines.forEach(function (line) {
   assert.ok(line.rdoDays.indexOf(5) >= 0, line.lineCode);
   assert.strictEqual(line.rdoDays.length, 3);
-  var win = containingBlock(line.rdoDays, 5, 2);
-  assert.ok(win, line.rdoDays.join("-"));
-  assert.ok(isConsecutiveBlock(win));
-  built[keyOf(win)] = true;
+  var rest = line.rdoDays.filter(function (d) { return d !== 5; });
+  assert.ok(isConsecutiveBlock(rest), line.rdoDays.join("-"));
+  built[keyOf(rest)] = true;
 });
 assert.ok(Object.keys(built).length >= 2);
 S.state.startDate = "2026-10-04";
@@ -250,7 +252,8 @@ var stale = { id: 8, lineCode: "Line 008", shiftId: "S10", empClass: "FT", rdoDa
 var fresh = { id: 9, lineCode: "Line 009", shiftId: "S10", empClass: "FT", rdoDays: [1, 2, 5] };
 var notes = lockedRdoNotes(lockHost, [stale, fresh]);
 assert.ok(stale.rdoDays.indexOf(5) >= 0);
-assert.ok(containingBlock(stale.rdoDays, 5, 2));
+var staleRest = stale.rdoDays.filter(function (d) { return d !== 5; });
+assert.ok(isConsecutiveBlock(staleRest), stale.rdoDays.join("-"));
 assert.deepStrictEqual(fresh.rdoDays, [1, 2, 5]);
 assert.ok(notes.some(function (n) { return n.indexOf("refreshed") >= 0; }));
 assert.ok(notes.some(function (n) { return n.indexOf("kept") >= 0; }));
@@ -362,17 +365,23 @@ function assertStsoPinPair(lines, pin, rdoLen) {
     assert.strictEqual(line.empClass, "STSO");
     assert.ok(line.rdoDays.indexOf(pin) >= 0, line.lineCode + " missing pin");
     assert.strictEqual(line.rdoDays.length, rdoLen);
-    var win = containingBlock(line.rdoDays, pin, 2);
-    assert.ok(win, "block missing " + line.rdoDays);
-    assert.ok(isConsecutiveBlock(win));
-    assert.strictEqual(weekendOnly(win), false);
+    if (rdoLen === 2) {
+      var win = containingBlock(line.rdoDays, pin, 2);
+      assert.ok(win, "block missing " + line.rdoDays);
+      assert.ok(isConsecutiveBlock(win));
+      assert.strictEqual(weekendOnly(win), false);
+    } else {
+      var rest = line.rdoDays.filter(function (d) { return d !== pin; });
+      assert.ok(isConsecutiveBlock(rest), "4x10 pair " + rest);
+    }
   });
   assert.deepStrictEqual(sharedDays(lines), [pin]);
 }
 
 assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 0).block, [1, 2]);
 assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 1).block, [2, 3]);
-assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 0).flex, [5]);
+assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 3).rdoDays, [2, 5, 6]);
+assert.deepStrictEqual(assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 3).flex, []);
 
 var seededSame = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 0, { avoidDays: [] });
 assert.deepStrictEqual(seededSame.rdoDays, [1, 2]);
@@ -382,10 +391,11 @@ var seededNone = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 2, 4, { avoidDay
 assert.strictEqual(seededNone.ok, false);
 assert.ok(String(seededNone.error).indexOf("non-pin") >= 0);
 
-var flexA = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 0, { avoidDays: [] });
-assert.ok(flexA.flex.indexOf(3) < 0, "flex ate the complementary day " + flexA.flex);
-var flexB = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 0, { avoidDays: flexA.rdoDays });
+var flexA = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 3, { avoidDays: [] });
+assert.deepStrictEqual(flexA.rdoDays, [2, 5, 6]);
+var flexB = assignBlockRdos({ rdoBlock: 2, rdoPins: [2] }, 3, 3, { avoidDays: flexA.rdoDays });
 assert.strictEqual(flexB.ok, true);
+assert.ok(flexB.rdoDays.indexOf(5) < 0 && flexB.rdoDays.indexOf(6) < 0);
 assert.deepStrictEqual(
   flexA.rdoDays.filter(function (d) { return flexB.rdoDays.indexOf(d) >= 0; }).sort(),
   [2]
@@ -429,10 +439,12 @@ for (var sweep = 0; sweep < 24; sweep++) {
   var swept = buildSupervisoryLines(host, { S1: 2 }, "STSO");
   assertStsoPinPair(swept, 2, 3);
   swept.forEach(function (line) {
-    seenWindows[keyOf(containingBlock(line.rdoDays, 2, 2))] = true;
+    var rest = line.rdoDays.filter(function (d) { return d !== 2; });
+    seenWindows[keyOf(rest)] = true;
   });
 }
-assert.ok(seenWindows["1-2"] && seenWindows["2-3"], "seeds did not rotate " + Object.keys(seenWindows));
+assert.ok(seenWindows["5-6"], "seeds did not reach Fri-Sat " + Object.keys(seenWindows));
+assert.ok(Object.keys(seenWindows).length >= 2);
 
 var crowdShifts = [pinShift("S1", 8, 2, 3)];
 var crowd = supHost(crowdShifts, { stsoM: 2, stsoF: 1 });

@@ -165,7 +165,8 @@ function legacyRdoDays(S, shift, rdoCount, seed) {
 /**
  * Place RDOs for one line.
  * No block: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
- * Block 2–4: checked days sit inside a rotating consecutive block. Flex fills only rdoCount − block length.
+ * Block 2–4: a consecutive block, then the pin if it is not already in that block. Flex fills only what is still short.
+ * A 4×10 pin is not glued to the block (Tue + Fri–Sat is legal). A 5×8 pin sits inside the two-day block.
  * opts.avoidDays, when passed, keeps non-pin days off days already taken. Omit it for the legacy pick.
  * Split Start2/End2 is time-only; this does not read segments.
  */

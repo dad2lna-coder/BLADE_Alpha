@@ -1,4 +1,4 @@
-/** Consecutive RDO block. Checked days sit inside the block. Flex fills only what is left. */
+/** Consecutive RDO block. A pin is always off and is not required to sit inside the block. */
 
 function sortDays(days) {
   return days.slice().sort(function (a, b) { return a - b; });
@@ -37,7 +37,7 @@ function pinRequired(raw) {
   return raw.rdoPinRequired === true || raw.rdoPinRequired === 1 || raw.rdoPinRequired === "true" || raw.rdoPinRequired === "1";
 }
 
-/** Circular windows of `length` that contain every pin. Pins are block days. */
+/** Circular windows of `length` that contain every pin. Used when the pin cannot sit outside the block. */
 function blocksContaining(pins, length) {
   var blocks = [];
   if (pins.length > length) return blocks;
@@ -51,6 +51,61 @@ function blocksContaining(pins, length) {
     if (!missing) blocks.push(block);
   }
   return blocks;
+}
+
+/** Circular windows of `length`. */
+function allBlocks(length) {
+  var blocks = [];
+  for (var start = 0; start < 7; start++) {
+    var block = [];
+    for (var i = 0; i < length; i++) block.push((start + i) % 7);
+    blocks.push(block);
+  }
+  return blocks;
+}
+
+function unionCount(block, pins) {
+  var n = block.length;
+  for (var i = 0; i < pins.length; i++) {
+    if (block.indexOf(pins[i]) < 0) n++;
+  }
+  return n;
+}
+
+/**
+ * Windows for this block.
+ * No pin: every consecutive window. Flex fills the rest.
+ * Pin with room (4×10 block 2): the pair stays off the pin, so Tue + Fri–Sat is legal.
+ * Pin with no room (5×8 block 2): the pair has to include the pin.
+ */
+function windowsFor(pins, blockSize, count) {
+  if (!pins.length) return allBlocks(blockSize);
+  var all = allBlocks(blockSize);
+  var disjoint = [];
+  var covering = [];
+  for (var i = 0; i < all.length; i++) {
+    var w = all[i];
+    if (unionCount(w, pins) > count) continue;
+    var misses = true;
+    var covers = true;
+    for (var p = 0; p < pins.length; p++) {
+      if (w.indexOf(pins[p]) < 0) covers = false;
+      else misses = false;
+    }
+    if (misses) disjoint.push(w);
+    else if (covers) covering.push(w);
+  }
+  if (disjoint.length) return disjoint;
+  if (covering.length) return covering;
+  return blocksContaining(pins, blockSize);
+}
+
+function withPins(block, pins) {
+  var days = block.slice();
+  for (var i = 0; i < pins.length; i++) {
+    if (days.indexOf(pins[i]) < 0) days.push(pins[i]);
+  }
+  return days;
 }
 
 /** Flex days rotate through the open days. They do not start at Sunday. */
@@ -94,23 +149,6 @@ function sharesNonPin(days, pins, avoid) {
     if (avoid.indexOf(extra[i]) >= 0) return true;
   }
   return false;
-}
-
-/** How many other windows share nothing but pins with this one. Higher is more complementary. */
-function complementaryScore(win, pins, windows) {
-  var mine = nonPinDays(win, pins);
-  var mineKey = dayKey(win);
-  var score = 0;
-  for (var i = 0; i < windows.length; i++) {
-    if (dayKey(windows[i]) === mineKey) continue;
-    var theirs = nonPinDays(windows[i], pins);
-    var overlap = false;
-    for (var j = 0; j < mine.length; j++) {
-      if (theirs.indexOf(mine[j]) >= 0) { overlap = true; break; }
-    }
-    if (!overlap) score++;
-  }
-  return score;
 }
 
 function protectPartnerDays(block, pins, windows, avoid) {
@@ -159,11 +197,10 @@ function readAvoid(opts) {
 /**
  * Place RDOs when a block size is set.
  * Returns null when this shift is not in the block model.
- * Checked days are block days: every window contains every pin.
- * Flex fills only rdoCount − block.length.
- * opts.avoidDays (STSO only): non-pin days and flex must miss those days.
- * Seed still rotates the start window. A shared non-pin day loses to the next legal window.
- * Complementary windows (Mon–Tue vs Tue–Wed around a pin) are preferred, and flex leaves them open.
+ * The pin is always off. On a 4×10 the consecutive pair does not have to include it
+ * (Tue + Fri–Sat). On a 5×8 the two RDOs are the pair, so the pin sits inside it.
+ * opts.avoidDays (STSO only): non-pin days must miss those days. Seed still picks the
+ * window; a shared non-pin day loses to the next legal one.
  */
 export function assignBlockRdos(shift, rdoCount, seed, opts) {
   var blockSize = normalizeRdoBlock(shift);
@@ -185,7 +222,7 @@ export function assignBlockRdos(shift, rdoCount, seed, opts) {
       pins: []
     };
   }
-  var windows = blocksContaining(pins, blockSize);
+  var windows = windowsFor(pins, blockSize, count);
   if (!windows.length) {
     return {
       ok: false,
@@ -203,25 +240,24 @@ export function assignBlockRdos(shift, rdoCount, seed, opts) {
   var flex = [];
   if (!avoid) {
     block = windows[s % windows.length].slice();
-    if (count - block.length > 0) flex = pickFlex(block, count - block.length, s + 3);
   } else {
-    var bestScore = -1;
-    var pool = [];
+    block = null;
     for (var i = 0; i < windows.length; i++) {
       var w = windows[(s + i) % windows.length];
       if (sharesNonPin(w, pins, avoid)) continue;
-      var need = count - w.length;
-      var protect = need > 0 ? protectPartnerDays(w, pins, windows, avoid) : [];
+      var baseTry = withPins(w, pins);
+      var needTry = count - baseTry.length;
       var picked = [];
-      if (need > 0) {
-        picked = pickExclusiveFlex(w, avoid, protect, need, s + 3);
-        if (picked.length < need) continue;
+      if (needTry > 0) {
+        var protect = protectPartnerDays(w, pins, windows, avoid);
+        picked = pickExclusiveFlex(baseTry, avoid, protect, needTry, s + 3);
+        if (picked.length < needTry) continue;
       }
-      var score = complementaryScore(w, pins, windows);
-      pool.push({ block: w, flex: picked, score: score });
-      if (score > bestScore) bestScore = score;
+      block = w.slice();
+      flex = picked;
+      break;
     }
-    if (!pool.length) {
+    if (!block) {
       return {
         ok: false,
         error: "no RDO window left without a shared non-pin day",
@@ -233,14 +269,9 @@ export function assignBlockRdos(shift, rdoCount, seed, opts) {
         pins: pins.slice()
       };
     }
-    var chosen = pool[0];
-    for (var p = 0; p < pool.length; p++) {
-      if (pool[p].score === bestScore) { chosen = pool[p]; break; }
-    }
-    block = chosen.block.slice();
-    flex = chosen.flex.slice();
   }
-  var days = block.slice();
+  var days = withPins(block, pins);
+  if (!avoid && count - days.length > 0) flex = pickFlex(days, count - days.length, s + 3);
   flex.forEach(function (d) {
     if (days.indexOf(d) < 0) days.push(d);
   });
