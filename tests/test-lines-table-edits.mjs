@@ -1,6 +1,6 @@
 import assert from "node:assert";
 import { initLineHelpers } from "../modules/shared/lines/helpers.js";
-import { initRowModel } from "../modules/lines-table/row-model.js";
+import { initRowModel, dowToScheduleOffset } from "../modules/lines-table/row-model.js";
 
 const Scheduler = {
   state: {
@@ -144,5 +144,48 @@ assert.strictEqual(row103Day.dayStarts[0], "05:30", "Sibling line 103 day 0 star
 
 Scheduler.linesView.filterDuty = "";
 Scheduler.linesView.filterDay = "";
+
+// Wednesday start: column d reads schedule[offset] whose weekdaySun0 is d.
+// 2026-10-07 is Wednesday. Tue (2) lands at offset 6, not under Sat.
+const wedMap = dowToScheduleOffset("2026-10-07", 1);
+assert.strictEqual(wedMap[2], 6, "Tuesday column maps to offset 6 when start is Wednesday");
+assert.strictEqual(wedMap[3], 0, "Wednesday column is the start offset");
+assert.strictEqual(wedMap[0], 4, "Sunday column is offset 4");
+assert.deepStrictEqual(dowToScheduleOffset("2026-03-01", 1), { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6 }, "Sunday start stays identity");
+assert.strictEqual(dowToScheduleOffset("2026-10-05", 1)[2], 1, "Monday start: Tuesday is offset 1");
+
+Scheduler.state.startDate = "2026-10-07";
+const wedLine = {
+  id: "301",
+  lineCode: "L-WED",
+  shiftId: "S1",
+  empClass: "FT",
+  sex: "M",
+  function: "PAX",
+  rdoDays: [2],
+  paid: 8,
+  dayTimes: { "2": { start: "04:00", end: "12:00" } }
+};
+const wedSched = ["WORK", "WORK", "WORK", "WORK", "WORK", "WORK", "RDO"];
+const wedRow = Scheduler.lineToRowModel(wedLine, wedSched, {
+  dayNames: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
+  rotationDutyResolver: function (_id, off) { return off === 6 ? "BAG" : "PAX"; }
+});
+assert.strictEqual(wedRow.days[2], "RDO", "Tue column shows the Tuesday RDO");
+assert.strictEqual(wedRow.dayDuties[2], "OFF", "Tue column duty is OFF");
+assert.strictEqual(wedRow.days[6], "WORK", "Sat column is not the Tuesday offset");
+assert.ok(String(wedRow.rdos).indexOf("Tue") >= 0, "RDOs text names Tue");
+assert.strictEqual(wedRow.days[0], "WORK", "Sun column follows Sunday's offset");
+assert.strictEqual(wedRow.hours, 48, "Six work offsets count");
+assert.strictEqual(wedRow.dayStarts[2], "04:00", "Tue time stays on weekday key, not schedule offset");
+
+const wedWork = ["WORK", "WORK", "WORK", "WORK", "WORK", "WORK", "WORK"];
+const wedDuty = Scheduler.lineToRowModel(Object.assign({}, wedLine, { rdoDays: [] }), wedWork, {
+  rotationDutyResolver: function (_id, off) { return off === 6 ? "BAG" : "PAX"; }
+});
+assert.strictEqual(wedDuty.dayDuties[2], "BAG", "Tue column reads rotation at the Tuesday offset");
+assert.strictEqual(wedDuty.dayDuties[6], "PAX", "Sat column does not read the Tuesday rotation slot");
+
+Scheduler.state.startDate = "2026-03-01";
 
 console.log("ALL LINES TABLE EDIT & FILTER TESTS PASSED SUCCESSFULLY!");

@@ -1,4 +1,22 @@
 /** Pure line-to-row model mapper — export-shaped, DOM-free */
+import { parseStartDate, addDays, weekdaySun0 } from "../shared/utils/dates.js";
+
+/** Column Sun=0…Sat=6 → first schedule offset whose weekday matches. Same idea as Coverage dowToOffset. */
+export function dowToScheduleOffset(startDate, weekCount) {
+  var map = {};
+  if (startDate == null || startDate === "") {
+    for (var i = 0; i < 7; i++) map[i] = i;
+    return map;
+  }
+  var days = Math.min(7, (Number(weekCount) || 1) * 7);
+  var base = parseStartDate(startDate);
+  for (var off = 0; off < days; off++) {
+    var dow = weekdaySun0(addDays(base, off));
+    if (map[dow] == null) map[dow] = off;
+  }
+  return map;
+}
+
 export function initRowModel(S) {
   S = S || window.Scheduler;
   if (!S) return;
@@ -64,6 +82,10 @@ export function initRowModel(S) {
     var paid = line.paid || 0;
     var rowSchedule = Array.isArray(schedule) ? schedule :
       schedule[line.id] || (schedule[String(line.id)] || []);
+    var offMap = dowToScheduleOffset(
+      options.startDate != null ? options.startDate : (S.state && S.state.startDate),
+      options.weekCount != null ? options.weekCount : (S.state && S.state.weekCount)
+    );
     var days = [];
     var dayDuties = [];
     var dayStarts = [];
@@ -71,6 +93,9 @@ export function initRowModel(S) {
     var hours = 0;
 
     for (var day = 0; day < 7; day++) {
+      var off = offMap[day];
+      if (off == null) off = day;
+      // dayTimes and shift overrides stay weekday keys (Sun=0). Schedule and rotation are start-date offsets.
       var dayCustom = line.dayTimes && line.dayTimes[String(day)];
       var times = typeof options.effectiveTimesResolver === "function"
         ? options.effectiveTimesResolver(line.shiftId, day)
@@ -80,11 +105,11 @@ export function initRowModel(S) {
       dayStarts.push(effStart);
       dayEnds.push(effEnd);
 
-      var value = rowSchedule[day];
+      var value = rowSchedule[off];
       if (value === "WORK") {
         hours += paid;
         var duty = typeof options.rotationDutyResolver === "function"
-          ? options.rotationDutyResolver(line.id, day)
+          ? options.rotationDutyResolver(line.id, off)
           : null;
         var text = resolveWorkDayText(line, duty, workLabel);
         days.push(text);

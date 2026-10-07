@@ -2,7 +2,7 @@
  * Rows come from filtered/sorted getRowModels. Edits write Scheduler.state.
  */
 import LinesTable from './LinesTable.svelte';
-import { initRowModel } from './row-model.js';
+import { initRowModel, dowToScheduleOffset } from './row-model.js';
 import { initLineColors } from './line-colors.js';
 
 export function initLinesTable(scheduler) {
@@ -57,6 +57,12 @@ export function initLinesTable(scheduler) {
     if (!S.state.functionRotation[key]) S.state.functionRotation[key] = [];
     while (S.state.functionRotation[key].length <= dayIndex) S.state.functionRotation[key].push(null);
     S.state.functionRotation[key][dayIndex] = duty; // "BAG" | "PAX" | "DFO" | null
+  }
+
+  function scheduleOffsetForColumn(dow) {
+    var map = dowToScheduleOffset(S.state && S.state.startDate, S.state && S.state.weekCount);
+    var off = map[dow];
+    return off == null ? dow : off;
   }
 
   function isDfoCapable(line) {
@@ -173,6 +179,7 @@ export function initLinesTable(scheduler) {
     const line = S.findLineById ? S.findLineById(detail.lineId) : null;
     const dayIndex = Number(detail.dayIndex);
     if (!line || !Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex > 6) return;
+    const off = scheduleOffsetForColumn(dayIndex);
     const key = String(line.id);
     if (!S.state.schedule) S.state.schedule = {};
     var existing = S.state.schedule[key] || S.state.schedule[line.id];
@@ -184,36 +191,36 @@ export function initLinesTable(scheduler) {
       S.state.functionRotation[key] = S.state.functionRotation[line.id];
     }
 
-    const cur = S.state.schedule[key][dayIndex] || "RDO";
+    const cur = S.state.schedule[key][off] || "RDO";
     const bagIdentity = line.function === "BAG";
     const dfo = isDfoCapable(line);
 
     if (cur !== "WORK") {
-      S.state.schedule[key][dayIndex] = "WORK";
+      S.state.schedule[key][off] = "WORK";
       if (bagIdentity) {
-        setRotationDuty(key, dayIndex, "BAG");
+        setRotationDuty(key, off, "BAG");
       } else if (dfo) {
-        setRotationDuty(key, dayIndex, "PAX");
+        setRotationDuty(key, off, "PAX");
       } else {
-        setRotationDuty(key, dayIndex, null);
+        setRotationDuty(key, off, null);
       }
     } else if (bagIdentity) {
-      S.state.schedule[key][dayIndex] = "RDO";
-      setRotationDuty(key, dayIndex, null);
+      S.state.schedule[key][off] = "RDO";
+      setRotationDuty(key, off, null);
     } else if (dfo) {
       var rawDuty = (typeof S.getRotationDuty === "function"
-        ? S.getRotationDuty(line.id, dayIndex)
-        : getRotationDutyLocal(line.id, dayIndex));
+        ? S.getRotationDuty(line.id, off)
+        : getRotationDutyLocal(line.id, off));
       var duty = rawDuty === "DFO" || rawDuty === "PAX" || !rawDuty ? "PAX" : rawDuty;
       if (duty === "PAX") {
-        setRotationDuty(key, dayIndex, "BAG");
+        setRotationDuty(key, off, "BAG");
       } else {
-        S.state.schedule[key][dayIndex] = "RDO";
-        setRotationDuty(key, dayIndex, null);
+        S.state.schedule[key][off] = "RDO";
+        setRotationDuty(key, off, null);
       }
     } else {
-      S.state.schedule[key][dayIndex] = "RDO";
-      setRotationDuty(key, dayIndex, null);
+      S.state.schedule[key][off] = "RDO";
+      setRotationDuty(key, off, null);
     }
 
     if (S.syncRdoDaysFromSchedule) S.syncRdoDaysFromSchedule(line);
@@ -228,6 +235,7 @@ export function initLinesTable(scheduler) {
     const dayIndex = Number(detail.dayIndex);
     const duty = String(detail.duty || "").toUpperCase();
     if (!line || !Number.isInteger(dayIndex) || dayIndex < 0 || dayIndex > 6) return;
+    const off = scheduleOffsetForColumn(dayIndex);
 
     const key = String(line.id);
     if (!S.state.schedule) S.state.schedule = {};
@@ -236,15 +244,15 @@ export function initLinesTable(scheduler) {
     }
 
     if (duty === "OFF" || duty === "RDO" || duty === "") {
-      S.state.schedule[key][dayIndex] = "RDO";
-      setRotationDuty(key, dayIndex, null);
+      S.state.schedule[key][off] = "RDO";
+      setRotationDuty(key, off, null);
     } else {
-      S.state.schedule[key][dayIndex] = "WORK";
-      if (duty === "BAG") setRotationDuty(key, dayIndex, "BAG");
-      else if (duty === "DFO") setRotationDuty(key, dayIndex, "DFO");
-      else if (duty === "TRAINING") setRotationDuty(key, dayIndex, "TRAINING");
-      else if (duty === "-") setRotationDuty(key, dayIndex, "-");
-      else setRotationDuty(key, dayIndex, "PAX");
+      S.state.schedule[key][off] = "WORK";
+      if (duty === "BAG") setRotationDuty(key, off, "BAG");
+      else if (duty === "DFO") setRotationDuty(key, off, "DFO");
+      else if (duty === "TRAINING") setRotationDuty(key, off, "TRAINING");
+      else if (duty === "-") setRotationDuty(key, off, "-");
+      else setRotationDuty(key, off, "PAX");
     }
 
     if (S.syncRdoDaysFromSchedule) S.syncRdoDaysFromSchedule(line);
