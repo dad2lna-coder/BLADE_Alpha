@@ -1,5 +1,6 @@
 /** Extra / add-on types — Setup owns cards, shift parking, and line build. */
 import { assignRdoDays } from "./shiftMath.js";
+import { placedRdosOk } from "./rdoBlock.js";
 
 function num0(v) {
   var n = Number(v);
@@ -182,6 +183,14 @@ function extraEmpClass(def, S) {
 function rdoDaysFor(S, def, workDays, seed) {
   var rdoCount = Math.max(1, 7 - workDays);
   var placed = assignRdoDays(S, def, rdoCount, seed);
+  if (!placedRdosOk(placed)) {
+    if (S.state && Array.isArray(S.state.issues)) {
+      var why = (placed && placed.error) || "RDO block does not fit";
+      var msg = ((def && def.name) || "shift") + ": " + why + ".";
+      if (S.state.issues.indexOf(msg) < 0) S.state.issues.push(msg);
+    }
+    return null;
+  }
   return { rdoDays: placed.rdoDays, hard: placed.hard };
 }
 
@@ -292,6 +301,10 @@ export function buildExtraPositionLines(S) {
         var empClass = extraEmpClass(slot.def, S);
         var workDays = S.targetWorkDays ? S.targetWorkDays(slot.def.id, empClass) : ((+slot.def.paid || 8) >= 10 ? 4 : 5);
         var rdo = rdoDaysFor(S, slot.def, workDays, slot.rdoSeed);
+        if (!rdo) {
+          slot.sex = null;
+          return;
+        }
         slot.empClass = empClass;
         slot.rdoDays = rdo.rdoDays;
         slot.rdoHard = rdo.hard;

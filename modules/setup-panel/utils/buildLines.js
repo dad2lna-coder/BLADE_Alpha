@@ -1,5 +1,6 @@
 /** Turn allocated headcounts into bid lines. */
 import { assignRdoDays } from "./shiftMath.js";
+import { placedRdosOk } from "./rdoBlock.js";
 
 export function createPRNG(seed) {
   var s = (seed >>> 0) || 1;
@@ -65,11 +66,22 @@ function takeFromPools(S, pools, preferLongFt, placed, preferPt) {
   return null;
 }
 
+function noteRejectedRdos(S, placed, label, seen) {
+  if (!S.state) return;
+  if (!Array.isArray(S.state.issues)) S.state.issues = [];
+  var why = (placed && placed.error) || "RDO block does not fit";
+  var msg = label + ": " + why + ".";
+  if (seen[msg]) return;
+  seen[msg] = true;
+  S.state.issues.push(msg);
+}
+
 function makeLineFromPerson(S, def, person, id) {
   var workDays = S.targetWorkDays(def.id, person.empClass);
   var rdoCount = 7 - workDays;
   var seed = (id - 1) % 7;
   var placed = assignRdoDays(S, def, rdoCount, seed);
+  if (!placedRdosOk(placed)) return null;
   return {
     id: id,
     lineCode: "Line " + String(id).padStart(3, "0"),
@@ -148,6 +160,7 @@ export function buildLines(S, counts) {
   });
 
   var lines = [], id = 1;
+  var rdoRejects = {};
 
   // Interleave slots by RDO seeds within each band using seeded bucket shuffle
   Object.keys(bands).forEach(function (bk) {
@@ -217,6 +230,11 @@ export function buildLines(S, counts) {
       var workDays = S.targetWorkDays(slot.def.id, person.empClass);
       var rdoCount = 7 - workDays;
       var placed = assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
+      if (!placedRdosOk(placed)) {
+        noteRejectedRdos(S, placed, def.name || def.id || "shift", rdoRejects);
+        slot.person = null;
+        return;
+      }
       slot.rdoDays = placed.rdoDays;
       slot.rdoHard = placed.hard;
     });
@@ -225,6 +243,7 @@ export function buildLines(S, counts) {
   // Build final lines array in slot order
   slots.forEach(function (slot) {
     if (!slot.person) return;
+    if (!slot.rdoDays || !slot.rdoDays.length) return;
     lines.push({
       id: id,
       lineCode: "Line " + String(id).padStart(3, "0"),
@@ -314,6 +333,7 @@ export function buildSupervisoryLines(S, supCounts, supType) {
   });
 
   // Pass 1: Assign RDO seeds per bandKey round-robin using seeded offset
+  var rdoRejects = {};
   Object.keys(bands).forEach(function (bk) {
     var bSlots = bands[bk];
     var seedOffset = prng ? Math.floor(prng() * 7) : 0;
@@ -324,6 +344,11 @@ export function buildSupervisoryLines(S, supCounts, supType) {
       slot.rdoSeed = seedIdx % 7;
       seedIdx++;
       var placed = assignRdoDays(S, slot.def, rdoCount, slot.rdoSeed);
+      if (!placedRdosOk(placed)) {
+        noteRejectedRdos(S, placed, slot.def.name || slot.def.id || "shift", rdoRejects);
+        slot.rdoDays = null;
+        return;
+      }
       slot.rdoDays = placed.rdoDays;
       slot.rdoHard = placed.hard;
     });
@@ -373,6 +398,7 @@ export function buildSupervisoryLines(S, supCounts, supType) {
 
   slots.forEach(function (slot) {
     if (!slot.sex) return;
+    if (!slot.rdoDays || !slot.rdoDays.length) return;
     lines.push({
       id: id,
       lineCode: supType + " " + String(lines.length + 1).padStart(2, "0"),

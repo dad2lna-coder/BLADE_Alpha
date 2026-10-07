@@ -1,4 +1,4 @@
-/** One RDO control: block length 2–4 and optional pin days. */
+/** One RDO control: block length 2–4. Checked days are always off and the block must include them. */
 import { normalizeRdoBlock, normalizeRdoPins } from "../utils/rdoBlock.js";
 
 export function rdoConstraintHtml(S, shift) {
@@ -18,20 +18,22 @@ export function rdoConstraintHtml(S, shift) {
       "<span>" + n + "</span></label>"
     );
   }).join("");
-  var dayHtml = days.map(function (label, d) {
+  var shortDays = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+  var dayHtml = shortDays.map(function (short, d) {
+    var full = days[d] || short;
     return (
-      '<label class="rdo-chk" title="Pin ' + label + ' off">' +
+      '<label class="rdo-chk" title="' + full + " is always off. The consecutive block must include it." + '">' +
       '<input type="checkbox" data-pin="' + d + '"' + (pins.has(d) ? " checked" : "") + " />" +
-      "<span>" + label.charAt(0) + "</span></label>"
+      "<span>" + short + "</span></label>"
     );
   }).join("");
   return (
     '<div class="rdo-block rdo-mode" data-missing="' + (missing ? "1" : "0") + '">' +
     '<div class="rdo-mode-switch" role="radiogroup" aria-label="Consecutive RDO block">' + blocks + "</div>" +
-    '<label class="rdo-pin-req" title="Every line is off the checked days. Leave the days empty and this fails generate instead of inventing a pattern.">' +
+    '<label class="rdo-pin-req" title="Checked days are always off and the block must include them. Turn this on with no day checked and generate fails instead of inventing a pattern.">' +
     '<input type="checkbox" data-f="rdoPinRequired"' + (required ? " checked" : "") + " />" +
     "<span>Pin</span></label>" +
-    '<div class="rdo-row rdo-constraint" role="group" aria-label="Pin days">' + dayHtml + "</div>" +
+    '<div class="rdo-row rdo-constraint" role="group" aria-label="Always off, block must include">' + dayHtml + "</div>" +
     "</div>"
   );
 }

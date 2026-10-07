@@ -1,4 +1,4 @@
-/** Consecutive RDO block + optional pin + flex days. No legacy fallback. */
+/** Consecutive RDO block. Checked days sit inside the block. Flex fills only what is left. */
 
 function sortDays(days) {
   return days.slice().sort(function (a, b) { return a - b; });
@@ -37,17 +37,18 @@ function pinRequired(raw) {
   return raw.rdoPinRequired === true || raw.rdoPinRequired === 1 || raw.rdoPinRequired === "true" || raw.rdoPinRequired === "1";
 }
 
-function blocksAvoiding(avoid, length) {
+/** Circular windows of `length` that contain every pin. Pins are block days. */
+function blocksContaining(pins, length) {
   var blocks = [];
+  if (pins.length > length) return blocks;
   for (var start = 0; start < 7; start++) {
     var block = [];
-    var hits = false;
-    for (var i = 0; i < length; i++) {
-      var d = (start + i) % 7;
-      if (avoid.indexOf(d) >= 0) { hits = true; break; }
-      block.push(d);
+    var missing = false;
+    for (var i = 0; i < length; i++) block.push((start + i) % 7);
+    for (var p = 0; p < pins.length; p++) {
+      if (block.indexOf(pins[p]) < 0) { missing = true; break; }
     }
-    if (!hits) blocks.push(block);
+    if (!missing) blocks.push(block);
   }
   return blocks;
 }
@@ -74,7 +75,8 @@ function pickFlex(taken, count, seed) {
 /**
  * Place RDOs when a block size is set.
  * Returns null when this shift is not in the block model.
- * Pin days are always included and are never used as block days.
+ * Checked days are block days: every window contains every pin.
+ * Flex fills only rdoCount − block.length.
  */
 export function assignBlockRdos(shift, rdoCount, seed) {
   var blockSize = normalizeRdoBlock(shift);
@@ -96,11 +98,11 @@ export function assignBlockRdos(shift, rdoCount, seed) {
       pins: []
     };
   }
-  var windows = blocksAvoiding(pins, blockSize);
+  var windows = blocksContaining(pins, blockSize);
   if (!windows.length) {
     return {
       ok: false,
-      error: "a " + blockSize + "-day block does not fit without using the pin",
+      error: "checked days do not fit in a " + blockSize + "-day block",
       rdoDays: [],
       hard: false,
       mode: "block",
@@ -110,11 +112,8 @@ export function assignBlockRdos(shift, rdoCount, seed) {
     };
   }
   var block = windows[s % windows.length].slice();
-  var days = pins.slice();
-  block.forEach(function (d) {
-    if (days.indexOf(d) < 0) days.push(d);
-  });
-  var flexNeed = count - days.length;
+  var days = block.slice();
+  var flexNeed = count - block.length;
   var flex = [];
   if (flexNeed > 0) flex = pickFlex(days, flexNeed, s + 3);
   flex.forEach(function (d) {
@@ -130,6 +129,12 @@ export function assignBlockRdos(shift, rdoCount, seed) {
     pins: pins.slice(),
     exceeds: days.length > count
   };
+}
+
+/** Callers may copy rdoDays only when this is true. Empty days pad to Fri+Sat. */
+export function placedRdosOk(placed) {
+  if (!placed || placed.ok === false) return false;
+  return !!(placed.rdoDays && placed.rdoDays.length);
 }
 
 /** Issues for a locked line whose pin is no longer in its RDOs. Others are kept. */
@@ -150,7 +155,7 @@ export function lockedRdoNotes(S, lines) {
     var seed = Math.abs(Number(l.id) || 0) % 7;
     var placed = assignBlockRdos(sh, count, seed);
     var label = l.lineCode || l.id || "line";
-    if (placed && placed.ok && placed.rdoDays.length) {
+    if (placedRdosOk(placed)) {
       l.rdoDays = placed.rdoDays;
       l.rdoHard = false;
       issues.push(label + ": locked RDOs refreshed to include the pin.");

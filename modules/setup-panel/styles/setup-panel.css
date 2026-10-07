@@ -76,12 +76,12 @@
   font-size: 0.85rem;
 }
 
-/* One RDO control: block length and optional pin days */
+/* One RDO control: block length, and days the block must include */
 .rdo-block {
   display: flex;
   flex-direction: column;
   gap: 0.28rem;
-  min-width: 8.4rem;
+  min-width: 14.6rem;
 }
 .rdo-mode-switch {
   display: flex;
@@ -144,6 +144,11 @@
   color: var(--muted);
 }
 .rdo-constraint { flex: 1; justify-content: space-between; }
+.rdo-constraint .rdo-chk span {
+  font-size: 0.62rem;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
 .rdo-mode[data-on="0"] .rdo-mode-day { opacity: 0.4; }
 .rdo-block[data-missing="1"] .rdo-pin-req span { color: var(--amber); font-weight: 700; }
 .rdo-pin-req {

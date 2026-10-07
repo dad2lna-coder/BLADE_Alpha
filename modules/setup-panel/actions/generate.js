@@ -60,7 +60,7 @@ export function generate(S) {
         S.state.issues.push(s.name + ": " + probe.error + ".");
         rdoFailed = true;
       } else if (probe && probe.exceeds) {
-        S.state.issues.push(s.name + ": block plus pin is " + probe.rdoDays.length + " day(s), over the " + needBlock + "-day RDO target. Extra days kept.");
+        S.state.issues.push(s.name + ": consecutive block is " + probe.rdoDays.length + " day(s), over the " + needBlock + "-day RDO target. Extra days kept.");
       }
       return;
     }

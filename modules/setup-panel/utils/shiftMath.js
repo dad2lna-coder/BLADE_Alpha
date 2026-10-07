@@ -165,7 +165,7 @@ function legacyRdoDays(S, shift, rdoCount, seed) {
 /**
  * Place RDOs for one line.
  * No block: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
- * Block 2–4: pin days stay off, a rotating consecutive block avoids those days, then flex.
+ * Block 2–4: checked days sit inside a rotating consecutive block. Flex fills only rdoCount − block length.
  * Split Start2/End2 is time-only; this does not read segments.
  */
 export function assignRdoDays(S, shift, rdoCount, seed) {

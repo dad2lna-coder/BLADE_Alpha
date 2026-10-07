@@ -1,5 +1,6 @@
 /** Setup-tab shifts table + day-times modal. */
 import { assignRdoDays } from "../utils/shiftMath.js";
+import { placedRdosOk } from "../utils/rdoBlock.js";
 import { rdoConstraintHtml, readRdoConstraint, syncRdoConstraintRow } from "./rdoConstraintUi.js";
 export function attachShiftsTable(S) {
   if (!S) return;
@@ -589,7 +590,7 @@ export function attachShiftsTable(S) {
         var rdoCount = Math.max(1, 7 - workDays);
         var sh = S.getShift ? S.getShift(l.shiftId) : null;
         var placed = assignRdoDays(S, sh || {}, rdoCount, rdoSeed);
-        if (placed && placed.ok === false) return;
+        if (!placedRdosOk(placed)) return;
         if (placed && placed.mode === "block") {
           l.rdoDays = placed.rdoDays;
           l.rdoHard = false;

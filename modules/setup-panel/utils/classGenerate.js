@@ -4,6 +4,7 @@
 import { buildScheduleForLine } from "../actions/generate.js";
 import { assignCertPoolsToLines } from "./certAssign.js";
 import { assignRdoDays } from "./shiftMath.js";
+import { placedRdosOk } from "./rdoBlock.js";
 
 export function belongsToClass(line, classKey) {
   if (!line) return false;
@@ -181,13 +182,15 @@ export function generateClass(S, classKey, perShiftTargets) {
         var idM = getNextId(usedIds, startId);
         var isPtM = remPtM > 0;
         if (isPtM) remPtM--;
-        newClassLines.push(createLineForClass(S, classKey, idM, sh, isTrainCls ? "" : "M", false, isPtM));
+        var madeM = createLineForClass(S, classKey, idM, sh, isTrainCls ? "" : "M", false, isPtM);
+        if (madeM) newClassLines.push(madeM);
       }
       for (var j = 0; j < needF; j++) {
         var idF = getNextId(usedIds, startId);
         var isPtF = remPtF > 0;
         if (isPtF) remPtF--;
-        newClassLines.push(createLineForClass(S, classKey, idF, sh, "F", false, isPtF));
+        var madeF = createLineForClass(S, classKey, idF, sh, "F", false, isPtF);
+        if (madeF) newClassLines.push(madeF);
       }
     });
 
@@ -197,7 +200,8 @@ export function generateClass(S, classKey, perShiftTargets) {
       var shortfallTrain = Math.max(0, hc.total - totalTrainLines);
       for (var st = 0; st < shortfallTrain; st++) {
         var sfId = getNextId(usedIds, startId);
-        newClassLines.push(createLineForClass(S, classKey, sfId, fallbackShift, "", false, false));
+        var madeTrain = createLineForClass(S, classKey, sfId, fallbackShift, "", false, false);
+        if (madeTrain) newClassLines.push(madeTrain);
       }
     } else {
       var shortfallM = Math.max(0, hc.M - totalTargetedM);
@@ -208,14 +212,14 @@ export function generateClass(S, classKey, perShiftTargets) {
         var isPtSfM = remPtM > 0;
         if (isPtSfM) remPtM--;
         var lineSfM = createLineForClass(S, classKey, sfIdM, fallbackShift, "M", true, isPtSfM);
-        newClassLines.push(lineSfM);
+        if (lineSfM) newClassLines.push(lineSfM);
       }
       for (var sf = 0; sf < shortfallF; sf++) {
         var sfIdF = getNextId(usedIds, startId);
         var isPtSfF = remPtF > 0;
         if (isPtSfF) remPtF--;
         var lineSfF = createLineForClass(S, classKey, sfIdF, fallbackShift, "F", true, isPtSfF);
-        newClassLines.push(lineSfF);
+        if (lineSfF) newClassLines.push(lineSfF);
       }
     }
   } else {
@@ -402,6 +406,14 @@ function createLineForClass(S, classKey, id, shift, sex, isShortfall, isPt) {
   var workDays = S.targetWorkDays ? S.targetWorkDays(shift.id, empClass) : ((+shift.paid || 8) >= 10 ? 4 : 5);
   var rdoCount = 7 - workDays;
   var placed = assignRdoDays(S, shift, rdoCount, id % 7);
+  if (!placedRdosOk(placed)) {
+    if (S.state && Array.isArray(S.state.issues)) {
+      var why = (placed && placed.error) || "RDO block does not fit";
+      var msg = (shift.name || shift.id || "shift") + ": " + why + ".";
+      if (S.state.issues.indexOf(msg) < 0) S.state.issues.push(msg);
+    }
+    return null;
+  }
 
   var line = {
     id: id,
