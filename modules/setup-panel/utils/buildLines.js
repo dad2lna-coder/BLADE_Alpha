@@ -19,7 +19,7 @@ function addDutyDays(counts, rdoDays) {
   return next;
 }
 
-/** Try the seed and the next six. Keep the pattern that flattens weekday coverage. Seed wins ties. */
+/** Try the seed and the next six. Lowest score wins. Seed wins only when scores still tie. */
 function pickBalancedRdos(S, def, rdoCount, seed, avoid, scoreOf) {
   var best = null;
   var bestScore = Infinity;
@@ -392,6 +392,34 @@ function takeSupervisoryFromPools(pools, targetFShare, placed, preferSex) {
   return pools.M >= pools.F ? take("M") : take("F");
 }
 
+function pairKeyOf(rdoDays, pins) {
+  var pin = {};
+  (pins || []).forEach(function (d) { pin[Number(d)] = true; });
+  var extra = [];
+  (rdoDays || []).forEach(function (d) {
+    var n = Number(d);
+    if (!pin[n]) extra.push(n);
+  });
+  if (!extra.length) (rdoDays || []).forEach(function (d) { extra.push(Number(d)); });
+  extra.sort(function (a, b) { return a - b; });
+  return extra.join("-");
+}
+
+function femaleGapCount(femaleOn, rdoDays, pins) {
+  var off = {};
+  (rdoDays || []).forEach(function (d) { off[Number(d)] = true; });
+  var pin = {};
+  (pins || []).forEach(function (d) { pin[Number(d)] = true; });
+  var gaps = 0;
+  for (var d = 0; d < 7; d++) {
+    if (pin[d]) continue;
+    var on = femaleOn[d] || 0;
+    if (!off[d]) on += 1;
+    if (on < 1) gaps++;
+  }
+  return gaps;
+}
+
 export function buildSupervisoryLines(S, supCounts, supType, opts) {
   var isLtso = supType === "LTSO";
   var partners = (opts && opts.partners) || [];
@@ -440,46 +468,19 @@ export function buildSupervisoryLines(S, supCounts, supType, opts) {
     bands[slot.bandKey].push(slot);
   });
 
-  // Pass 1: RDOs that keep this class's on-duty count even across the week.
-  // STSO pin blocks may share the pin only. Non-pin days stay exclusive across bands.
-  var rdoRejects = {};
-  var stsoTaken = [];
-  var duty = [0, 0, 0, 0, 0, 0, 0];
+  // Seeds first so sex can be chosen before RDO windows. Window choice needs sex.
   Object.keys(bands).forEach(function (bk) {
     var bSlots = bands[bk];
     var seedOffset = prng ? Math.floor(prng() * 7) : 0;
     var seedIdx = seedOffset;
     bSlots.forEach(function (slot) {
-      var workDays = (+slot.def.paid || 8) >= 10 ? 4 : 5;
-      var rdoCount = 7 - workDays;
       slot.rdoSeed = seedIdx % 7;
       seedIdx++;
-      var exclusive = !isLtso && normalizeRdoPins(slot.def).length > 0;
-      var placed = pickBalancedRdos(
-        S,
-        slot.def,
-        rdoCount,
-        slot.rdoSeed,
-        exclusive ? stsoTaken : null,
-        function (rdoDays) { return dutySpread(addDutyDays(duty, rdoDays)); }
-      );
-      if (!placedRdosOk(placed)) {
-        noteRejectedRdos(S, placed, slot.def.name || slot.def.id || "shift", rdoRejects);
-        slot.rdoDays = null;
-        return;
-      }
-      slot.rdoDays = placed.rdoDays;
-      slot.rdoHard = placed.hard;
-      duty = addDutyDays(duty, placed.rdoDays);
-      if (!isLtso) {
-        placed.rdoDays.forEach(function (d) {
-          if (stsoTaken.indexOf(d) < 0) stsoTaken.push(d);
-        });
-      }
     });
   });
 
-  // Pass 2: Assign sex from M/F pools, interleaving across RDO seeds within each bandKey using seeded shuffle
+  // Pass 1: sex from M/F pools. LTSO prefers the opposite STSO sex on that shift.
+  // That roster preference does not place calendar days.
   Object.keys(bands).forEach(function (bk) {
     var bSlots = bands[bk];
     var seedBuckets = {};
@@ -535,6 +536,77 @@ export function buildSupervisoryLines(S, supCounts, supType, opts) {
         ltsoSexOnShift[slot.def.id][sex]++;
       }
     });
+  });
+
+  // Pass 2: RDO windows. Flatten this class's on-duty counts, then
+  // penalize a weekday pair already used by this class or by STSO partners.
+  // Female lines also cover non-pin days that no female STSO/LTSO is working.
+  // The pin may stay empty. STSO pin blocks still share only the pin.
+  var rdoRejects = {};
+  var stsoTaken = [];
+  var duty = [0, 0, 0, 0, 0, 0, 0];
+  var pairUse = {};
+  var femaleOn = [0, 0, 0, 0, 0, 0, 0];
+  var shiftById = {};
+  shifts.forEach(function (def) { shiftById[def.id] = def; });
+  partners.forEach(function (p) {
+    if (!p || !p.rdoDays || !p.rdoDays.length) return;
+    var sh = shiftById[p.shiftId];
+    var pins = sh ? normalizeRdoPins(sh) : [];
+    var key = pairKeyOf(p.rdoDays, pins);
+    if (key) pairUse[key] = (pairUse[key] || 0) + 1;
+    if (p.sex === "F") {
+      var off = {};
+      p.rdoDays.forEach(function (d) { off[Number(d)] = true; });
+      for (var d = 0; d < 7; d++) if (!off[d]) femaleOn[d]++;
+    }
+  });
+
+  var rdoSlots = [];
+  slots.forEach(function (slot) { if (slot.sex) rdoSlots.push(slot); });
+  rdoSlots.sort(function (a, b) {
+    if (a.sex === b.sex) return 0;
+    return a.sex === "F" ? -1 : 1;
+  });
+
+  rdoSlots.forEach(function (slot) {
+    var workDays = (+slot.def.paid || 8) >= 10 ? 4 : 5;
+    var rdoCount = 7 - workDays;
+    var pins = normalizeRdoPins(slot.def);
+    var exclusive = !isLtso && pins.length > 0;
+    var placed = pickBalancedRdos(
+      S,
+      slot.def,
+      rdoCount,
+      slot.rdoSeed,
+      exclusive ? stsoTaken : null,
+      function (rdoDays) {
+        var gaps = slot.sex === "F" ? femaleGapCount(femaleOn, rdoDays, pins) : 0;
+        var spread = dutySpread(addDutyDays(duty, rdoDays));
+        var reuse = pairUse[pairKeyOf(rdoDays, pins)] || 0;
+        return gaps * 1000 + spread * 10 + reuse;
+      }
+    );
+    if (!placedRdosOk(placed)) {
+      noteRejectedRdos(S, placed, slot.def.name || slot.def.id || "shift", rdoRejects);
+      slot.rdoDays = null;
+      return;
+    }
+    slot.rdoDays = placed.rdoDays;
+    slot.rdoHard = placed.hard;
+    duty = addDutyDays(duty, placed.rdoDays);
+    var won = pairKeyOf(placed.rdoDays, pins);
+    if (won) pairUse[won] = (pairUse[won] || 0) + 1;
+    if (slot.sex === "F") {
+      var wonOff = {};
+      placed.rdoDays.forEach(function (d) { wonOff[Number(d)] = true; });
+      for (var d = 0; d < 7; d++) if (!wonOff[d]) femaleOn[d]++;
+    }
+    if (!isLtso) {
+      placed.rdoDays.forEach(function (d) {
+        if (stsoTaken.indexOf(d) < 0) stsoTaken.push(d);
+      });
+    }
   });
 
   // Build lines

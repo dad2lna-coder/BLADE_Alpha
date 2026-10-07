@@ -460,8 +460,40 @@ var ltsoHost = supHost(
 );
 var ltsoLines = buildSupervisoryLines(ltsoHost, { S1: 1, S2: 1 }, "LTSO");
 assert.strictEqual(ltsoLines.length, 2);
-assert.deepStrictEqual(ltsoLines[0].rdoDays, [1, 2]);
-assert.deepStrictEqual(ltsoLines[1].rdoDays, [1, 2]);
-assert.ok(sharedDays(ltsoLines).length > 1);
+assert.ok(!ltsoHost.state.issues.some(function (msg) { return msg.indexOf("non-pin") >= 0; }));
+var ltsoPairs = ltsoLines.map(function (line) {
+  return line.rdoDays.filter(function (d) { return d !== 2; }).slice().sort(function (a, b) { return a - b; }).join("-");
+});
+assert.notStrictEqual(ltsoPairs[0], ltsoPairs[1], "LTSO recycled one pair " + ltsoPairs);
+
+function nonPinPair(line, pin) {
+  return line.rdoDays.filter(function (d) { return d !== pin; }).slice().sort(function (a, b) { return a - b; }).join("-");
+}
+
+var femShift = [pinShift("S1", 10, 2, 1)];
+var femStsoHost = supHost(femShift, { stsoF: 1 });
+var femStso = buildSupervisoryLines(femStsoHost, { S1: 1 }, "STSO");
+var femLtsoHost = supHost(femShift, { ltsoF: 1 });
+var femLtso = buildSupervisoryLines(femLtsoHost, { S1: 1 }, "LTSO", { partners: femStso });
+assert.strictEqual(femStso.length, 1);
+assert.strictEqual(femLtso.length, 1);
+var femaleOn = [0, 0, 0, 0, 0, 0, 0];
+femStso.concat(femLtso).forEach(function (line) {
+  assert.strictEqual(line.sex, "F");
+  var off = {};
+  line.rdoDays.forEach(function (d) { off[d] = true; });
+  for (var d = 0; d < 7; d++) if (!off[d]) femaleOn[d]++;
+});
+for (var day = 0; day < 7; day++) {
+  if (day === 2) continue;
+  assert.ok(femaleOn[day] >= 1, "non-pin day " + day + " has no female lead " + femaleOn);
+}
+assert.notStrictEqual(nonPinPair(femStso[0], 2), nonPinPair(femLtso[0], 2));
+
+var clumpHost = supHost([pinShift("S1", 10, 2, 4)], { ltsoM: 4 });
+var clumpLines = buildSupervisoryLines(clumpHost, { S1: 4 }, "LTSO");
+var clumpKeys = {};
+clumpLines.forEach(function (line) { clumpKeys[nonPinPair(line, 2)] = true; });
+assert.ok(Object.keys(clumpKeys).length >= 4, "leadership pairs clumped " + Object.keys(clumpKeys));
 
 console.log("ALL CONSTRAINT-DAY RDO MODE TESTS PASSED");
