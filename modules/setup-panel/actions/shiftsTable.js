@@ -1,5 +1,5 @@
 /** Setup-tab shifts table + day-times modal. */
-import { assignRdoDays, normalizeRdoMode, normalizeConstraintDay } from "../utils/shiftMath.js";
+import { assignRdoDays, normalizeRdoMode, normalizeConstraintDay, hardDaysMatchingMode } from "../utils/shiftMath.js";
 export function attachShiftsTable(S) {
   if (!S) return;
 
@@ -20,8 +20,8 @@ export function attachShiftsTable(S) {
         '<label class="rdo-mode-opt" title="' + (opt.value === "off"
           ? "Legacy hard RDOs and soft consecutive days"
           : opt.value === "4x10"
-            ? "Pin the constraint day off. Other two RDOs are a rotating consecutive pair."
-            : "Two RDOs stay in the window around the constraint day. Patterns rotate by line.") + '">' +
+            ? "Pins the constraint day. Two RDOs form a consecutive pair with that day; the third RDO is a flex day."
+            : "Pins the constraint day. The other RDO is only the day before or the day after.") + '">' +
         '<input type="radio" name="rdo-mode-' + id + '" data-f="rdoMode" value="' + opt.value + '"' + checked + " />" +
         "<span>" + opt.label + "</span></label>"
       );
@@ -45,12 +45,12 @@ export function attachShiftsTable(S) {
     );
   };
 
-  S.rdoChecksHtml = function (selected) {
+  S.rdoChecksHtml = function (selected, locked) {
     var set = new Set((selected || []).map(Number));
     return (S.DAYS || []).map(function (label, d) {
       return (
         '<label class="rdo-chk" title="' + label + '">' +
-        '<input type="checkbox" data-rdo="' + d + '"' + (set.has(d) ? " checked" : "") + " />" +
+        '<input type="checkbox" data-rdo="' + d + '"' + (set.has(d) ? " checked" : "") + (locked ? " disabled" : "") + " />" +
         "<span>" + label.charAt(0) + "</span></label>"
       );
     }).join("");
@@ -107,7 +107,8 @@ export function attachShiftsTable(S) {
       var rdoMode = normalizeRdoMode(modeEl ? modeEl.value : (existing && existing.rdoMode));
       var cEl = tr.querySelector("input[data-constraint]:checked");
       var rdoConstraint = cEl ? Number(cEl.getAttribute("data-constraint")) : normalizeConstraintDay(existing);
-      if (rdoMode !== "off" && rdoConstraint == null) rdoConstraint = 2;
+      var pinnedHard = hardDaysMatchingMode({ rdoMode: rdoMode, rdoConstraint: rdoConstraint });
+      if (pinnedHard) rdoHard = pinnedHard;
       var dayTimes = existing && existing.dayTimes ? existing.dayTimes : null;
       var phaseEl = tr.querySelector("[data-f=phase]");
       var phase = (phaseEl && phaseEl.value) || (existing && existing.phase) || "auto";
@@ -208,6 +209,8 @@ export function attachShiftsTable(S) {
       var start2 = isSplit ? s.segments[1].start : "";
       var end2 = isSplit ? s.segments[1].end : "";
 
+      var pinned = hardDaysMatchingMode(s);
+      var hardShown = pinned || s.rdoHard;
       return (
         '<tr data-shift-id="' + s.id + '">' +
         '<td><input type="text" data-f="name" value="' + String(s.name).replace(/"/g, "&quot;") + '" style="width:5.5rem" /></td>' +
@@ -226,7 +229,7 @@ export function attachShiftsTable(S) {
         '<td><input type="number" data-f="force" min="0" value="' + (s.force || 0) + '" style="width:4rem" title="TSO force" /></td>' +
         '<td><input type="number" data-f="ltsoForce" min="0" value="' + (s.ltsoForce || 0) + '" style="width:4rem" title="LTSO force" /></td>' +
         '<td><input type="number" data-f="stsoForce" min="0" value="' + (s.stsoForce || 0) + '" style="width:4rem" title="STSO force" /></td>' +
-        '<td><div class="rdo-row">' + S.rdoChecksHtml(s.rdoHard) + "</div></td>" +
+        '<td><div class="rdo-row' + (pinned ? " rdo-hard-locked" : "") + '"' + (pinned ? ' title="Hard RDOs follow the constraint day while a mode is on"' : "") + ">" + S.rdoChecksHtml(hardShown, !!pinned) + "</div></td>" +
         "<td>" + S.rdoModeHtml(s) + "</td>" +
         '<td style="white-space:nowrap">' +
           '<button type="button" class="' + daysCls + '" data-day-times="' + s.id + '" title="' + daysTitle + '">Day times…</button> ' +
@@ -237,19 +240,38 @@ export function attachShiftsTable(S) {
       );
     }).join("");
 
+    function syncRdoModeRow(tr) {
+      if (!tr) return;
+      var modeEl = tr.querySelector('input[data-f="rdoMode"]:checked');
+      var on = !!(modeEl && modeEl.value !== "off");
+      var wrap = tr.querySelector(".rdo-mode");
+      if (wrap) wrap.setAttribute("data-on", on ? "1" : "0");
+      tr.querySelectorAll("input[data-constraint]").forEach(function (c) { c.disabled = !on; });
+      var cEl = tr.querySelector("input[data-constraint]:checked");
+      var c = cEl ? Number(cEl.getAttribute("data-constraint")) : null;
+      var lock = on && c != null && c >= 0 && c <= 6;
+      var hardRow = tr.querySelector(".rdo-row:not(.rdo-constraint)");
+      if (hardRow) {
+        hardRow.classList.toggle("rdo-hard-locked", lock);
+        hardRow.title = lock ? "Hard RDOs follow the constraint day while a mode is on" : "";
+      }
+      tr.querySelectorAll("input[data-rdo]").forEach(function (cb) {
+        var d = Number(cb.getAttribute("data-rdo"));
+        cb.disabled = lock;
+        if (lock) cb.checked = d === c;
+      });
+    }
+
     tbody.querySelectorAll('input[data-f="rdoMode"]').forEach(function (radio) {
       radio.addEventListener("change", function () {
-        var tr = radio.closest("tr");
-        if (!tr || !radio.checked) return;
-        var on = radio.value !== "off";
-        var wrap = tr.querySelector(".rdo-mode");
-        if (wrap) wrap.setAttribute("data-on", on ? "1" : "0");
-        var days = tr.querySelectorAll("input[data-constraint]");
-        days.forEach(function (c) { c.disabled = !on; });
-        if (on && !tr.querySelector("input[data-constraint]:checked")) {
-          var tue = tr.querySelector('input[data-constraint="2"]');
-          if (tue) tue.checked = true;
-        }
+        if (!radio.checked) return;
+        syncRdoModeRow(radio.closest("tr"));
+      });
+    });
+    tbody.querySelectorAll("input[data-constraint]").forEach(function (radio) {
+      radio.addEventListener("change", function () {
+        if (!radio.checked) return;
+        syncRdoModeRow(radio.closest("tr"));
       });
     });
 

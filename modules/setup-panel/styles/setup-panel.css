@@ -149,6 +149,12 @@
   color: var(--amber);
   font-weight: 700;
 }
+.rdo-hard-locked { opacity: 0.85; }
+.rdo-hard-locked .rdo-chk { cursor: not-allowed; }
+.rdo-hard-locked .rdo-chk:has(input:checked) span {
+  color: var(--amber);
+  font-weight: 700;
+}
 .data-table .rdo-mode input { width: auto; }
 @media (max-width: 720px) {
   #fc-pool-row {

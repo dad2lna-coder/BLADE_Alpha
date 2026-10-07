@@ -134,6 +134,12 @@ export function rdoModeActive(shift) {
   return normalizeRdoMode(shift) !== "off" && normalizeConstraintDay(shift) != null;
 }
 
+/** Days the hard-RDO checks may show. Mode on: only the pin, so the row cannot claim extra days. */
+export function hardDaysMatchingMode(shift) {
+  if (!rdoModeActive(shift)) return null;
+  return [normalizeConstraintDay(shift)];
+}
+
 function sortDays(days) {
   return days.slice().sort(function (a, b) { return a - b; });
 }
@@ -156,28 +162,40 @@ export function consecutiveBlocksDisjoint(constraint, length) {
 }
 
 /**
- * 5×8 valid pairs inside {day before, constraint, day after}.
- * Stable order so a line seed rotates them: before+pin, pin+after, before+after.
+ * 5×8 pairs that keep the constraint day off.
+ * Before+pin, or pin+after. Never before+after (that works the pin).
  */
 export function adjacentRdoPatterns(constraint) {
   var prev = (constraint + 6) % 7;
   var next = (constraint + 1) % 7;
   return [
     [prev, constraint],
-    [constraint, next],
-    [prev, next]
+    [constraint, next]
   ];
 }
 
 function daysFor4x10(constraint, rdoCount, seed) {
   var n = Math.max(1, Math.min(6, rdoCount || 3));
+  var prev = (constraint + 6) % 7;
+  var next = (constraint + 1) % 7;
+  var s = Math.abs(seed) || 0;
   if (n === 1) return [constraint];
-  var blocks = consecutiveBlocksDisjoint(constraint, n - 1);
-  var block = blocks.length ? blocks[Math.abs(seed) % blocks.length] : [];
-  var days = [constraint];
-  block.forEach(function (d) {
-    if (days.indexOf(d) < 0) days.push(d);
-  });
+  var side = s % 2 === 0 ? prev : next;
+  var days = [constraint, side];
+  if (n === 2) return sortDays(days);
+  var flex = [];
+  for (var d = 0; d < 7; d++) {
+    if (d !== constraint && days.indexOf(d) < 0) flex.push(d);
+  }
+  var step = Math.floor(s / 2);
+  var guard = 0;
+  while (days.length < n && flex.length && guard < 14) {
+    var pick = flex[(step + guard) % flex.length];
+    if (days.indexOf(pick) < 0) days.push(pick);
+    guard++;
+    if (days.length >= n) break;
+    if (guard >= flex.length) break;
+  }
   return sortDays(days);
 }
 
@@ -239,8 +257,9 @@ function legacyRdoDays(S, shift, rdoCount, seed) {
 /**
  * Place RDOs for one line.
  * Mode off: copy hard days and pad Sunday-first, else a soft consecutive block from seed.
- * 4×10: constraint day is always off; the other days are one rotating consecutive block.
- * 5×8: both days are a valid pair around the constraint (before / after / both).
+ * 4×10: constraint day is always off. One neighbor makes a consecutive pair;
+ * the third RDO is a flex day and is not forced onto that pair.
+ * 5×8: constraint day is always off. The other RDO is only the day before or after.
  * Split Start2/End2 is time-only; this does not read segments.
  */
 export function assignRdoDays(S, shift, rdoCount, seed) {
@@ -380,6 +399,7 @@ export function attachShiftMath(S) {
   S.normalizeRdoMode = normalizeRdoMode;
   S.normalizeConstraintDay = normalizeConstraintDay;
   S.rdoModeActive = rdoModeActive;
+  S.hardDaysMatchingMode = hardDaysMatchingMode;
   S.assignRdoDays = function (shift, rdoCount, seed) { return assignRdoDays(S, shift, rdoCount, seed); };
   S.rdoCountForShift = function (shift, empClass) { return rdoCountForShift(S, shift, empClass); };
   S.normalizeShift = function (raw, index) { return normalizeShift(S, raw, index); };
