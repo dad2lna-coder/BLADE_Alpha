@@ -1,4 +1,5 @@
 /** Board export — same people as Lines Excel, day cells are location */
+import { dowToScheduleOffset } from "../../lines-table/row-model.js";
 export function attachExportBoard(S) {
   S = S || window.Scheduler;
   if (!S) return;
@@ -80,6 +81,7 @@ export function attachExportBoard(S) {
         return String(a.lineCode || a.id).localeCompare(String(b.lineCode || b.id), undefined, { numeric: true });
       });
       var dayNames = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+      var dowMap = dowToScheduleOffset(S.state && S.state.startDate, S.state && S.state.weekCount);
       var headerFill = "FF1F4E79", rdoFill = "FF000000", bagFill = "FFF4B4B4", dfoFill = "FFFFF3A8";
       var wb = new ExcelJS.Workbook();
       wb.creator = "BrokeSched";
@@ -103,14 +105,16 @@ export function attachExportBoard(S) {
         var row = [tm.name || "", line.lineCode || line.id, (line.shiftName || (sh && sh.name) || ""), sh ? sh.start : "", sh ? sh.end : "", pos(line), line.sex || "", line.function || ""];
         var flags = [];
         for (var d = 0; d < 7; d++) {
+          var off = dowMap[d];
+          if (off == null) off = d;
           var sched = (S.state.schedule && (S.state.schedule[line.id] || S.state.schedule[String(line.id)])) || [];
-          var isWork = (sched[d] || "RDO") === "WORK";
-          var du = isWork ? duty(line, d) : null;
+          var isWork = (sched[off] || "RDO") === "WORK";
+          var du = isWork ? duty(line, off) : null;
           var isBag = du === "BAG" || du === "BAGS";
           var isDfo = du === "DFO";
-          var lab = label(line, tm.id ? tm : null, d, isWork);
+          var lab = label(line, tm.id ? tm : null, off, isWork);
           row.push(lab);
-          var rec = msRec(msIdFor(line, tm.id ? tm : null, d));
+          var rec = msRec(msIdFor(line, tm.id ? tm : null, off));
           flags.push({ isRdo: !isWork, isBag: isBag, isDfo: isDfo, fill: rec ? rec.argb : null });
           if (!isWork) bump(d, "RDO");
           else if (isBag) bump(d, "BAG");

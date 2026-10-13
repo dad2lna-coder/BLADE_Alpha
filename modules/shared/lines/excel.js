@@ -1,5 +1,6 @@
 /** Bid-lines Excel export. Duty colors come from S.state.exportStyle. */
 import { getExportStyle, hexToArgb, dutyFillArgb } from "./exportStyle.js";
+import { dowToScheduleOffset } from "../../lines-table/row-model.js";
 
 function loadExcel(cb) {
   if (typeof ExcelJS !== "undefined") { cb(); return; }
@@ -166,6 +167,7 @@ function generateAndDownloadXlsx(S) {
   var tmMap = teamColorMap(S, lines);
   var days = 7;
   var dayNames = S.DAYS || ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  var dowMap = dowToScheduleOffset(S.state.startDate, S.state.weekCount);
   var metaHeaders = ["Team", "Line", "Shift", "Start", "End", "Position", "Emp", "Sex", "Function", "Cert pool", "RDOs", "Paid"];
   var headers = metaHeaders.concat(dayNames, ["Hours"]);
   var workbook = new ExcelJS.Workbook();
@@ -181,9 +183,11 @@ function generateAndDownloadXlsx(S) {
     var hours = 0, dayValues = [], dayFlags = [];
     var workText = workLabelForLine(line, sh);
     for (var i = 0; i < days; i++) {
+      var off = dowMap[i];
+      if (off == null) off = i;
       var sched = S.state.schedule[line.id] || S.state.schedule[String(line.id)] || [];
-      var isWork = (sched[i] || "RDO") === "WORK";
-      var duty = isWork ? dayDutyForExport(S, line, i) : null;
+      var isWork = (sched[off] || "RDO") === "WORK";
+      var duty = isWork ? dayDutyForExport(S, line, off) : null;
       var isBag = isWork && (duty === "BAG" || duty === "BAGS");
       var isDfo = isWork && duty === "DFO";
       var isPax = isWork && duty === "PAX";
