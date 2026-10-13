@@ -6,6 +6,9 @@ import { buildCoverageWorkbook } from "../modules/coverage/actions/exportExcel.j
 const require = createRequire(import.meta.url);
 const ExcelJS = require("../lib/exceljs.min.js");
 
+const VIEW_NAMES = ["All", "STSO/LTSO", "STSO", "LTSO", "TSO"];
+const DATA_SHEETS = ["d_All", "d_STSO_LTSO", "d_STSO", "d_LTSO", "d_TSO"];
+
 function createScheduler() {
   const work = ["WORK", "WORK", "WORK", "WORK", "WORK", "WORK", "WORK"];
   const lines = [
@@ -50,8 +53,10 @@ function createScheduler() {
 
 function cellText(value) {
   if (value == null) return "";
-  if (typeof value === "object" && value.richText) {
-    return value.richText.map((p) => p.text).join("");
+  if (typeof value === "object") {
+    if (value.richText) return value.richText.map((p) => p.text).join("");
+    if (Object.prototype.hasOwnProperty.call(value, "result")) return cellText(value.result);
+    if (value.formula) return "";
   }
   return String(value);
 }
@@ -94,23 +99,45 @@ function sheetGrid(sheet) {
   return rows;
 }
 
+function listNames(formulae) {
+  const raw = Array.isArray(formulae) ? formulae.join(",") : String(formulae || "");
+  const quoted = raw.match(/"([^"]*)"/);
+  const body = quoted ? quoted[1] : raw.replace(/^=/, "");
+  return body.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
 const S = createScheduler();
 const view = S.coverageView;
 const before = JSON.parse(JSON.stringify(view));
 const slots = coverageSlots(S);
-const wb = buildCoverageWorkbook(S, ExcelJS);
+const built = buildCoverageWorkbook(S, ExcelJS);
 
 assert.equal(S.coverageView, view, "coverageView object is restored");
 assert.deepEqual(S.coverageView, before, "coverageView filters are unchanged after export");
 
+const buf = await built.xlsx.writeBuffer();
+const wb = new ExcelJS.Workbook();
+await wb.xlsx.load(buf);
+
 const names = wb.worksheets.map((sheet) => sheet.name);
-assert.deepEqual(names, ["All", "STSO", "LTSO", "TSO"]);
+assert.deepEqual(names, ["Coverage"].concat(DATA_SHEETS));
+assert.notEqual(wb.getWorksheet("Coverage").state, "hidden");
+DATA_SHEETS.forEach((name) => {
+  assert.equal(wb.getWorksheet(name).state, "hidden", name + " is hidden");
+});
+
+const cover = wb.getWorksheet("Coverage");
+assert.equal(cellText(cover.getCell("A1").value), "View");
+const sel = cover.getCell("B1");
+assert.equal(cellText(sel.value), "All");
+assert.equal(sel.dataValidation && sel.dataValidation.type, "list");
+assert.deepEqual(listNames(sel.dataValidation.formulae), VIEW_NAMES);
 
 const grids = {};
-names.forEach((name) => {
+DATA_SHEETS.forEach((name) => {
   const rows = sheetGrid(wb.getWorksheet(name));
   assert.equal(rows.length, 1 + slots.length + 1, name + " row count");
-  rows.forEach((row) => assert.equal(row.length, 1 + 7 + 1, name + " column count"));
+  rows.forEach((row) => assert.equal(row.length, 9, name + " column count"));
   assert.equal(cellText(rows[0][0]), "Time");
   assert.deepEqual(rows[0].slice(1, 8).map(cellText), S.DAYS);
   assert.equal(cellText(rows[0][8]), "Avg T");
@@ -122,17 +149,43 @@ names.forEach((name) => {
   grids[name] = rows;
 });
 
-const all = grids.All;
+const all = grids.d_All;
 for (let r = 1; r < all.length; r++) {
   for (let c = 1; c < 9; c++) {
-    const sum = ["STSO", "LTSO", "TSO"].reduce((acc, name) => addParts(acc, parts(grids[name][r][c])), null);
-    assert.ok(sameParts(sum, parts(all[r][c])), "row " + r + " col " + c + " " + JSON.stringify(sum) + " vs " + cellText(all[r][c]));
+    const three = ["d_STSO", "d_LTSO", "d_TSO"].reduce((acc, name) => addParts(acc, parts(grids[name][r][c])), null);
+    const two = addParts(parts(grids.d_STSO[r][c]), parts(grids.d_LTSO[r][c]));
+    assert.ok(sameParts(three, parts(all[r][c])), "All row " + r + " col " + c);
+    assert.ok(sameParts(two, parts(grids.d_STSO_LTSO[r][c])), "STSO/LTSO row " + r + " col " + c);
   }
 }
 
-assert.equal(parts(grids.All[1][1]).join("/"), "4/2/6");
-assert.equal(parts(grids.STSO[1][1]).join("/"), "1/1/2");
-assert.equal(parts(grids.LTSO[1][1]).join("/"), "1/0/1");
-assert.equal(parts(grids.TSO[1][1]).join("/"), "2/1/3");
+assert.equal(parts(grids.d_All[1][1]).join("/"), "4/2/6");
+assert.equal(parts(grids.d_STSO_LTSO[1][1]).join("/"), "2/1/3");
+assert.equal(parts(grids.d_STSO[1][1]).join("/"), "1/1/2");
+assert.equal(parts(grids.d_LTSO[1][1]).join("/"), "1/0/1");
+assert.equal(parts(grids.d_TSO[1][1]).join("/"), "2/1/3");
+
+assert.equal(cellText(cover.getCell("A2").value), "Time");
+assert.deepEqual([2, 3, 4, 5, 6, 7, 8, 9].map((c) => cellText(cover.getRow(2).getCell(c).value)), S.DAYS.concat(["Avg T"]));
+assert.equal(cellText(cover.getCell("A" + (slots.length + 3)).value), "Day total*");
+
+for (let r = 0; r < slots.length; r++) {
+  assert.equal(cellText(cover.getCell("A" + (r + 3)).value), S.slotLabel(slots[r]));
+}
+
+for (let r = 2; r <= all.length; r++) {
+  for (let c = 2; c <= 9; c++) {
+    const cell = cover.getRow(r + 1).getCell(c);
+    const model = cell.value;
+    assert.equal(typeof model, "object", "Coverage value is a formula");
+    const formula = String(model.formula || "").replace(/^=/, "");
+    DATA_SHEETS.forEach((name) => {
+      assert.ok(formula.includes(name + "!"), formula + " missing " + name);
+    });
+    assert.ok(formula.includes("CHOOSE"), formula);
+    assert.ok(formula.includes("$B$1"), formula);
+    assert.equal(cellText(model.result), cellText(all[r - 1][c - 1]), "cached All result r" + r + " c" + c);
+  }
+}
 
 console.log("test-coverage-export: ok");
