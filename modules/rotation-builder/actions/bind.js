@@ -1,6 +1,6 @@
 /** Event binding and startup. Does not read scheduler.state. */
 import { RB_DEMO } from "../data/rbDemo.js";
-import { rb, DB, defaultConfig } from "../stores/rotationStore.js";
+import { rb, DB, defaultConfig, stripDummyLocations } from "../stores/rotationStore.js";
 import { esc, toast, confirmBox, $ } from "../utils/dom.js";
 import { t2m, m2t, todayKey } from "../utils/time.js";
 import { solve, sheetWindow, buildSeats, buildRings } from "../utils/engine.js";
@@ -143,14 +143,14 @@ export function loadDemo(persist){
     DB.set("proj", rb.proj); DB.set("projMeta", rb.projMeta);
   }
   const d = (rb.meta.dates || []);
-  $("rosterInfo").innerHTML = "<b>" + rb.roster.length + "</b> checkpoint rows · demo CKPT-A12" +
+  $("rosterInfo").innerHTML = "<b>" + rb.roster.length + "</b> checkpoint rows · demo roster" +
     (d.length ? "<br>" + d[0] : "") + "<br>(baked demo)";
   $("projInfo").innerHTML = (typeof projSummary === "function") ? projSummary() : "Demo projections loaded.";
   if(d.length) $("iDate").value = d[0];
   fillTerms(); fillLocSelect();
-  if($("iLoc")){
-    $("iLoc").value = "CKPT-A12";
-    $("iLoc").dispatchEvent(new Event("change"));
+  if($("iLoc") && !$("iLoc").value){
+    const first = $("iLoc").querySelector("option[value]:not([value=''])");
+    if(first){ $("iLoc").value = first.value; $("iLoc").dispatchEvent(new Event("change")); }
   }
   if($("iShift")) $("iShift").value = "AM";
   toast("Demo roster loaded — pick Generate.", "ok");
@@ -175,7 +175,8 @@ export function boot(){
   DB.get("config").then(c => {
     rb.cfg = Object.assign(defaultConfig(), bakedCfg || {}, c || {});
     rb.cfg.rules = Object.assign(defaultConfig().rules, (bakedCfg&&bakedCfg.rules)||{}, (c&&c.rules)||{});
-    if(!c && bakedCfg) DB.set("config", rb.cfg);
+    const stripped = stripDummyLocations(rb.cfg);
+    if((!c && bakedCfg) || stripped) DB.set("config", rb.cfg);
     return Promise.all([DB.get("roster"), DB.get("rosterMeta"), DB.get("proj"), DB.get("projMeta")]);
   }).then(([r, m, pj, pm]) => {
     if((!r || !r.length) && window.RB_DEMO && RB_DEMO.roster){
@@ -219,23 +220,23 @@ export function boot(){
     $("projInfo").innerHTML = projSummary();
     if(!$("iDate").value) $("iDate").value = todayKey();
     if(rb.roster && rb.roster.length && $("iLoc") && !$("iLoc").value){
-      $("iLoc").value = "CKPT-A12";
+      $("iLoc").value = ($("iLoc").querySelector("option[value]:not([value=''])") || {}).value || "";
       $("iLoc").dispatchEvent(new Event("change"));
     }
     if(rb.roster && rb.roster.length && $("iLoc") && !$("iLoc").value){
-      $("iLoc").value = "CKPT-A12";
+      $("iLoc").value = ($("iLoc").querySelector("option[value]:not([value=''])") || {}).value || "";
       $("iLoc").dispatchEvent(new Event("change"));
     }
     if(rb.roster && rb.roster.length && $("iLoc") && !$("iLoc").value){
-      $("iLoc").value = "CKPT-A12";
+      $("iLoc").value = ($("iLoc").querySelector("option[value]:not([value=''])") || {}).value || "";
       $("iLoc").dispatchEvent(new Event("change"));
     }
     if(rb.roster && rb.roster.length && $("iLoc") && !$("iLoc").value){
-      $("iLoc").value = "CKPT-A12";
+      $("iLoc").value = ($("iLoc").querySelector("option[value]:not([value=''])") || {}).value || "";
       $("iLoc").dispatchEvent(new Event("change"));
     }
     if(rb.roster && rb.roster.length && $("iLoc") && !$("iLoc").value){
-      $("iLoc").value = "CKPT-A12";
+      $("iLoc").value = ($("iLoc").querySelector("option[value]:not([value=''])") || {}).value || "";
       $("iLoc").dispatchEvent(new Event("change"));
     }
     $("iShift").dispatchEvent(new Event("change"));

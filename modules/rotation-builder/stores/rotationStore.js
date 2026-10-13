@@ -15,28 +15,16 @@ export const DEF_POS = [
 
 export const DEF_QUALS = ["1","2","3","4","6","8","9","0","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","X","Z"];
 
-/* ---- location catalogue (derived from supplied parameters) */
-const L = (t,open,close,mods,kcm,exit)=>({t,open,close,mods,kcm:kcm||null,exit:exit||{am:0,pm:0}});
-const lane = (n,ct)=>({n,ct:ct?1:0});
+/* ---- location catalogue. Real checkpoints are added in Configuration. */
+export const DUMMY_LOC_IDS = [
+  "CKPT-A12", "CKPT-A20", "CKPT-A21", "CKPT-A35",
+  "CKPT-B09", "CKPT-B30",
+  "CKPT-C10", "CKPT-C11", "CKPT-C21",
+  "CKPT-D18", "CKPT-D22", "CKPT-D30",
+  "CKPT-E08", "CKPT-E16", "CKPT-E18", "CKPT-E33"
+];
 
-export const DEF_LOCS = {
-  "CKPT-A12": L("A","04:00","20:00",[[lane(1,1),lane(2,0)],[lane(3,0)]]),
-  "CKPT-A20": L("A","03:30","20:00",[[lane(1,0),lane(2,0)]]),
-  "CKPT-A21": L("A","03:00","22:30",[[lane(1,0),lane(2,0)],[lane(3,0),lane(4,0)]],{open:"03:00",close:"20:00"}),
-  "CKPT-A35": L("A","04:30","20:00",[[lane(1,0),lane(2,0)],[lane(3,0)]]),
-  "CKPT-B09": L("B","04:30","21:00",[[lane(1,1),lane(2,0)],[lane(3,0)]]),
-  "CKPT-B30": L("B","04:30","22:45",[[lane(1,0),lane(2,0)],[lane(3,0)]],{open:"04:30",close:"19:00"}),
-  "CKPT-C10": L("C","05:00","13:00",[[lane(1,0),lane(2,0)]],null,{am:1,pm:0}),
-  "CKPT-C11": L("C","04:00","21:00",[[lane(1,0),lane(2,0)]],{open:"03:30",close:"21:00"},{am:0,pm:1}),
-  "CKPT-C21": L("C","03:30","22:30",[[lane(1,0),lane(2,1)],[lane(3,0),lane(4,0)],[lane(5,0)]]),
-  "CKPT-D18": L("D","04:00","23:00",[[lane(1,0),lane(2,0)],[lane(3,0)]],null,{am:1,pm:1}),
-  "CKPT-D22": L("D","05:00","21:00",[[lane(1,0),lane(2,0)],[lane(3,1),lane(4,0)],[lane(5,0),lane(6,0)]],{open:"05:00",close:"21:00"}),
-  "CKPT-D30": L("D","03:30","23:00",[[lane(1,0),lane(2,0)],[lane(3,0),lane(4,0)]],null,{am:1,pm:1}),
-  "CKPT-E08": L("E","03:45","20:30",[[lane(1,0),lane(2,0)],[lane(3,0)]]),
-  "CKPT-E16": L("E","04:00","20:00",[[lane(1,0),lane(2,0)]],{open:"04:00",close:"19:00"}),
-  "CKPT-E18": L("E","03:00","23:00",[[lane(1,1),lane(2,0)],[lane(3,0),lane(4,0)]]),
-  "CKPT-E33": L("E","04:00","20:30",[[lane(1,0),lane(2,0)]])
-};
+export const DEF_LOCS = {};
 
 export const DEF_TITLES = { TSO:1, LTSO:1, STSO:0, "Phase 1":1, "TSO/DFO":1, "TSO DFO":1, "LTSO/DFO":1, ESTI:1, CCO:0, SCCO:0, MSTI:0, PA:0, TSM:0, Officer:0, ETSO:0 };
 
@@ -61,7 +49,7 @@ export function defaultConfig(){
     locations: JSON.parse(JSON.stringify(DEF_LOCS)),
     titles: Object.assign({}, DEF_TITLES),
     colmap: Object.assign({}, DEF_MAP),
-    aliases: { "CKPT-NORTH":"" },
+    aliases: {},
     proj: {
       mode: "standard",        /* standard | combined | separate */
       paxPerLane: 150,         /* standard-screening throughput, pax per lane per hour */
@@ -77,6 +65,26 @@ export function defaultConfig(){
     },
     restrictions: {}
   };
+}
+
+/** Drop the sample checkpoint catalogue from a saved config. Real IDs are kept. */
+export function stripDummyLocations(cfg){
+  if(!cfg) return false;
+  let changed = false;
+  const locs = cfg.locations;
+  if(locs){
+    for(const id of DUMMY_LOC_IDS){
+      if(Object.prototype.hasOwnProperty.call(locs, id)){
+        delete locs[id];
+        changed = true;
+      }
+    }
+  }
+  if(cfg.aliases && Object.prototype.hasOwnProperty.call(cfg.aliases, "CKPT-NORTH") && cfg.aliases["CKPT-NORTH"] === ""){
+    delete cfg.aliases["CKPT-NORTH"];
+    changed = true;
+  }
+  return changed;
 }
 
 /* ---- tiny IndexedDB wrapper ------------------------------ */

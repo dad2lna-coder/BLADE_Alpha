@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { createRequire } from "node:module";
 import { RB_DEMO } from "../modules/rotation-builder/data/rbDemo.js";
-import { defaultConfig } from "../modules/rotation-builder/stores/rotationStore.js";
+import { defaultConfig, stripDummyLocations } from "../modules/rotation-builder/stores/rotationStore.js";
 import { ingestWorkbook, parseRemarks } from "../modules/rotation-builder/utils/roster.js";
 import {
   lanesFor,
@@ -18,8 +18,29 @@ const XLSX = require("../lib/xlsx.full.min.js");
 globalThis.XLSX = XLSX;
 
 const cfg = defaultConfig();
+assert.deepEqual(cfg.locations, {}, "defaults ship with no checkpoint locations");
+assert.deepEqual(cfg.aliases, {}, "defaults ship with no location aliases");
+const saved = {
+  locations: {
+    "CKPT-A12": { t: "A" },
+    "CKPT-E33": { t: "E" },
+    "CKPT-A01": { t: "A", open: "04:00", close: "22:00" }
+  },
+  aliases: { "CKPT-NORTH": "", "NORTH A": "CKPT-A01" }
+};
+assert.equal(stripDummyLocations(saved), true);
+assert.deepEqual(Object.keys(saved.locations), ["CKPT-A01"]);
+assert.deepEqual(saved.aliases, { "NORTH A": "CKPT-A01" });
+assert.equal(stripDummyLocations(saved), false);
+
 const locId = "CKPT-A12";
 const date = "2026-09-06";
+cfg.locations[locId] = {
+  t: "A", open: "04:00", close: "20:00",
+  mods: [[{ n: 1, ct: 1 }, { n: 2, ct: 0 }], [{ n: 3, ct: 0 }]],
+  kcm: null,
+  exit: { am: 0, pm: 0 }
+};
 const loc = cfg.locations[locId];
 
 function clone(v) {
