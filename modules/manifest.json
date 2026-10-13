@@ -20,8 +20,17 @@
     "panel": "modules/team-builder/panel.html",
     "docks": "modules/team-builder/docks.html",
     "mount": "#tab-teams",
-    "tab": { "id": "teams", "label": "TEAMS", "priority": 3, "order": 1 },
-    "reportsSubTab": { "id": "cohesion", "label": "Team Cohesion", "order": 3 },
+    "tab": {
+      "id": "teams",
+      "label": "TEAMS",
+      "priority": 3,
+      "order": 1
+    },
+    "reportsSubTab": {
+      "id": "cohesion",
+      "label": "Team Cohesion",
+      "order": 3
+    },
     "reportsPanel": "modules/reports/cohesion.html",
     "reportsMount": "#report-sub-cohesion"
   },
@@ -37,15 +46,27 @@
     ],
     "panel": "modules/setup-panel/panel.html",
     "mount": "#tab-setup",
-    "tab": { "id": "setup", "label": "SETUP", "priority": 1, "order": 1 }
+    "tab": {
+      "id": "setup",
+      "label": "SETUP",
+      "priority": 1,
+      "order": 1
+    }
   },
   "lines-table": {
     "entry": "modules/lines-table/dist/lines-table.js",
     "init": "initLinesTable",
-    "css": ["modules/lines-table/dist/lines-table.css"],
+    "css": [
+      "modules/lines-table/dist/lines-table.css"
+    ],
     "panel": "modules/lines-table/panel.html",
     "mount": "#tab-lines",
-    "tab": { "id": "lines", "label": "LINES", "priority": 1, "order": 2 }
+    "tab": {
+      "id": "lines",
+      "label": "LINES",
+      "priority": 1,
+      "order": 2
+    }
   },
   "coverage": {
     "entry": "modules/coverage/dist/coverage.js",
@@ -55,7 +76,12 @@
     ],
     "panel": "modules/coverage/panel.html",
     "mount": "#tab-coverage",
-    "tab": { "id": "coverage", "label": "COVERAGE", "priority": 1, "order": 3 }
+    "tab": {
+      "id": "coverage",
+      "label": "COVERAGE",
+      "priority": 1,
+      "order": 3
+    }
   },
   "demand-capacity": {
     "entry": "modules/demand-capacity/dist/demand-capacity.js",
@@ -65,7 +91,11 @@
     ],
     "panel": "modules/demand-capacity/panel.html",
     "mount": "#report-sub-demand",
-    "reportsSubTab": { "id": "demand", "label": "Demand", "order": 2 }
+    "reportsSubTab": {
+      "id": "demand",
+      "label": "Demand",
+      "order": 2
+    }
   },
   "reports": {
     "entry": "modules/reports/dist/reports.js",
@@ -74,17 +104,49 @@
       "modules/reports/styles/reports.css",
       "modules/reports/styles/reports-print.css"
     ],
-    "tab": { "id": "reports", "label": "REPORTS", "priority": 2, "order": 1 },
-    "reportsSubTab": { "id": "management", "label": "Management Reports", "order": 1 },
+    "tab": {
+      "id": "reports",
+      "label": "REPORTS",
+      "priority": 2,
+      "order": 1
+    },
+    "reportsSubTab": {
+      "id": "management",
+      "label": "Management Reports",
+      "order": 1
+    },
     "reportsPanel": "modules/reports/management.html",
     "reportsMount": "#report-sub-management"
   },
   "bid-planner": {
     "entry": "modules/bid-planner/dist/bid-planner.js",
     "init": "initBidPlanner",
-    "css": ["modules/bid-planner/styles/bid-planner.css", "modules/bid-planner/styles/miles.css"],
+    "css": [
+      "modules/bid-planner/styles/bid-planner.css",
+      "modules/bid-planner/styles/miles.css"
+    ],
     "panel": "modules/bid-planner/panel.html",
     "mount": "#tab-bid-planner",
-    "tab": { "id": "bid-planner", "label": "BID PLANNER", "priority": 2, "order": 2 }
+    "tab": {
+      "id": "bid-planner",
+      "label": "BID PLANNER",
+      "priority": 2,
+      "order": 2
+    }
+  },
+  "rotation-builder": {
+    "entry": "modules/rotation-builder/dist/rotation-builder.js",
+    "init": "initRotationBuilder",
+    "css": [
+      "modules/rotation-builder/styles/rotation-builder.css"
+    ],
+    "panel": "modules/rotation-builder/panel.html",
+    "mount": "#tab-rotation",
+    "tab": {
+      "id": "rotation",
+      "label": "ROTATION",
+      "priority": 2,
+      "order": 3
+    }
   }
 }
