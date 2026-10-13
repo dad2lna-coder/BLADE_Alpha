@@ -3,6 +3,7 @@ import { attachRender } from "./actions/render.js";
 import { bindCoverageUI } from "./actions/bind.js";
 import { applyCoverageCutsToLines, initCuts } from "./components/cuts.js";
 import { attachHourly } from "./utils/hourly.js";
+import { attachCoverageExport } from "./actions/exportExcel.js";
 
 export function initCoverage(scheduler) {
   const S = scheduler || window.Scheduler;
@@ -15,6 +16,7 @@ export function initCoverage(scheduler) {
   };
 
   attachRender(S);
+  attachCoverageExport(S);
   S.applyCoverageCutsToLines = function () {
     return applyCoverageCutsToLines(S);
   };
