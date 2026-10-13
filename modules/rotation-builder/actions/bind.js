@@ -1,4 +1,4 @@
-/** Event binding and startup. Does not read scheduler.state. */
+/** Event binding and startup. The only scheduler read is the #bLines click. */
 import { RB_DEMO } from "../data/rbDemo.js";
 import { rb, DB, defaultConfig, stripDummyLocations } from "../stores/rotationStore.js";
 import { esc, toast, confirmBox, $ } from "../utils/dom.js";
@@ -15,8 +15,9 @@ import {
   openAdd, commitAdd, refreshSaved, saveSheet, loadSheet, exportBriefcase, importBriefcase,
   exportConfiguredTool, handleRoster, handleProjections, projSummary, openAdj, drawAddList
 } from "./config.js";
+import { useGeneratedLines, paintRosterInfo } from "./linesRoster.js";
 
-export function wire(){
+export function wire(scheduler){
     document.querySelectorAll("#rb-app .tab").forEach(b => b.onclick = () => {
     document.querySelectorAll("#rb-app .tab").forEach(x => x.classList.remove("on"));
     b.classList.add("on");
@@ -29,6 +30,7 @@ export function wire(){
   document.querySelectorAll(".ov").forEach(o => o.onclick = e => { if(e.target === o) o.classList.remove("on"); });
 
   $("bUpload").onclick = () => $("fRoster").click();
+  if($("bLines")) $("bLines").onclick = () => useGeneratedLines(scheduler);
   if($("bDemo")) $("bDemo").onclick = () => loadDemo(true);
   $("fRoster").onchange = e => { if(e.target.files[0]) handleRoster(e.target.files[0]); e.target.value = ""; };
   $("iTerm").onchange = fillLocSelect;
@@ -165,7 +167,7 @@ export function syncBladeChrome(){
   if($("bladeRows")) $("bladeRows").textContent = (rb.roster && rb.roster.length) ? rb.roster.length : 0;
 }
 
-export function boot(){
+export function boot(scheduler){
   const baked = document.getElementById("bakedCfg");
   let bakedCfg = null;
   if(baked){ try{ bakedCfg = JSON.parse(baked.textContent); }catch(e){} }
@@ -212,11 +214,10 @@ export function boot(){
     if(pj){ rb.proj = pj; rb.projMeta = pm || {}; }
     if(r && r.length){ rb.roster = r; rb.meta = m || rb.meta;
       const d = (rb.meta.dates||[]);
-      $("rosterInfo").innerHTML = `<b>${r.length}</b> checkpoint rows${rb.meta.locs?" · "+Object.keys(rb.meta.locs).length+" locations":""}` +
-        (d.length ? `<br>${d[0]} → ${d[d.length-1]}` : "") + (rb.meta.file ? `<br>${esc(rb.meta.file)}` : "");
+      paintRosterInfo();
       if(d.length) $("iDate").value = d.includes(todayKey()) ? todayKey() : d[0];
     }
-    fillTerms(); fillLocSelect(); renderAdmin(); wire(); refreshSaved();
+    fillTerms(); fillLocSelect(); renderAdmin(); wire(scheduler); refreshSaved();
     $("projInfo").innerHTML = projSummary();
     if(!$("iDate").value) $("iDate").value = todayKey();
     if(rb.roster && rb.roster.length && $("iLoc") && !$("iLoc").value){
@@ -244,7 +245,7 @@ export function boot(){
 
   }).catch(e => {
     console.error(e);
-    fillTerms(); fillLocSelect(); renderAdmin(); wire();
+    fillTerms(); fillLocSelect(); renderAdmin(); wire(scheduler);
     toast("Local storage unavailable — the tool still runs, but nothing will persist.", "err");
   });
 }
@@ -268,7 +269,6 @@ export function attachRotation(scheduler){
 }
 
 export function bindRotation(scheduler){
-  void scheduler;
   publishRotationDebug();
-  boot();
+  boot(scheduler);
 }
