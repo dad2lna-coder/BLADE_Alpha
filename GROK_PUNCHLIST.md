@@ -3,7 +3,7 @@
 **Work branch:** `svelte5-transition` (do not commit on `bright-garden`)
 **Base:** `bright-garden`
 **Last updated:** 2026-10-14
-**HEAD:** `600910a` — generate modal in Svelte 5
+**HEAD:** `1e19a18` — RDO matrix modal in Svelte 5
 
 Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 has forms, the shift table, the generate modal, and the RDO matrix.
 
@@ -54,6 +54,7 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 ### Commits on this branch
 
 ```
+1e19a18 Move the RDO matrix modal into Svelte 5.
 600910a Move the generate modal into Svelte 5.
 aeb53ad Move setup period, FTE, and the shift table into Svelte 5.
 f908ca7 Move the ops console chrome into Svelte 5.
