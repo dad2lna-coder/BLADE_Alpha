@@ -8,6 +8,7 @@ import { mount } from "svelte";
 import PeriodForm from "../../src/lib/components/PeriodForm.svelte";
 import FteForm from "../../src/lib/components/FteForm.svelte";
 import ShiftsTable from "../../src/lib/components/ShiftsTable.svelte";
+import GenerateModal from "../../src/lib/components/GenerateModal.svelte";
 
 let _boundDomContentLoaded = false;
 
@@ -28,6 +29,11 @@ function mountSetupUi(S) {
   }
   if (shifts && !S.setupShifts) {
     S.setupShifts = mount(ShiftsTable, { target: shifts });
+  }
+  const generate = document.getElementById("generate-modal-root");
+  if (generate && !generate.dataset.setupMounted) {
+    generate.dataset.setupMounted = "1";
+    S.setupGenerate = mount(GenerateModal, { target: generate });
   }
 }
 

@@ -3,17 +3,16 @@
 **Work branch:** `svelte5-transition` (do not commit on `bright-garden`)
 **Base:** `bright-garden`
 **Last updated:** 2026-10-14
-**HEAD:** `aeb53ad` — setup period, FTE, and shift table in Svelte 5
+**HEAD:** generate modal in Svelte 5 (this commit)
 
-Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 is only the first slice.
+Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 has forms, the shift table, and the generate modal.
 
 ## Resume here
 
 Next slice of Phase 3, still on `svelte5-transition`:
 
-1. Generate modal (`modules/setup-panel/actions/generateModal.js` + the `#generate-modal` markup in `panel.html`).
-2. RDO matrix modal (`renderRdoMatrixModal` / `#rdo-matrix-modal`).
-3. Schedule locks, FT/DFO rebalance, and sex-swap modals.
+1. RDO matrix modal (`renderRdoMatrixModal` / `#rdo-matrix-modal` in `shiftsTable.js` + `panel.html`).
+2. Schedule locks, FT/DFO rebalance, and sex-swap modals.
 
 Keep generation, rebalance, lock, cert, and extra-position logic in the existing plain JS utils. Components call those functions. They do not reimplement them.
 
@@ -29,6 +28,7 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 | Shell | `src/shell/mount.js`, `src/lib/components/{ShellHeader,ThemeSwitcher,StatusBar,TabNav,ConsoleFooter,IntroSplash}.svelte`, `src/lib/shell/chrome.svelte.js` | Built to `modules/shell/dist/shell.js` (`npm run build:shell`). Manifest loader still creates panels. |
 | Setup period + FTE | `PeriodForm.svelte`, `FteForm.svelte` | Same input ids (`cfg-start`, `cfg-weeks`, `cfg-ft-m`, …). `S.setupForm.pullPeriod` / `pullFte`. |
 | Shift table | `ShiftsTable.svelte` | Mounted into `#shifts-tbody`. `S.setupShifts.refresh()` replaces the old `innerHTML` path. `readShiftsFromDom` still reads `data-f` / `data-pin`. |
+| Generate modal | `GenerateModal.svelte`, `actions/generateModal.js` | Mounted into `#generate-modal-root`. `S.setupGenerate.open/close/refresh`. View models stay in `generateModal.js`. `S.generate`, `S.generateClass`, `S.checkParity`, `S.approveParitySwaps`, `S.proposeDfoCertBalance`, and `S.approveDfoCertBalance` are called, not copied. `getBandLabel` still exported for `parityReport.js`. |
 
 ### Left classic on purpose
 
@@ -36,7 +36,8 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 - Theme persistence: `js/utils/theme.js`. `S.shellOwnsChrome` skips the old menu DOM writes. Tokens are the existing `--bg`, `--text`, `--amber`, and the rest, switched by `html[data-theme]`.
 - F-keys and `switchTab`: `js/console-chrome.js` / `js/main.js`. The shell wraps `switchTab` so `shell.active` stays in sync.
 - Help modal bind: `js/main.js` listens for `blade-shell-ready` because the Help button is created by the shell.
-- Generate, RDO matrix, locks, rebalance, sex swap, function coverage, cert pools, crew groups, extra positions.
+- Generate modal ids stay on the component (`#generate-modal`, `#btn-generate-all`, target/parity/DFO controls). Toolbar `#btn-generate` still calls `S.openGenerateModal()`.
+- RDO matrix, locks, rebalance, sex swap, function coverage, cert pools, crew groups, extra positions.
 - All other tabs.
 
 ### Contracts a later session must not break
@@ -51,6 +52,7 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 ### Commits on this branch
 
 ```
+(this) Move the generate modal into Svelte 5.
 aeb53ad Move setup period, FTE, and the shift table into Svelte 5.
 f908ca7 Move the ops console chrome into Svelte 5.
 e66f08c Convert the lines table to Svelte 5 runes.
@@ -95,12 +97,12 @@ Incremental Svelte 5 migration. Mix runes components with classic DOM during the
 
 ### Phase 3 — Setup panel
 - [x] Period form, FTE counts, shift table (including RDO block/pin and day-times button).
-- [ ] Generate modal.
+- [x] Generate modal.
 - [ ] RDO matrix modal.
 - [ ] Lock, rebalance, and sex-swap modals.
 - [x] Generation / rebalance / lock / cert / extra-position logic still in plain JS.
-- [ ] Form state fully on the scheduler bridge. Period and FTE use `S.setupForm`; shifts still commit through `readShiftsFromDom`.
-- [x] Generate, DFO rebalance, sex swap, locks, and export tests still pass. Those UIs are not converted yet.
+- [ ] Form state fully on the scheduler bridge. Period and FTE use `S.setupForm`; shifts still commit through `readShiftsFromDom`. Generate targets still live on `S._perShiftTargets`.
+- [x] Generate, DFO rebalance, sex swap, locks, and export tests still pass. RDO matrix, locks, rebalance, and sex-swap UIs are not converted yet.
 
 ### Phase 4 — Remaining view modules
 - [ ] Coverage heatmap.
@@ -131,7 +133,7 @@ Incremental Svelte 5 migration. Mix runes components with classic DOM during the
 | 0. Scaffold | Done | Low |
 | 1. Lines table | Done | Low |
 | 2. Shell | Done | Low–Medium |
-| 3. Setup | In progress (forms + shift table) | Medium |
+| 3. Setup | In progress (forms, shift table, generate modal) | Medium |
 | 4. Other modules | Not started | Medium (teams DnD highest) |
 | 5. Full shell + cleanup | Not started | Medium |
 
@@ -139,6 +141,6 @@ Incremental Svelte 5 migration. Mix runes components with classic DOM during the
 
 1. Check out `svelte5-transition`.
 2. `npm run build:modules` once so `modules/shell/dist` and `modules/setup-panel/dist` exist.
-3. Convert the generate modal next, calling `attachGenerate` / `attachGenerateModal` helpers instead of copying them.
-4. Then the RDO matrix, locks, rebalance, and sex-swap modals.
+3. Convert the RDO matrix next. Keep `renderRdoMatrixModal` math in `shiftsTable.js`; the component calls it.
+4. Then locks, rebalance, and sex-swap modals.
 5. Do not start Phase 4 until those setup dialogs are on runes and `npm test` is still green.
