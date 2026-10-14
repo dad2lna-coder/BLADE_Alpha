@@ -1,102 +1,144 @@
 # BLADE Alpha — Grok Punch List: Transition to Svelte 5
 
-**Branch:** bright-garden  
-**Date:** 2026-10-14  
-**Goal:** Incremental migration from hybrid classic JS + one Svelte 4 island to Svelte 5 (runes) while preserving offline-first, modular architecture, pure engines, Tauri, and existing tests.
+**Work branch:** `svelte5-transition` (do not commit on `bright-garden`)
+**Base:** `bright-garden`
+**Last updated:** 2026-10-14
+**HEAD:** `aeb53ad` — setup period, FTE, and shift table in Svelte 5
 
-## Current State Summary
+Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 is only the first slice.
 
-- Host shell (`index.html` + `js/`) creates shared mutable `window.Scheduler`.
-- Modules load via `modules/manifest.json` as Vite ESM bundles that mount HTML panels and attach methods to `Scheduler`.
-- Only Svelte surface: `modules/lines-table/LinesTable.svelte` (Svelte 4 style — `export let`, `$:` , `on:`, manual virtualization).
-- Pure domain logic (generation, rebalance, coverage math, function coverage, bid rules) is in plain JS and relatively well-separated.
-- Dependencies: svelte ^4.2.19, @sveltejs/vite-plugin-svelte ^3, @tanstack/svelte-virtual, Tauri, local vendor libs.
-- Offline-first, self-contained preference must be preserved.
+## Resume here
 
-## Recommended Strategy
+Next slice of Phase 3, still on `svelte5-transition`:
 
-Incremental Svelte 5 migration (not big-bang). Svelte 5 is largely backward-compatible; mix legacy and runes components during transition. Keep pure engines as plain JS. Bridge via thin reactive adapter around `Scheduler` (or class with `$state`) until the shell is fully replaced.
+1. Generate modal (`modules/setup-panel/actions/generateModal.js` + the `#generate-modal` markup in `panel.html`).
+2. RDO matrix modal (`renderRdoMatrixModal` / `#rdo-matrix-modal`).
+3. Schedule locks, FT/DFO rebalance, and sex-swap modals.
 
-## Punch List
+Keep generation, rebalance, lock, cert, and extra-position logic in the existing plain JS utils. Components call those functions. They do not reimplement them.
 
-### Phase 0 — Scaffolding & Tooling (1–2 days)
-- [ ] Create branch from bright-garden.
-- [ ] Upgrade dependencies: `svelte@^5`, `@sveltejs/vite-plugin-svelte@^4` (or current compatible).
-- [ ] Verify `npm run build:modules` and `npm test` still pass after upgrade.
-- [ ] Add root or shared Vite config that supports both existing modules and new Svelte code.
-- [ ] Create `src/` structure for new Svelte code:
-  ```
-  src/
-    lib/
-      scheduler/     # reactive bridge + re-exports of pure engines
-      components/    # shared UI primitives
-      stores/        # or Scheduler class with $state fields
-  ```
-- [ ] Ensure Tauri packaging and GitHub Pages workflows continue to work.
-- [ ] Document the reactive bridge contract (shape that mirrors current `S.state`).
+Verify with `npm test` and `npm run build:setup-panel`. Full module build is `npm run build:modules`.
 
-### Phase 1 — Lines Table (highest leverage, already Svelte) (2–4 days)
-- [ ] Convert `LinesTable.svelte` to Svelte 5 runes (`$props`, `$state`, `$derived`, event attributes).
-- [ ] Replace manual spacer-row virtualization with `@tanstack/svelte-virtual` (or clean Svelte 5 equivalent).
-- [ ] Move filter/sort state into component or small store; keep write-back to `Scheduler.state` initially.
-- [ ] Run `npx sv migrate svelte-5` as starting point, then hand-tune.
-- [ ] Verify inline edits, day duty/time edits, sorting, filtering, and coverage refresh events still work.
+### What is already in Svelte 5
 
-### Phase 2 — Shell / Chrome (3–5 days)
-- [ ] Extract header, tab navigation, theme switcher, status bar, and intro splash into Svelte components.
-- [ ] Keep manifest loader so unmigrated modules still mount into panels.
-- [ ] Map existing theme system (`js/utils/theme.js`) to CSS custom properties consumed by Svelte components.
-- [ ] Preserve F-key shortcuts and console chrome behavior.
+| Piece | Where | Notes |
+|---|---|---|
+| Tooling | `package.json`, `vite.svelte-plugin.mjs` | `svelte@^5`, plugin `^4`. Per-file runes, not a global `runes: true`. |
+| Scheduler bridge | `src/lib/scheduler/bridge.svelte.js` | `$state` / `$state.raw` mirror of `Scheduler.state`. `pull`, `notify`, `patch`. Not wired into every screen yet. |
+| Lines table | `modules/lines-table/LinesTable.svelte` | Runes + `@tanstack/svelte-virtual`. Host `index.js` still uses `asClassComponent` so `$set` works. |
+| Shell | `src/shell/mount.js`, `src/lib/components/{ShellHeader,ThemeSwitcher,StatusBar,TabNav,ConsoleFooter,IntroSplash}.svelte`, `src/lib/shell/chrome.svelte.js` | Built to `modules/shell/dist/shell.js` (`npm run build:shell`). Manifest loader still creates panels. |
+| Setup period + FTE | `PeriodForm.svelte`, `FteForm.svelte` | Same input ids (`cfg-start`, `cfg-weeks`, `cfg-ft-m`, …). `S.setupForm.pullPeriod` / `pullFte`. |
+| Shift table | `ShiftsTable.svelte` | Mounted into `#shifts-tbody`. `S.setupShifts.refresh()` replaces the old `innerHTML` path. `readShiftsFromDom` still reads `data-f` / `data-pin`. |
 
-### Phase 3 — Setup Panel (largest UI surface) (1–2 weeks)
-- [ ] Split setup-panel UI into Svelte components (shifts table, FTE inputs, generate controls, modals, locks, etc.).
-- [ ] Keep generation / rebalance / lock / cert / extra-position logic in existing plain JS utils.
-- [ ] Bridge form state through the reactive Scheduler adapter.
-- [ ] Ensure Generate pass, DFO rebalance, sex swap, schedule locks, and export still function identically.
+### Left classic on purpose
 
-### Phase 4 — Remaining View Modules
-- [ ] Coverage heatmap (display + cuts interaction).
-- [ ] Reports (management, gender, capacity math, print).
+- Intro typewriter: `js/intro.js`. It waits for `blade-shell-ready`, then types into `#blade-term`.
+- Theme persistence: `js/utils/theme.js`. `S.shellOwnsChrome` skips the old menu DOM writes. Tokens are the existing `--bg`, `--text`, `--amber`, and the rest, switched by `html[data-theme]`.
+- F-keys and `switchTab`: `js/console-chrome.js` / `js/main.js`. The shell wraps `switchTab` so `shell.active` stays in sync.
+- Help modal bind: `js/main.js` listens for `blade-shell-ready` because the Help button is created by the shell.
+- Generate, RDO matrix, locks, rebalance, sex swap, function coverage, cert pools, crew groups, extra positions.
+- All other tabs.
+
+### Contracts a later session must not break
+
+- `window.Scheduler` is still the host. Svelte reads and writes it. Utils must not import Svelte.
+- Shell mount order: classic scripts, then `modules/shell/dist/shell.js`, then the manifest module script. `buildNav` skips tab buttons when `Scheduler.shell` exists and calls `shell.setTabs`.
+- Setup mount order: `bridgeScheduler`, then `mountSetupUi`, then `seedStartDate`, then `bindSetupActions`. Shift toolbar buttons stay in `panel.html` so those binds still find them.
+- `applyFte` writes `S.state` and then `setupForm.pullFte()`. Import does the same for period and FTE.
+- Module `dist/` folders are gitignored except lines-table. `npm run build:modules` must run before Pages or Tauri copy. That script now starts with `build:shell`.
+- Offline and self-contained. No CDN. Do not change JSON or Excel contracts.
+
+### Commits on this branch
+
+```
+aeb53ad Move setup period, FTE, and the shift table into Svelte 5.
+f908ca7 Move the ops console chrome into Svelte 5.
+e66f08c Convert the lines table to Svelte 5 runes.
+0fde646 Scaffold Svelte 5 on its own branch.
+```
+
+## Current state
+
+- Host shell (`index.html` + `js/`) still creates `window.Scheduler`.
+- Modules still load from `modules/manifest.json` as Vite ESM bundles.
+- New Svelte lives under `src/` and is bundled into `modules/shell/dist` and `modules/setup-panel/dist`.
+- Pure domain logic stays in plain JS.
+- `npm test` was green after each phase above.
+
+## Recommended strategy
+
+Incremental Svelte 5 migration. Mix runes components with classic DOM during the transition. Keep pure engines as plain JS. Prefer the shell class and `S.setupForm` over new stores.
+
+## Punch list
+
+### Phase 0 — Scaffolding & Tooling
+- [x] Branch `svelte5-transition` from `bright-garden`.
+- [x] `svelte@^5`, `@sveltejs/vite-plugin-svelte@^4`.
+- [x] `npm test` passed. `build:modules` includes `build:shell`.
+- [x] `vite.svelte-plugin.mjs` shared by lines, shell, and setup.
+- [x] `src/lib/scheduler`, `src/lib/components`, `src/lib/shell`, `src/shell`.
+- [x] Tauri copy and Pages still run `build:modules` before packaging. No workflow edit required.
+- [x] Bridge contract is `src/lib/scheduler/bridge.svelte.js`.
+
+### Phase 1 — Lines table
+- [x] Runes (`$props`, `$state`, `$derived`).
+- [x] `@tanstack/svelte-virtual` instead of manual spacers.
+- [x] Filter/sort stay controlled and write back through the host.
+- [x] Host kept on `asClassComponent` so `$set` still works.
+- [x] Lines-table edit tests passed.
+
+### Phase 2 — Shell / chrome
+- [x] Header, tabs, theme switcher, status, footer, intro splash.
+- [x] Manifest loader still mounts unmigrated panels.
+- [x] Theme tokens are the existing CSS variables. `S.themeTokens` lists them.
+- [x] F-keys still call `switchTab`.
+
+### Phase 3 — Setup panel
+- [x] Period form, FTE counts, shift table (including RDO block/pin and day-times button).
+- [ ] Generate modal.
+- [ ] RDO matrix modal.
+- [ ] Lock, rebalance, and sex-swap modals.
+- [x] Generation / rebalance / lock / cert / extra-position logic still in plain JS.
+- [ ] Form state fully on the scheduler bridge. Period and FTE use `S.setupForm`; shifts still commit through `readShiftsFromDom`.
+- [x] Generate, DFO rebalance, sex swap, locks, and export tests still pass. Those UIs are not converted yet.
+
+### Phase 4 — Remaining view modules
+- [ ] Coverage heatmap.
+- [ ] Reports.
 - [ ] Demand-capacity chart.
-- [ ] Team builder (careful with SortableJS — use `{@attach}` / action or replace with Svelte-friendly DnD).
+- [ ] Team builder. Keep SortableJS behind `{@attach}`.
 - [ ] Bid planner.
-- [ ] Function-coverage modal and rotation builder.
-- [ ] Pure engines remain plain JS throughout.
+- [ ] Function-coverage and rotation builder.
+- [ ] Pure engines remain plain JS.
 
-### Phase 5 — Full Shell Replacement & Cleanup
-- [ ] Replace `index.html` loader with Svelte root component once most tabs are migrated.
-- [ ] Retire global `window.Scheduler` mutation pattern in favor of reactive store/class.
-- [ ] Update Tauri packaging and Pages workflow.
-- [ ] Delete unused classic DOM rendering paths and orphan files.
-- [ ] Final pass on offline/self-contained guarantees.
+### Phase 5 — Full shell replacement and cleanup
+- [ ] Svelte root replaces the `index.html` loader.
+- [ ] Retire `window.Scheduler` mutation once every tab reads the bridge.
+- [ ] Delete unused classic DOM paths.
+- [ ] Final offline check.
 
-### Cross-Cutting
-- [ ] Preserve offline-first: all libs local/vendored, no CDNs.
-- [ ] Keep JSON import/export and Excel export contracts intact.
-- [ ] Maintain and extend existing unit test suite; add component tests for new surfaces.
-- [ ] Design: intentional, non-templated visual decisions (refine existing console/retro chrome rather than wholesale replace).
-- [ ] Run full test suite and manual smoke test after each phase.
+### Cross-cutting
+- [x] Offline-first. Libs stay local.
+- [x] JSON and Excel contracts unchanged.
+- [x] Existing unit tests kept green. No new component test runner yet.
+- [ ] Design pass. Console chrome was moved, not restyled.
+- [x] `npm test` after each phase. Manual browser smoke of the new shell and setup forms is still open.
 
-## Rough Effort
+## Rough effort
 
-| Phase | Effort | Risk |
-|-------|--------|------|
-| 0. Scaffold + Svelte 5 upgrade | 1–2 days | Low |
-| 1. Lines table → runes | 2–4 days | Low |
-| 2. Shell/chrome | 3–5 days | Low–Medium |
-| 3. Setup panel | 1–2 weeks | Medium |
-| 4. Other modules | 2–4 weeks | Medium (teams DnD highest) |
-| 5. Full shell + cleanup | 1 week | Medium |
-| **Total (incremental)** | **~6–10 weeks** part-time | Manageable |
+| Phase | Status | Risk |
+|---|---|---|
+| 0. Scaffold | Done | Low |
+| 1. Lines table | Done | Low |
+| 2. Shell | Done | Low–Medium |
+| 3. Setup | In progress (forms + shift table) | Medium |
+| 4. Other modules | Not started | Medium (teams DnD highest) |
+| 5. Full shell + cleanup | Not started | Medium |
 
-## Immediate Next Steps
+## Immediate next steps
 
-1. Create branch from bright-garden.
-2. Bump dependencies and verify builds + tests.
-3. Add minimal Svelte 5 root that can coexist with existing shell.
-4. Convert `LinesTable.svelte` to runes as proof-of-concept.
-5. Define reactive bridge interface.
-
----
-
-*Generated by Grok as part of BLADE Alpha Svelte transition scoping.*
+1. Check out `svelte5-transition`.
+2. `npm run build:modules` once so `modules/shell/dist` and `modules/setup-panel/dist` exist.
+3. Convert the generate modal next, calling `attachGenerate` / `attachGenerateModal` helpers instead of copying them.
+4. Then the RDO matrix, locks, rebalance, and sex-swap modals.
+5. Do not start Phase 4 until those setup dialogs are on runes and `npm test` is still green.
