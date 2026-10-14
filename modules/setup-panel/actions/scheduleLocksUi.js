@@ -1,124 +1,161 @@
-/** Schedule Locks modal UI actions. */
+/** Schedule Locks modal. The component renders the dialog.
+ *  Matching and storage stay on Scheduler.state.scheduleLocks.
+ */
+
+function classLabel(S, key) {
+  if (!key || key === "ALL") return "All Classes";
+  var classes = S.getAvailableClasses ? S.getAvailableClasses() : [];
+  var match = classes.find(function (c) { return c.key === key; });
+  return match ? match.label : key;
+}
+
+function shiftLabelText(S, shiftId) {
+  if (!shiftId) return "Any Shift";
+  var shifts = (S.state && S.state.shifts) || [];
+  var s = shifts.find(function (x) { return x.id === shiftId; });
+  if (!s) return "Shift " + shiftId + " (deleted)";
+  var lbl = S.shiftLabel ? S.shiftLabel(s) : ((s.start || "") + "–" + (s.end || ""));
+  return (s.name || s.id) + " (" + lbl + ")";
+}
+
+function sexLabel(sex) {
+  if (!sex || sex === "ALL") return "All";
+  return sex === "M" ? "Male (M)" : "Female (F)";
+}
+
+export function readLockForm(S) {
+  var classes = [{ key: "ALL", label: "All Classes" }];
+  var avail = S && S.getAvailableClasses ? S.getAvailableClasses() : [];
+  avail.forEach(function (c) { classes.push({ key: c.key, label: c.label }); });
+  var shifts = (S && S.state && S.state.shifts) || [];
+  var shiftOptions = [{ id: "", label: "All Shifts" }];
+  shifts.forEach(function (s) {
+    var label = S.shiftLabel ? S.shiftLabel(s) : ((s.start || "") + "–" + (s.end || ""));
+    shiftOptions.push({ id: s.id, label: (s.name || s.id) + " (" + label + ")" });
+  });
+  return { classes: classes, shifts: shiftOptions };
+}
+
+export function readLockRuleRows(S) {
+  var rules = (S && S.state && S.state.scheduleLocks) || [];
+  var lines = (S && S.state && S.state.lines) || [];
+  return rules.map(function (rule) {
+    var matching = lines.filter(function (line) {
+      return S.lineMatchesLockRule ? S.lineMatchesLockRule(line, rule) : false;
+    }).length;
+    return {
+      id: rule.id,
+      classText: classLabel(S, rule.classKey),
+      sexText: sexLabel(rule.sex),
+      shiftText: shiftLabelText(S, rule.shiftId),
+      matching: matching
+    };
+  });
+}
+
+export function pushLockRule(S, classKey, sex, shiftId) {
+  if (!S.state) S.state = {};
+  var rule = {
+    id: "LOCK_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
+    classKey: classKey || "ALL",
+    sex: sex || "ALL",
+    shiftId: shiftId ? shiftId : null
+  };
+  S.state.scheduleLocks = S.state.scheduleLocks || [];
+  S.state.scheduleLocks.push(rule);
+  return rule;
+}
+
+export function removeLockRule(S, ruleId) {
+  if (!S || !S.state || !S.state.scheduleLocks) return;
+  S.state.scheduleLocks = S.state.scheduleLocks.filter(function (rule) { return rule.id !== ruleId; });
+}
+
+export function clearLockRules(S) {
+  if (S && S.state) S.state.scheduleLocks = [];
+}
+
+export function renderLockRulesList(S) {
+  if (S && S.setupLocks && typeof S.setupLocks.refresh === "function") {
+    S.setupLocks.refresh();
+    return;
+  }
+  var container = typeof document !== "undefined" ? document.getElementById("lock-rules-list") : null;
+  if (!container) return;
+  var rows = readLockRuleRows(S);
+  if (!rows.length) {
+    container.textContent = "";
+    var empty = document.createElement("p");
+    empty.className = "muted";
+    empty.style.margin = "0";
+    empty.textContent = "No lock rules defined. All generated lines move freely.";
+    container.appendChild(empty);
+    return;
+  }
+  container.textContent = "";
+  rows.forEach(function (row) {
+    var wrap = document.createElement("div");
+    wrap.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:0.5rem 0.75rem;background:var(--bg-subtle,#f8f9fa);border:1px solid #ddd;border-radius:4px;gap:0.75rem";
+    var text = document.createElement("div");
+    text.style.cssText = "flex:1;font-size:0.88rem";
+    text.textContent = "Class: " + row.classText + " · Gender: " + row.sexText + " · Shift: " + row.shiftText + " (" + row.matching + ")";
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "btn btn-sm btn-red btn-del-lock-rule";
+    btn.setAttribute("data-rule-id", row.id);
+    btn.textContent = "Remove";
+    btn.addEventListener("click", function () {
+      removeLockRule(S, row.id);
+      renderLockRulesList(S);
+    });
+    wrap.appendChild(text);
+    wrap.appendChild(btn);
+    container.appendChild(wrap);
+  });
+}
+
+export function addLockRule(S) {
+  var classSelect = typeof document !== "undefined" ? document.getElementById("lock-rule-class") : null;
+  var sexSelect = typeof document !== "undefined" ? document.getElementById("lock-rule-sex") : null;
+  var shiftSelect = typeof document !== "undefined" ? document.getElementById("lock-rule-shift") : null;
+  pushLockRule(
+    S,
+    classSelect ? classSelect.value : "ALL",
+    sexSelect ? sexSelect.value : "ALL",
+    shiftSelect && shiftSelect.value ? shiftSelect.value : null
+  );
+  renderLockRulesList(S);
+}
 
 export function openLockSchedulesModal(S) {
-  var modal = document.getElementById("lock-schedules-modal");
+  if (S && S.setupLocks && typeof S.setupLocks.open === "function") {
+    S.setupLocks.open();
+    return;
+  }
+  var modal = typeof document !== "undefined" ? document.getElementById("lock-schedules-modal") : null;
   if (!modal) return;
-
-  var classSelect = document.getElementById("lock-rule-class");
-  if (classSelect) {
-    var avail = S.getAvailableClasses ? S.getAvailableClasses() : [];
-    var optsHtml = '<option value="ALL">All Classes</option>' + avail.map(function (c) {
-      return '<option value="' + c.key + '">' + String(c.label).replace(/"/g, "&quot;") + '</option>';
-    }).join("");
-    classSelect.innerHTML = optsHtml;
-  }
-
-  var shiftSelect = document.getElementById("lock-rule-shift");
-  if (shiftSelect) {
-    var shifts = (S.state && S.state.shifts) || [];
-    var shiftOpts = '<option value="">All Shifts</option>' + shifts.map(function (s) {
-      var label = S.shiftLabel ? S.shiftLabel(s) : (s.start + "–" + s.end);
-      return '<option value="' + s.id + '">' + String(s.name || s.id).replace(/"/g, "&quot;") + ' (' + label + ')</option>';
-    }).join("");
-    shiftSelect.innerHTML = shiftOpts;
-  }
-
   renderLockRulesList(S);
   modal.style.display = "flex";
   modal.setAttribute("aria-hidden", "false");
 }
 
 export function closeLockSchedulesModal() {
-  var modal = document.getElementById("lock-schedules-modal");
+  var modal = typeof document !== "undefined" ? document.getElementById("lock-schedules-modal") : null;
   if (modal) {
     modal.style.display = "none";
     modal.setAttribute("aria-hidden", "true");
   }
 }
 
-export function renderLockRulesList(S) {
-  var container = document.getElementById("lock-rules-list");
-  if (!container) return;
-
-  var rules = (S.state && S.state.scheduleLocks) || [];
-  if (!rules.length) {
-    container.innerHTML = '<p class="muted" style="margin:0">No lock rules defined. All generated lines move freely.</p>';
-    return;
-  }
-
-  var lines = (S.state && S.state.lines) || [];
-  var shifts = (S.state && S.state.shifts) || [];
-  var classes = S.getAvailableClasses ? S.getAvailableClasses() : [];
-
-  function classLabel(key) {
-    if (!key || key === "ALL") return "All Classes";
-    var match = classes.find(function (c) { return c.key === key; });
-    return match ? match.label : key;
-  }
-
-  function shiftLabelText(shiftId) {
-    if (!shiftId) return "Any Shift";
-    var s = shifts.find(function (x) { return x.id === shiftId; });
-    if (!s) return "Shift " + shiftId + " (deleted)";
-    var lbl = S.shiftLabel ? S.shiftLabel(s) : (s.start + "–" + s.end);
-    return (s.name || s.id) + " (" + lbl + ")";
-  }
-
-  function sexLabel(sex) {
-    if (!sex || sex === "ALL") return "All";
-    return sex === "M" ? "Male (M)" : "Female (F)";
-  }
-
-  container.innerHTML = rules.map(function (r) {
-    var matchingN = lines.filter(function (l) { return S.lineMatchesLockRule ? S.lineMatchesLockRule(l, r) : false; }).length;
-    var matchText = matchingN > 0 ? "<strong>" + matchingN + " matching line" + (matchingN > 1 ? "s" : "") + "</strong>" : '<span class="muted">(0 matching lines)</span>';
-
-    return '<div style="display:flex;align-items:center;justify-space-between;padding:0.5rem 0.75rem;background:var(--bg-subtle,#f8f9fa);border:1px solid #ddd;border-radius:4px;gap:0.75rem">' +
-      '<div style="flex:1;font-size:0.88rem">' +
-        '<div><strong>Class:</strong> ' + classLabel(r.classKey) + ' &middot; <strong>Gender:</strong> ' + sexLabel(r.sex) + ' &middot; <strong>Shift:</strong> ' + shiftLabelText(r.shiftId) + '</div>' +
-        '<div style="font-size:0.8rem;margin-top:0.2rem">' + matchText + '</div>' +
-      '</div>' +
-      '<button type="button" class="btn btn-sm btn-red btn-del-lock-rule" data-rule-id="' + r.id + '">Remove</button>' +
-    '</div>';
-  }).join("");
-
-  container.querySelectorAll(".btn-del-lock-rule").forEach(function (btn) {
-    btn.addEventListener("click", function () {
-      var ruleId = btn.getAttribute("data-rule-id");
-      if (S.state && S.state.scheduleLocks) {
-        S.state.scheduleLocks = S.state.scheduleLocks.filter(function (x) { return x.id !== ruleId; });
-      }
-      renderLockRulesList(S);
-    });
-  });
-}
-
-export function addLockRule(S) {
-  var classSelect = document.getElementById("lock-rule-class");
-  var sexSelect = document.getElementById("lock-rule-sex");
-  var shiftSelect = document.getElementById("lock-rule-shift");
-
-  var classKey = classSelect ? classSelect.value : "ALL";
-  var sex = sexSelect ? sexSelect.value : "ALL";
-  var shiftId = (shiftSelect && shiftSelect.value) ? shiftSelect.value : null;
-
-  var rule = {
-    id: "LOCK_" + Date.now() + "_" + Math.floor(Math.random() * 10000),
-    classKey: classKey,
-    sex: sex,
-    shiftId: shiftId
-  };
-
-  S.state.scheduleLocks = S.state.scheduleLocks || [];
-  S.state.scheduleLocks.push(rule);
-  renderLockRulesList(S);
-}
-
 export function attachScheduleLocksUi(S) {
   if (!S) return;
   S.openLockSchedulesModal = function () { openLockSchedulesModal(S); };
-  S.closeLockSchedulesModal = closeLockSchedulesModal;
+  S.closeLockSchedulesModal = function () {
+    if (S.setupLocks && typeof S.setupLocks.close === "function") S.setupLocks.close();
+    else closeLockSchedulesModal();
+  };
   S.renderLockRulesList = function () { renderLockRulesList(S); };
+  S.addLockRule = function () { addLockRule(S); };
 
   if (typeof document === "undefined") return;
 
@@ -127,29 +164,6 @@ export function attachScheduleLocksUi(S) {
     if (openBtn && !openBtn._lockedBound) {
       openBtn._lockedBound = true;
       openBtn.addEventListener("click", function () { S.openLockSchedulesModal(); });
-    }
-    var closeBtn = document.getElementById("lock-schedules-close");
-    if (closeBtn && !closeBtn._lockedBound) {
-      closeBtn._lockedBound = true;
-      closeBtn.addEventListener("click", S.closeLockSchedulesModal);
-    }
-    var doneBtn = document.getElementById("btn-lock-schedules-done");
-    if (doneBtn && !doneBtn._lockedBound) {
-      doneBtn._lockedBound = true;
-      doneBtn.addEventListener("click", S.closeLockSchedulesModal);
-    }
-    var addBtn = document.getElementById("btn-add-lock-rule");
-    if (addBtn && !addBtn._lockedBound) {
-      addBtn._lockedBound = true;
-      addBtn.addEventListener("click", function () { addLockRule(S); });
-    }
-    var clearBtn = document.getElementById("btn-clear-lock-rules");
-    if (clearBtn && !clearBtn._lockedBound) {
-      clearBtn._lockedBound = true;
-      clearBtn.addEventListener("click", function () {
-        if (S.state) S.state.scheduleLocks = [];
-        renderLockRulesList(S);
-      });
     }
   }
 

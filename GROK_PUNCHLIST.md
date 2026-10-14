@@ -5,14 +5,15 @@
 **Last updated:** 2026-10-14
 **HEAD:** `1e19a18` — RDO matrix modal in Svelte 5
 
-Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 has forms, the shift table, the generate modal, and the RDO matrix.
+Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 still needs the rebalance and sex-swap dialogs.
 
 ## Resume here
 
 Next slice of Phase 3, still on `svelte5-transition`:
 
-1. Schedule locks (`scheduleLocksUi.js` / `#lock-schedules-modal`).
-2. FT rebalance, DFO rebalance, and sex-swap modals.
+1. FT rebalance modal (`render.js` `renderFtRebalanceModal` / `#ft-rebalance-modal`). Engine stays in `utils/rebalanceFt.js`.
+2. DFO rebalance modal (`#dfo-rebalance-modal`). Engine stays in `utils/rebalanceDfo.js`.
+3. Sex-swap modal (`#swap-sex-modal`). Engine stays in `utils/swapSex.js`.
 
 Keep generation, rebalance, lock, cert, and extra-position logic in the existing plain JS utils. Components call those functions. They do not reimplement them.
 
@@ -30,6 +31,7 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 | Shift table | `ShiftsTable.svelte` | Mounted into `#shifts-tbody`. `S.setupShifts.refresh()` replaces the old `innerHTML` path. `readShiftsFromDom` still reads `data-f` / `data-pin`. |
 | Generate modal | `GenerateModal.svelte`, `actions/generateModal.js` | Mounted into `#generate-modal-root`. `S.setupGenerate.open/close/refresh`. View models stay in `generateModal.js`. `S.generate`, `S.generateClass`, `S.checkParity`, `S.approveParitySwaps`, `S.proposeDfoCertBalance`, and `S.approveDfoCertBalance` are called, not copied. `getBandLabel` still exported for `parityReport.js`. |
 | RDO matrix | `RdoMatrixModal.svelte`, `readRdoMatrixView` in `shiftsTable.js` | Mounted into `#rdo-matrix-root`. `S.setupRdo.open/close/refresh`. Shifts sort by start time inside `readRdoMatrixView`. Export, respin, and the rebalance/swap buttons keep their `render.js` binds. Respin modal stays classic. |
+| Schedule locks | `LockSchedulesModal.svelte`, `scheduleLocksUi.js` | Mounted into `#lock-schedules-root`. `S.setupLocks.open/close/refresh`. Rules stay on `S.state.scheduleLocks`. Matching stays `S.lineMatchesLockRule`. Toolbar `#btn-lock-schedules` still calls `S.openLockSchedulesModal()`. |
 
 ### Left classic on purpose
 
@@ -39,7 +41,8 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 - Help modal bind: `js/main.js` listens for `blade-shell-ready` because the Help button is created by the shell.
 - Generate modal ids stay on the component (`#generate-modal`, `#btn-generate-all`, target/parity/DFO controls). Toolbar `#btn-generate` still calls `S.openGenerateModal()`.
 - RDO matrix ids stay on the component (`#rdo-matrix-modal`, `#rdo-matrix-pos-select`, `#rdo-matrix-table-wrap`, export/respin/rebalance/swap buttons) so `bindSetupActions` still finds them. Toolbar `#btn-rdo-matrix` still calls `S.openRdoMatrixModal()`.
-- Locks, rebalance, sex swap, respin modal, function coverage, cert pools, crew groups, extra positions.
+- Locks ids stay on the component (`#lock-schedules-modal`, `#lock-rule-class`, `#lock-rule-sex`, `#lock-rule-shift`, `#lock-rules-list`).
+- Rebalance, sex swap, respin modal, function coverage, cert pools, crew groups, extra positions.
 - All other tabs.
 
 ### Contracts a later session must not break
@@ -102,10 +105,11 @@ Incremental Svelte 5 migration. Mix runes components with classic DOM during the
 - [x] Period form, FTE counts, shift table (including RDO block/pin and day-times button).
 - [x] Generate modal.
 - [x] RDO matrix modal.
-- [ ] Lock, rebalance, and sex-swap modals.
+- [x] Lock schedules modal.
+- [ ] FT rebalance, DFO rebalance, and sex-swap modals.
 - [x] Generation / rebalance / lock / cert / extra-position logic still in plain JS.
 - [ ] Form state fully on the scheduler bridge. Period and FTE use `S.setupForm`; shifts still commit through `readShiftsFromDom`. Generate targets still live on `S._perShiftTargets`.
-- [x] Generate, DFO rebalance, sex swap, locks, and export tests still pass. Locks, rebalance, and sex-swap UIs are not converted yet.
+- [x] Generate, DFO rebalance, sex swap, locks, and export tests still pass. Rebalance and sex-swap UIs are not converted yet.
 
 ### Phase 4 — Remaining view modules
 - [ ] Coverage heatmap.
@@ -136,7 +140,7 @@ Incremental Svelte 5 migration. Mix runes components with classic DOM during the
 | 0. Scaffold | Done | Low |
 | 1. Lines table | Done | Low |
 | 2. Shell | Done | Low–Medium |
-| 3. Setup | In progress (forms, shifts, generate, RDO matrix) | Medium |
+| 3. Setup | In progress (forms, shifts, generate, RDO matrix, locks) | Medium |
 | 4. Other modules | Not started | Medium (teams DnD highest) |
 | 5. Full shell + cleanup | Not started | Medium |
 
@@ -144,6 +148,6 @@ Incremental Svelte 5 migration. Mix runes components with classic DOM during the
 
 1. Check out `svelte5-transition`.
 2. `npm run build:modules` once so `modules/shell/dist` and `modules/setup-panel/dist` exist.
-3. Convert schedule locks next. Keep rule storage and matching in `scheduleLocks.js`. The component only renders the dialog.
-4. Then FT rebalance, DFO rebalance, and sex-swap modals.
+3. Convert the FT rebalance modal next. Keep `proposeClassMoves` / `approveClassRebalance` in `rebalanceFt.js`.
+4. Then the DFO rebalance and sex-swap modals.
 5. Do not start Phase 4 until those setup dialogs are on runes and `npm test` is still green.

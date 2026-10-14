@@ -10,6 +10,7 @@ import FteForm from "../../src/lib/components/FteForm.svelte";
 import ShiftsTable from "../../src/lib/components/ShiftsTable.svelte";
 import GenerateModal from "../../src/lib/components/GenerateModal.svelte";
 import RdoMatrixModal from "../../src/lib/components/RdoMatrixModal.svelte";
+import LockSchedulesModal from "../../src/lib/components/LockSchedulesModal.svelte";
 
 let _boundDomContentLoaded = false;
 
@@ -40,6 +41,11 @@ function mountSetupUi(S) {
   if (rdo && !rdo.dataset.setupMounted) {
     rdo.dataset.setupMounted = "1";
     S.setupRdo = mount(RdoMatrixModal, { target: rdo });
+  }
+  const locks = document.getElementById("lock-schedules-root");
+  if (locks && !locks.dataset.setupMounted) {
+    locks.dataset.setupMounted = "1";
+    S.setupLocks = mount(LockSchedulesModal, { target: locks });
   }
 }
 
