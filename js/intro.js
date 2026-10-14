@@ -173,8 +173,13 @@
     window.addEventListener("keydown", onAirportKey);
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", runIntro);
-  else runIntro();
+  function startIntro() {
+    if (document.getElementById("blade-term")) runIntro();
+    else window.addEventListener("blade-shell-ready", function () { runIntro(); }, { once: true });
+  }
+
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startIntro);
+  else startIntro();
 
   function boot(src) {
     if (document.querySelector('script[src*="' + src.split("?")[0] + '"]')) return;

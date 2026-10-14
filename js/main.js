@@ -15,6 +15,27 @@ window.Scheduler = window.Scheduler || {};
   }
   if (!S.renderAll) S.renderAll = function () {};
 
+  function bindInstructions() {
+    if (S._instructionsBound) return;
+    var modal = document.getElementById("instructions-modal");
+    var btn = document.getElementById("btn-instructions");
+    var closeBtn = document.getElementById("instructions-modal-close");
+    var content = document.getElementById("instructions-content");
+    if (!btn || !modal || !closeBtn || !content) return;
+    S._instructionsBound = true;
+    function show() {
+      var text = S.INSTRUCTIONS_MD || "Instructions unavailable.";
+      content.innerHTML = "<pre>" + String(text)
+        .replace(/&/g, "&").replace(/</g, "<").replace(/>/g, ">") + "</pre>";
+      modal.style.display = "block";
+    }
+    btn.addEventListener("click", show);
+    closeBtn.addEventListener("click", function () { modal.style.display = "none"; });
+    window.addEventListener("click", function (event) {
+      if (event.target === modal) modal.style.display = "none";
+    });
+  }
+
   function init() {
     document.addEventListener("click", function (e) {
       var sub = e.target && e.target.closest ? e.target.closest(".report-sub-btn") : null;
@@ -28,28 +49,12 @@ window.Scheduler = window.Scheduler || {};
 
     // GEN/EXP/IMP/CLR + #file-import bind after Setup panel mount
     // (modules/setup-panel bindSetupActions). Header only keeps HLP.
-
-    var modal = document.getElementById("instructions-modal");
-    var btn = document.getElementById("btn-instructions");
-    var closeBtn = document.getElementById("instructions-modal-close");
-    var content = document.getElementById("instructions-content");
-    if (btn && modal && closeBtn && content) {
-      function show() {
-        var text = S.INSTRUCTIONS_MD || "Instructions unavailable.";
-        content.innerHTML = "<pre>" + String(text)
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;") + "</pre>";
-        modal.style.display = "block";
-      }
-      btn.addEventListener("click", show);
-      closeBtn.addEventListener("click", function () { modal.style.display = "none"; });
-      window.addEventListener("click", function (event) {
-        if (event.target === modal) modal.style.display = "none";
-      });
-    }
+    bindInstructions();
 
     if (S.updateStatus) S.updateStatus("BLADE Alpha Build — boot 20260924b");
     if (S.renderAll) S.renderAll();
   }
 
   document.addEventListener("DOMContentLoaded", init);
+  window.addEventListener("blade-shell-ready", bindInstructions);
 })(window.Scheduler);

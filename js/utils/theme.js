@@ -6,6 +6,8 @@ window.Scheduler = window.Scheduler || {};
   var STORAGE_KEY = "blade.theme";
   var THEMES = { dark: "dark", presentation: "presentation" };
   var LABELS = { dark: "Dark", presentation: "Presentation" };
+  /** Custom properties the Svelte shell reads. html[data-theme] selects the set. */
+  S.themeTokens = ["--bg", "--panel", "--panel2", "--border", "--text", "--muted", "--amber", "--green", "--red", "--blue", "--cyan", "--mono", "--sans"];
 
   function normalize(name) {
     return name === THEMES.presentation ? THEMES.presentation : THEMES.dark;
@@ -34,6 +36,7 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function setMenuOpen(open) {
+    if (S.shellOwnsChrome) return;
     var menu = menuEl();
     var btn = btnEl();
     if (menu) {
@@ -49,6 +52,7 @@ window.Scheduler = window.Scheduler || {};
   }
 
   function updateToggle(name) {
+    if (S.shellOwnsChrome) return;
     var btn = btnEl();
     var theme = normalize(name);
     if (btn) {

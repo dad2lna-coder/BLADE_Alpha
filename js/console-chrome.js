@@ -26,8 +26,11 @@ window.Scheduler = window.Scheduler || {};
     if (!S.state) S.state = {};
     S.state.airportCode = c;
     try { localStorage.setItem(LS_AIRPORT, c); } catch (e) {}
-    var el = $("console-airport");
-    if (el) el.textContent = c || "\u2014";
+    if (S.shell) S.shell.airport = c || "\u2014";
+    else {
+      var el = $("console-airport");
+      if (el) el.textContent = c || "\u2014";
+    }
     if (c.length === 3) {
       invoke("ensure_airport_folder", { airport: c }).then(function (p) {
         if (S.updateStatus) S.updateStatus("Airport folder: " + p);
@@ -43,8 +46,11 @@ window.Scheduler = window.Scheduler || {};
     if (!S.state) S.state = {};
     S.state.operator = n;
     try { localStorage.setItem(LS_OPERATOR, n); } catch (e) {}
-    var el = $("console-operator");
-    if (el) el.textContent = n;
+    if (S.shell) S.shell.operator = n;
+    else {
+      var el = $("console-operator");
+      if (el) el.textContent = n;
+    }
     return n;
   };
   S.exportDateStamp = function (d) {
@@ -186,6 +192,10 @@ window.Scheduler = window.Scheduler || {};
 
   function tickClock() {
     var now = new Date();
+    if (S.shell) {
+      S.shell.tick(now);
+      return;
+    }
     if ($("console-time")) $("console-time").textContent = pad(now.getHours()) + ":" + pad(now.getMinutes()) + ":" + pad(now.getSeconds());
     if ($("console-date")) $("console-date").textContent = pad(now.getMonth() + 1) + "/" + pad(now.getDate()) + "/" + now.getFullYear();
   }
@@ -207,6 +217,14 @@ window.Scheduler = window.Scheduler || {};
   }
   function refreshHeader() {
     var st = S.state || {};
+    if (S.shell) {
+      S.shell.airport = S.getAirportCode() || "\u2014";
+      S.shell.operator = S.getOperator();
+      S.shell.weeks = String(st.weekCount || 1);
+      S.shell.staff = String(staffTotal());
+      S.shell.lines = String((st.lines && st.lines.length) || 0);
+      return;
+    }
     if ($("console-weeks")) $("console-weeks").textContent = String(st.weekCount || ($("cfg-weeks") && $("cfg-weeks").value) || 1);
     if ($("console-staff")) $("console-staff").textContent = String(staffTotal());
     if ($("console-lines")) $("console-lines").textContent = String((st.lines && st.lines.length) || 0);
