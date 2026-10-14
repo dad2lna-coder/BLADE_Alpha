@@ -3,7 +3,7 @@
 **Work branch:** `svelte5-transition` (do not commit on `bright-garden`)
 **Base:** `bright-garden`
 **Last updated:** 2026-10-14
-**HEAD:** `1e19a18` — RDO matrix modal in Svelte 5
+**HEAD:** `4789b1a` — schedule locks modal in Svelte 5
 
 Resume on `svelte5-transition`. Phases 0–2 are done. Phase 3 still needs the rebalance and sex-swap dialogs.
 
@@ -57,6 +57,7 @@ Verify with `npm test` and `npm run build:setup-panel`. Full module build is `np
 ### Commits on this branch
 
 ```
+4789b1a Move the schedule locks modal into Svelte 5.
 1e19a18 Move the RDO matrix modal into Svelte 5.
 600910a Move the generate modal into Svelte 5.
 aeb53ad Move setup period, FTE, and the shift table into Svelte 5.
