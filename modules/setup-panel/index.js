@@ -9,6 +9,7 @@ import PeriodForm from "../../src/lib/components/PeriodForm.svelte";
 import FteForm from "../../src/lib/components/FteForm.svelte";
 import ShiftsTable from "../../src/lib/components/ShiftsTable.svelte";
 import GenerateModal from "../../src/lib/components/GenerateModal.svelte";
+import RdoMatrixModal from "../../src/lib/components/RdoMatrixModal.svelte";
 
 let _boundDomContentLoaded = false;
 
@@ -34,6 +35,11 @@ function mountSetupUi(S) {
   if (generate && !generate.dataset.setupMounted) {
     generate.dataset.setupMounted = "1";
     S.setupGenerate = mount(GenerateModal, { target: generate });
+  }
+  const rdo = document.getElementById("rdo-matrix-root");
+  if (rdo && !rdo.dataset.setupMounted) {
+    rdo.dataset.setupMounted = "1";
+    S.setupRdo = mount(RdoMatrixModal, { target: rdo });
   }
 }
 

@@ -277,8 +277,9 @@ test('renderRdoMatrixModal sorts shifts earliest to latest by start time', async
   mod.attachShiftsTable(S);
 
   S.renderRdoMatrixModal();
-  // Ensure shiftsTable attached without error
   assert.equal(typeof S.renderRdoMatrixModal, 'function');
+  const view = mod.readRdoMatrixView(S, 'STSO');
+  assert.deepEqual(view.rows.map((row) => row.shift), ['0330', '0330', '0400', '0400', '1230', '1230']);
 });
 
 test('exportAllRdoMatrixCsv exports all sexed position lines and respinSelectedSlices updates target lines', async () => {
