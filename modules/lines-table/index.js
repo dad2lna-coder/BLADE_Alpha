@@ -1,9 +1,12 @@
 /** Lines Table module -- Svelte island inside the classic Lines tab.
  * Rows come from filtered/sorted getRowModels. Edits write Scheduler.state.
  */
-import LinesTable from './LinesTable.svelte';
+import LinesTableSvelte from './LinesTable.svelte';
+import { asClassComponent } from 'svelte/legacy';
 import { initRowModel, dowToScheduleOffset } from './row-model.js';
 import { initLineColors } from './line-colors.js';
+
+const LinesTable = asClassComponent(LinesTableSvelte);
 
 export function initLinesTable(scheduler) {
   const S = scheduler || window.Scheduler;

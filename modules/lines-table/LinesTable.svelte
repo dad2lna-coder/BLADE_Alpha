@@ -1,36 +1,66 @@
 <script>
-  import { onMount } from 'svelte';
+  import { createVirtualizer } from '@tanstack/svelte-virtual';
+  import { fromStore, get } from 'svelte/store';
   import { defaultExportStyle, readableTextHex } from '../shared/lines/exportStyle.js';
 
-  export let rows = [];
-  export let mode = 'svelte'; // 'svelte' | 'classic'
-  export let shiftOptions = [];
-  export let teamOptions = [];
-  export let exportStyle = defaultExportStyle();
-  export let onInlineEdit = null;
-  export let onDayToggle = null;
-  export let onDayDutyEdit = null;
-  export let onDayTimeEdit = null;
-
-  function handleDayToggle(lineId, dayIndex) {
-    onDayToggle?.({ lineId, dayIndex });
-  }
-  export let onSort = null;
-  export let onFilter = null;
-
-  export let currentSortBy = 'role';
-  export let currentSortDir = 'asc';
-
-  export let filterRole = 'ALL';
-  export let filterShift = '';
-  export let filterTeam = '';
-  export let filterSex = '';
-  export let filterDuty = '';
-  export let filterDay = '';
-  export let searchCode = '';
+  let {
+    rows = [],
+    mode = 'svelte',
+    shiftOptions = [],
+    teamOptions = [],
+    exportStyle = null,
+    onInlineEdit = null,
+    onDayToggle = null,
+    onDayDutyEdit = null,
+    onDayTimeEdit = null,
+    onSort = null,
+    onFilter = null,
+    currentSortBy = 'role',
+    currentSortDir = 'asc',
+    filterRole = $bindable('ALL'),
+    filterShift = $bindable(''),
+    filterTeam = $bindable(''),
+    filterSex = $bindable(''),
+    filterDuty = $bindable(''),
+    filterDay = $bindable(''),
+    searchCode = $bindable('')
+  } = $props();
 
   const BASE_POSITIONS = ['TSO', 'LTSO', 'STSO'];
   const BASE_EMPS = ['FT', 'PT'];
+  const ROW_HEIGHT = 42;
+  const BUFFER = 8;
+  const DAY_INDEXES = [0, 1, 2, 3, 4, 5, 6];
+
+  let scrollContainer = $state(null);
+  let palette = $derived(exportStyle || defaultExportStyle());
+
+  const virtualizerStore = createVirtualizer({
+    count: 0,
+    getScrollElement: () => scrollContainer,
+    estimateSize: () => ROW_HEIGHT,
+    overscan: BUFFER,
+    initialRect: { width: 800, height: 600 }
+  });
+  const virtualizer = fromStore(virtualizerStore);
+
+  $effect(() => {
+    const count = rows.length;
+    const element = scrollContainer;
+    get(virtualizerStore).setOptions({
+      count,
+      getScrollElement: () => element,
+      estimateSize: () => ROW_HEIGHT,
+      overscan: BUFFER
+    });
+  });
+
+  let virtualItems = $derived(rows.length ? virtualizer.current.getVirtualItems() : []);
+  let totalSize = $derived(virtualizer.current.getTotalSize());
+  let paddingTop = $derived(virtualItems.length ? virtualItems[0].start : 0);
+  let paddingBottom = $derived(
+    virtualItems.length ? Math.max(0, totalSize - virtualItems[virtualItems.length - 1].end) : 0
+  );
 
   function withCurrent(base, value) {
     const v = value == null ? '' : String(value);
@@ -75,8 +105,7 @@
   function dayStyle(text) {
     const key = dutyKey(text);
     if (!key) return undefined;
-    const style = exportStyle || defaultExportStyle();
-    const bg = style[key];
+    const bg = palette[key];
     if (!bg) return undefined;
     return 'background:' + bg + ';color:' + readableTextHex(bg) + ';';
   }
@@ -91,6 +120,10 @@
 
   function emitDayTime(lineId, dayIndex, field, value) {
     onDayTimeEdit?.({ lineId, dayIndex, field, value });
+  }
+
+  function handleDayToggle(lineId, dayIndex) {
+    onDayToggle?.({ lineId, dayIndex });
   }
 
   function handleSort(col) {
@@ -113,48 +146,26 @@
     });
   }
 
+  function attachScroll(element) {
+    scrollContainer = element;
+    return () => {
+      if (scrollContainer === element) scrollContainer = null;
+    };
+  }
+
   function sortIndicator(col) {
     if (currentSortBy !== col) return '';
     return currentSortDir === 'asc' ? ' ▲' : ' ▼';
   }
-
-  /* Virtualization State */
-  const ROW_HEIGHT = 42; // px per row
-  const BUFFER = 8;      // buffer rows above/below
-
-  let scrollTop = 0;
-  let viewportHeight = 600;
-  let scrollContainer;
-
-  function handleScroll(e) {
-    scrollTop = e.target.scrollTop;
-  }
-
-  $: totalRows = rows.length;
-  $: totalHeight = totalRows * ROW_HEIGHT;
-
-  $: if (scrollContainer && totalHeight >= 0 && scrollTop > totalHeight) {
-    scrollContainer.scrollTop = Math.max(0, totalHeight - viewportHeight);
-    scrollTop = scrollContainer.scrollTop;
-  }
-
-  $: startIndex = Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - BUFFER);
-  $: endIndex = Math.min(totalRows, Math.ceil((scrollTop + viewportHeight) / ROW_HEIGHT) + BUFFER);
-
-  $: visibleRows = rows.slice(startIndex, endIndex);
-  $: offsetY = startIndex * ROW_HEIGHT;
-  $: paddingBottom = Math.max(0, totalHeight - (endIndex * ROW_HEIGHT));
-
-  onMount(() => {
-    if (scrollContainer) {
-      viewportHeight = scrollContainer.clientHeight || 600;
-    }
-  });
 </script>
 
 <div
   class="lines-table-root"
-  style="min-height: min(70vh, 720px); height: min(70vh, 720px); width: 100%; --export-rdo: {exportStyle?.rdo || '#000000'}; --export-bag: {exportStyle?.bag || '#F4B4B4'}; --export-dfo: {exportStyle?.dfo || '#FFF3A8'}; --export-pax: {exportStyle?.pax || '#A0C4FF'}; --export-header: {exportStyle?.header || '#1F4E79'};"
+  style:--export-rdo={palette.rdo || '#000000'}
+  style:--export-bag={palette.bag || '#F4B4B4'}
+  style:--export-dfo={palette.dfo || '#FFF3A8'}
+  style:--export-pax={palette.pax || '#A0C4FF'}
+  style:--export-header={palette.header || '#1F4E79'}
 >
   {#if mode === 'svelte'}
     <div class="lines-table-header-controls">
@@ -166,12 +177,12 @@
             class="filter-input search-input"
             placeholder="Search line code..."
             bind:value={searchCode}
-            on:input={handleFilterChange}
+            oninput={handleFilterChange}
           />
         </label>
         <label>
           Role
-          <select class="filter-select" bind:value={filterRole} on:change={handleFilterChange}>
+          <select class="filter-select" bind:value={filterRole} onchange={handleFilterChange}>
             <option value="ALL">All</option>
             <option value="STSO">STSO</option>
             <option value="LTSO">LTSO</option>
@@ -180,26 +191,26 @@
         </label>
         <label>
           Team
-          <select class="filter-select" bind:value={filterTeam} on:change={handleFilterChange}>
+          <select class="filter-select" bind:value={filterTeam} onchange={handleFilterChange}>
             <option value="">All</option>
             <option value="__none__">Unassigned</option>
-            {#each teamOptions as team}
+            {#each teamOptions as team (team.id)}
               <option value={team.id}>{team.name ?? team.id}</option>
             {/each}
           </select>
         </label>
         <label>
           Shift
-          <select class="filter-select" bind:value={filterShift} on:change={handleFilterChange}>
+          <select class="filter-select" bind:value={filterShift} onchange={handleFilterChange}>
             <option value="">All shifts</option>
-            {#each shiftOptions as shift}
+            {#each shiftOptions as shift (shift.id)}
               <option value={shift.id}>{shiftLabel(shift)}</option>
             {/each}
           </select>
         </label>
         <label>
           Duty
-          <select class="filter-select" bind:value={filterDuty} on:change={handleFilterChange}>
+          <select class="filter-select" bind:value={filterDuty} onchange={handleFilterChange}>
             <option value="">All duties</option>
             <option value="BAG">BAG</option>
             <option value="PAX">PAX</option>
@@ -211,7 +222,7 @@
         </label>
         <label>
           On Day
-          <select class="filter-select" bind:value={filterDay} on:change={handleFilterChange}>
+          <select class="filter-select" bind:value={filterDay} onchange={handleFilterChange}>
             <option value="">Any day</option>
             <option value="0">Sun</option>
             <option value="1">Mon</option>
@@ -224,7 +235,7 @@
         </label>
         <label>
           Sex
-          <select class="filter-select" bind:value={filterSex} on:change={handleFilterChange}>
+          <select class="filter-select" bind:value={filterSex} onchange={handleFilterChange}>
             <option value="">All</option>
             <option value="M">M</option>
             <option value="F">F</option>
@@ -233,16 +244,16 @@
       </div>
     </div>
 
-    <div class="lines-virtual-root" bind:this={scrollContainer} on:scroll={handleScroll}>
+    <div class="lines-virtual-root" {@attach attachScroll}>
       <table class="data-table lines-editable">
         <thead>
           <tr>
-            <th class="sortable col-team" on:click={() => handleSort('team')}>Team{sortIndicator('team')}</th>
-            <th class="sortable col-line" on:click={() => handleSort('line')}>Line{sortIndicator('line')}</th>
-            <th class="sortable col-shift" on:click={() => handleSort('shift')}>Shift{sortIndicator('shift')}</th>
-            <th class="sortable col-time" on:click={() => handleSort('start')}>Start{sortIndicator('start')}</th>
+            <th class="sortable col-team" onclick={() => handleSort('team')}>Team{sortIndicator('team')}</th>
+            <th class="sortable col-line" onclick={() => handleSort('line')}>Line{sortIndicator('line')}</th>
+            <th class="sortable col-shift" onclick={() => handleSort('shift')}>Shift{sortIndicator('shift')}</th>
+            <th class="sortable col-time" onclick={() => handleSort('start')}>Start{sortIndicator('start')}</th>
             <th class="col-time">End</th>
-            <th class="sortable col-pos" on:click={() => handleSort('role')}>Position{sortIndicator('role')}</th>
+            <th class="sortable col-pos" onclick={() => handleSort('role')}>Position{sortIndicator('role')}</th>
             <th class="col-sm">Emp</th>
             <th class="col-sm">Sex</th>
             <th class="col-duty">Duty</th>
@@ -260,124 +271,127 @@
           </tr>
         </thead>
         <tbody>
-          {#if offsetY > 0}
-            <tr class="spacer-row" style="height: {offsetY}px;"><td colspan="20" class="spacer-cell" style="height: {offsetY}px;"></td></tr>
-          {/if}
-          {#each visibleRows as row (row.id)}
-            <tr data-line-row={row?.id} style="height: {ROW_HEIGHT}px;">
-              <td>
-                <select class="line-edit" data-field="team" data-line-id={row?.id} value={row?.teamId ?? ''} on:change={(e) => emitEdit(row?.id, 'team', e.target.value)}>
-                  <option value="">—</option>
-                  {#each teamOptions as team}
-                    <option value={team.id}>{team.name ?? team.id}</option>
-                  {/each}
-                </select>
-              </td>
-              <td>
-                <input type="text" class="line-edit line-code-input" data-field="lineCode" data-line-id={row?.id} value={row?.line ?? ''} on:change={(e) => emitEdit(row?.id, 'lineCode', e.target.value)} />
-              </td>
-              <td>
-                <select class="line-edit" data-field="shift" data-line-id={row?.id} value={row?.shiftId ?? ''} on:change={(e) => emitEdit(row?.id, 'shift', e.target.value)}>
-                  <option value="">—</option>
-                  {#each shiftOptions as shift}
-                    <option value={shift.id}>{shiftLabel(shift)}</option>
-                  {/each}
-                </select>
-              </td>
-              <td>
-                <input type="time" class="line-edit line-time-input" data-field="start" data-line-id={row?.id} value={row?.start ?? ''} on:change={(e) => emitEdit(row?.id, 'start', e.target.value)} />
-              </td>
-              <td>
-                <input type="time" class="line-edit line-time-input" data-field="end" data-line-id={row?.id} value={row?.end ?? ''} on:change={(e) => emitEdit(row?.id, 'end', e.target.value)} />
-              </td>
-              <td>
-                <select class="line-edit" data-field="position" data-line-id={row?.id} value={row?.position ?? ''} on:change={(e) => emitEdit(row?.id, 'position', e.target.value)}>
-                  <option value="">—</option>
-                  {#each withCurrent(BASE_POSITIONS, row?.position) as pos}
-                    <option value={pos}>{pos}</option>
-                  {/each}
-                </select>
-              </td>
-              <td>
-                <select class="line-edit" data-field="emp" data-line-id={row?.id} value={row?.emp ?? ''} on:change={(e) => emitEdit(row?.id, 'emp', e.target.value)}>
-                  <option value="">—</option>
-                  {#each BASE_EMPS as emp}
-                    <option value={emp}>{emp}</option>
-                  {/each}
-                </select>
-              </td>
-              <td>
-                <select class="line-edit" data-field="sex" data-line-id={row?.id} value={row?.sex ?? ''} on:change={(e) => emitEdit(row?.id, 'sex', e.target.value)}>
-                  <option value="">—</option>
-                  <option value="M">M</option>
-                  <option value="F">F</option>
-                </select>
-              </td>
-              <td>
-                <select class="line-edit" data-field="function" data-line-id={row?.id} value={row?.function ?? ''} on:change={(e) => emitEdit(row?.id, 'function', e.target.value)}>
-                  <option value="">—</option>
-                  <option value="-">-</option>
-                  <option value="DFO">DFO</option>
-                  <option value="BAG">BAG</option>
-                  <option value="PAX">PAX</option>
-                  <option value="TRAINING">TRAINING</option>
-                </select>
-              </td>
-              <td>
-                <select class="line-edit" data-field="certPool" data-line-id={row?.id} value={row?.certPool ?? ''} on:change={(e) => emitEdit(row?.id, 'certPool', e.target.value)}>
-                  <option value="">—</option>
-                  <option value="A">A</option>
-                  <option value="B">B</option>
-                </select>
-              </td>
-              <td class="line-rdo-cell">{row?.rdos ?? '—'}</td>
-              <td class="line-center">{row?.paid ?? ''}</td>
-              {#each [0, 1, 2, 3, 4, 5, 6] as i}
-                <td
-                  class={dayClass(row?.dayDuties?.[i] ?? row?.days?.[i])}
-                  style={dayStyle(row?.dayDuties?.[i] ?? row?.days?.[i])}
-                >
-                  <div class="day-cell-inner">
-                    <select
-                      class="day-duty-select"
-                      value={row?.dayDuties?.[i] === 'OFF' || row?.days?.[i] === 'RDO' ? 'OFF' : (row?.dayDuties?.[i] || 'PAX')}
-                      on:change={(e) => emitDayDuty(row?.id, i, e.target.value)}
-                    >
-                      <option value="PAX">PAX</option>
-                      <option value="BAG">BAG</option>
-                      <option value="DFO">DFO</option>
-                      <option value="-">-</option>
-                      <option value="TRAINING">Training</option>
-                      <option value="OFF">OFF</option>
-                    </select>
-
-                    {#if row?.dayDuties?.[i] !== 'OFF' && row?.days?.[i] !== 'RDO'}
-                      <div class="day-times-wrap">
-                        <input
-                          type="time"
-                          class="day-time-input"
-                          value={row?.dayStarts?.[i] || row?.start || ''}
-                          on:change={(e) => emitDayTime(row?.id, i, 'start', e.target.value)}
-                        />
-                        <span class="day-time-sep">–</span>
-                        <input
-                          type="time"
-                          class="day-time-input"
-                          value={row?.dayEnds?.[i] || row?.end || ''}
-                          on:change={(e) => emitDayTime(row?.id, i, 'end', e.target.value)}
-                        />
-                      </div>
-                    {/if}
-                  </div>
-                </td>
-              {/each}
-              <td class="line-hours">{row?.hours ?? ''}</td>
-            </tr>
-          {:else}
+          {#if rows.length === 0}
             <tr><td colspan="20" class="muted" style="padding: 1.5rem; text-align: center;">No matching lines found.</td></tr>
-          {/each}
-          {#if paddingBottom > 0}
-            <tr class="spacer-row" style="height: {paddingBottom}px;"><td colspan="20" class="spacer-cell" style="height: {paddingBottom}px;"></td></tr>
+          {:else}
+            {#if paddingTop > 0}
+              <tr class="spacer-row" style:height="{paddingTop}px"><td colspan="20" class="spacer-cell" style:height="{paddingTop}px"></td></tr>
+            {/if}
+            {#each virtualItems as item (rows[item.index]?.id ?? item.key)}
+              {@const row = rows[item.index]}
+              <tr data-line-row={row?.id} style:height="{ROW_HEIGHT}px">
+                <td>
+                  <select class="line-edit" data-field="team" data-line-id={row?.id} value={row?.teamId ?? ''} onchange={(e) => emitEdit(row?.id, 'team', e.target.value)}>
+                    <option value="">—</option>
+                    {#each teamOptions as team (team.id)}
+                      <option value={team.id}>{team.name ?? team.id}</option>
+                    {/each}
+                  </select>
+                </td>
+                <td>
+                  <input type="text" class="line-edit line-code-input" data-field="lineCode" data-line-id={row?.id} value={row?.line ?? ''} onchange={(e) => emitEdit(row?.id, 'lineCode', e.target.value)} />
+                </td>
+                <td>
+                  <select class="line-edit" data-field="shift" data-line-id={row?.id} value={row?.shiftId ?? ''} onchange={(e) => emitEdit(row?.id, 'shift', e.target.value)}>
+                    <option value="">—</option>
+                    {#each shiftOptions as shift (shift.id)}
+                      <option value={shift.id}>{shiftLabel(shift)}</option>
+                    {/each}
+                  </select>
+                </td>
+                <td>
+                  <input type="time" class="line-edit line-time-input" data-field="start" data-line-id={row?.id} value={row?.start ?? ''} onchange={(e) => emitEdit(row?.id, 'start', e.target.value)} />
+                </td>
+                <td>
+                  <input type="time" class="line-edit line-time-input" data-field="end" data-line-id={row?.id} value={row?.end ?? ''} onchange={(e) => emitEdit(row?.id, 'end', e.target.value)} />
+                </td>
+                <td>
+                  <select class="line-edit" data-field="position" data-line-id={row?.id} value={row?.position ?? ''} onchange={(e) => emitEdit(row?.id, 'position', e.target.value)}>
+                    <option value="">—</option>
+                    {#each withCurrent(BASE_POSITIONS, row?.position) as pos (pos)}
+                      <option value={pos}>{pos}</option>
+                    {/each}
+                  </select>
+                </td>
+                <td>
+                  <select class="line-edit" data-field="emp" data-line-id={row?.id} value={row?.emp ?? ''} onchange={(e) => emitEdit(row?.id, 'emp', e.target.value)}>
+                    <option value="">—</option>
+                    {#each BASE_EMPS as emp (emp)}
+                      <option value={emp}>{emp}</option>
+                    {/each}
+                  </select>
+                </td>
+                <td>
+                  <select class="line-edit" data-field="sex" data-line-id={row?.id} value={row?.sex ?? ''} onchange={(e) => emitEdit(row?.id, 'sex', e.target.value)}>
+                    <option value="">—</option>
+                    <option value="M">M</option>
+                    <option value="F">F</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="line-edit" data-field="function" data-line-id={row?.id} value={row?.function ?? ''} onchange={(e) => emitEdit(row?.id, 'function', e.target.value)}>
+                    <option value="">—</option>
+                    <option value="-">-</option>
+                    <option value="DFO">DFO</option>
+                    <option value="BAG">BAG</option>
+                    <option value="PAX">PAX</option>
+                    <option value="TRAINING">TRAINING</option>
+                  </select>
+                </td>
+                <td>
+                  <select class="line-edit" data-field="certPool" data-line-id={row?.id} value={row?.certPool ?? ''} onchange={(e) => emitEdit(row?.id, 'certPool', e.target.value)}>
+                    <option value="">—</option>
+                    <option value="A">A</option>
+                    <option value="B">B</option>
+                  </select>
+                </td>
+                <td class="line-rdo-cell">{row?.rdos ?? '—'}</td>
+                <td class="line-center">{row?.paid ?? ''}</td>
+                {#each DAY_INDEXES as i (i)}
+                  <td
+                    class={dayClass(row?.dayDuties?.[i] ?? row?.days?.[i])}
+                    style={dayStyle(row?.dayDuties?.[i] ?? row?.days?.[i])}
+                  >
+                    <div class="day-cell-inner">
+                      <select
+                        class="day-duty-select"
+                        value={row?.dayDuties?.[i] === 'OFF' || row?.days?.[i] === 'RDO' ? 'OFF' : (row?.dayDuties?.[i] || 'PAX')}
+                        onchange={(e) => emitDayDuty(row?.id, i, e.target.value)}
+                      >
+                        <option value="PAX">PAX</option>
+                        <option value="BAG">BAG</option>
+                        <option value="DFO">DFO</option>
+                        <option value="-">-</option>
+                        <option value="TRAINING">Training</option>
+                        <option value="OFF">OFF</option>
+                      </select>
+
+                      {#if row?.dayDuties?.[i] !== 'OFF' && row?.days?.[i] !== 'RDO'}
+                        <div class="day-times-wrap">
+                          <input
+                            type="time"
+                            class="day-time-input"
+                            value={row?.dayStarts?.[i] || row?.start || ''}
+                            onchange={(e) => emitDayTime(row?.id, i, 'start', e.target.value)}
+                          />
+                          <span class="day-time-sep">–</span>
+                          <input
+                            type="time"
+                            class="day-time-input"
+                            value={row?.dayEnds?.[i] || row?.end || ''}
+                            onchange={(e) => emitDayTime(row?.id, i, 'end', e.target.value)}
+                          />
+                        </div>
+                      {/if}
+                    </div>
+                  </td>
+                {/each}
+                <td class="line-hours">{row?.hours ?? ''}</td>
+              </tr>
+            {/each}
+            {#if paddingBottom > 0}
+              <tr class="spacer-row" style:height="{paddingBottom}px"><td colspan="20" class="spacer-cell" style:height="{paddingBottom}px"></td></tr>
+            {/if}
           {/if}
         </tbody>
       </table>
@@ -502,7 +516,6 @@
     background: rgba(125, 125, 125, 0.08);
   }
 
-  /* Seamless inline editable cells */
   .lines-virtual-root .line-edit {
     background: transparent;
     border: none;
@@ -546,7 +559,6 @@
     height: 100%;
   }
 
-  /* Day duty and per-day time cells */
   .day-cell-inner {
     display: flex;
     flex-direction: column;
@@ -650,7 +662,6 @@
     font-style: italic;
   }
 
-  /* Column Sizing */
   .col-team { width: 4.5rem; min-width: 4rem; }
   .col-line { width: 5.5rem; min-width: 5.5rem; }
   .col-shift { width: 7rem; min-width: 6.5rem; }
