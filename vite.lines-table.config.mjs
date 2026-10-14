@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { bladeSvelte } from "./vite.svelte-plugin.mjs";
 import { resolve } from "path";
 
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [bladeSvelte()],
   define: {
     "process.env.NODE_ENV": JSON.stringify("production"),
   },

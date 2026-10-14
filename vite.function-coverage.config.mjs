@@ -1,9 +1,9 @@
 import { defineConfig } from "vite";
-import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { bladeSvelte } from "./vite.svelte-plugin.mjs";
 import { resolve } from "path";
 
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [bladeSvelte()],
   resolve: {
     alias: {
       "@tanstack/svelte-virtual": resolve(__dirname, "node_modules/@tanstack/svelte-virtual/dist/index.js"),
