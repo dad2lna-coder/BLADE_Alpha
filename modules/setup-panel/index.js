@@ -4,17 +4,43 @@ import { bridgeScheduler } from "./actions/bridge.js";
 import { renderAll, bindSetupActions } from "./actions/render.js";
 import { attachExtraPositions } from "./utils/extraPositions.js";
 import { attachTrainingClasses } from "./utils/trainingClasses.js";
+import { mount } from "svelte";
+import PeriodForm from "../../src/lib/components/PeriodForm.svelte";
+import FteForm from "../../src/lib/components/FteForm.svelte";
+import ShiftsTable from "../../src/lib/components/ShiftsTable.svelte";
 
 let _boundDomContentLoaded = false;
 
-function seedStartDate(S) {
-  var el = document.getElementById("cfg-start");
-  if (!el) return;
-  if (!el.value && S.parseStartDate && S.toDateInputValue) {
-    var d = S.parseStartDate(null);
-    el.value = S.toDateInputValue(d);
-    if (S.state) S.state.startDate = d;
+function mountSetupUi(S) {
+  const period = document.getElementById("setup-period-root");
+  const fte = document.getElementById("setup-fte-root");
+  const shifts = document.getElementById("shifts-tbody");
+  if (!S.setupForm) S.setupForm = {};
+  if (period && !period.dataset.setupMounted) {
+    period.dataset.setupMounted = "1";
+    const api = mount(PeriodForm, { target: period });
+    S.setupForm.pullPeriod = function () { api.pullPeriod(); };
   }
+  if (fte && !fte.dataset.setupMounted) {
+    fte.dataset.setupMounted = "1";
+    const api = mount(FteForm, { target: fte });
+    S.setupForm.pullFte = function () { api.pullFte(); };
+  }
+  if (shifts && !S.setupShifts) {
+    S.setupShifts = mount(ShiftsTable, { target: shifts });
+  }
+}
+
+function seedStartDate(S) {
+  if (!S.state) S.state = {};
+  if (!S.state.startDate && S.parseStartDate) S.state.startDate = S.parseStartDate(null);
+  if (S.setupForm && typeof S.setupForm.pullPeriod === "function") {
+    S.setupForm.pullPeriod();
+    return;
+  }
+  var el = document.getElementById("cfg-start");
+  if (!el || el.value || !S.toDateInputValue) return;
+  el.value = S.toDateInputValue(S.state.startDate);
 }
 
 export function initSetupPanel(scheduler) {
@@ -36,6 +62,7 @@ export function initSetupPanel(scheduler) {
     }
   };
 
+  mountSetupUi(S);
   seedStartDate(S);
 
   if (!_boundDomContentLoaded) {

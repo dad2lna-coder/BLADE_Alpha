@@ -232,6 +232,10 @@ window.Scheduler = window.Scheduler || {};
     if (startEl && S.toDateInputValue) startEl.value = S.toDateInputValue(S.state.startDate);
     var seedEl = document.getElementById("cfg-generate-seed");
     if (seedEl) seedEl.value = S.state.generateSeed || "random";
+    if (S.setupForm) {
+      if (typeof S.setupForm.pullPeriod === "function") S.setupForm.pullPeriod();
+      if (typeof S.setupForm.pullFte === "function") S.setupForm.pullFte();
+    }
     if (S.renderShiftsTable) S.renderShiftsTable();
     if (S.renderAll) S.renderAll();
     if (S.renderCoverageBars) S.renderCoverageBars();

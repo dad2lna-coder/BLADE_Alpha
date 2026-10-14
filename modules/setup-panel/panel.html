@@ -9,24 +9,11 @@
 </div>
 <div class="card"><div class="section-title">What this is</div><p class="muted" style="margin:0"><strong>BLADE</strong> staffing balancer. <strong>FT / PT</strong> are operational TSO. <strong>LTSO/STSO M/F</strong> are management.</p></div>
 <input type="hidden" id="cfg-open" value="03:30" /><input type="hidden" id="cfg-close" value="23:00" />
-<div class="card" id="card-period"><div class="section-title">Schedule period</div><div class="period-row" style="display:flex;flex-wrap:wrap;gap:1rem;align-items:center"><label>Schedule start <input type="date" id="cfg-start" /></label><label>Weeks <input type="number" id="cfg-weeks" min="1" max="8" value="1" style="width:4.5rem" /></label><label>Generate seed <input type="text" id="cfg-generate-seed" placeholder="random" value="random" style="width:6.5rem" title="Leave as 'random' or enter a number for reproducible scheduling" /></label></div></div>
+<div id="setup-period-root"></div>
 <details class="card setup-fold" id="card-fte"><summary class="section-title">FTE</summary>
-<div class="fte-block">
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">FT TSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ft-m" min="0" value="10" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ft-f" min="0" value="10" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">PT TSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-pt-m" min="0" value="4" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-pt-f" min="0" value="4" style="width:4.5rem" /></label></div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Hours/day <input type="number" id="cfg-pt-hours" min="1" max="12" value="4" style="width:4.5rem" /></label><label>Days/week <input type="number" id="cfg-pt-days" min="1" max="6" value="3" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">LTSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-ltso-m" min="0" value="1" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-ltso-f" min="0" value="1" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">STSO</div>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>Male <input type="number" id="cfg-stso-m" min="0" value="2" style="width:4.5rem" /></label><label>Female <input type="number" id="cfg-stso-f" min="0" value="2" style="width:4.5rem" /></label></div>
-<div class="fte-role" style="text-align:center;font-weight:700;margin:0.85rem 0 0.35rem">Training dept</div>
-<p class="muted" style="margin:0 0 0.35rem;text-align:center">ESTI and MSTI are training classes — no sex, not ops FTE, not drawn from FT/PT TSO pools. Use these counts; do not add them as extra positions.</p>
-<div class="fte-sex-row" style="display:flex;justify-content:center;gap:2rem;flex-wrap:wrap"><label>ESTI <input type="number" id="cfg-esti" min="0" value="0" style="width:4.5rem" /></label><label>MSTI <input type="number" id="cfg-msti" min="0" value="0" style="width:4.5rem" /></label></div>
+<div id="setup-fte-root"></div>
 <div class="toolbar" style="margin-top:0.75rem;gap:0.5rem;flex-wrap:wrap"><button type="button" class="btn" id="btn-add-position">+ Add position</button><button type="button" class="btn btn-amber" id="btn-save-staffing">Save staffing</button></div>
 <div id="extra-pos-list" class="extra-pos-list"></div>
-</div>
 </details>
 <details class="card setup-fold" id="card-func"><summary class="section-title">Function coverage</summary>
 <p class="muted" style="margin:0 0 0.65rem">BAG and DFO pools run together. Each is Male/Female × STSO/LTSO/TSO, carved from FTE. Generate assigns functions to generated shift lines. Min/max below are counts of shifts (lines) per role — not instantaneous headcount. Start/end come from the shift definition. Leftover ops lines are PAX.</p>

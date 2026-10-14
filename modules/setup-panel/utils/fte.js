@@ -62,6 +62,7 @@ export function applyFte(S, fte) {
   S.state.stsoF = +fte.stsoF || 0;
   S.state.esti = +fte.esti || 0;
   S.state.msti = +fte.msti || 0;
+  if (S.setupForm && typeof S.setupForm.pullFte === "function") S.setupForm.pullFte();
 }
 
 function readSetupCompanions(S) {

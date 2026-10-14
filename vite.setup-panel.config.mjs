@@ -1,7 +1,12 @@
 import { defineConfig } from "vite";
+import { bladeSvelte } from "./vite.svelte-plugin.mjs";
 import { resolve } from "path";
 
 export default defineConfig({
+  plugins: [bladeSvelte()],
+  define: {
+    "process.env.NODE_ENV": JSON.stringify("production"),
+  },
   build: {
     target: "es2020",
     module: true,

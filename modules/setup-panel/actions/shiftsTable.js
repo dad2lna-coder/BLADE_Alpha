@@ -129,6 +129,10 @@ export function attachShiftsTable(S) {
   };
 
   S.renderShiftsTable = function () {
+    if (S.setupShifts && typeof S.setupShifts.refresh === "function") {
+      S.setupShifts.refresh();
+      return;
+    }
     var tbody = document.getElementById("shifts-tbody");
     if (!tbody) return;
     var groups = S.state.shiftCrewGroups || [];

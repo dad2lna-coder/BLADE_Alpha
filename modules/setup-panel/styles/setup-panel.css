@@ -209,3 +209,29 @@
 #card-cert-pool .cert-map-row select {
   min-width: 5rem;
 }
+
+#card-period .period-row,
+#card-fte .fte-sex-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+}
+#card-period .period-row {
+  gap: 1rem;
+}
+#card-fte .fte-role {
+  text-align: center;
+  font-weight: 700;
+  margin: 0.85rem 0 0.35rem;
+}
+#card-fte .fte-sex-row {
+  justify-content: center;
+  gap: 2rem;
+}
+#card-fte .fte-note {
+  margin: 0 0 0.35rem;
+  text-align: center;
+}
+#shifts-tbody .shift-actions {
+  white-space: nowrap;
+}
