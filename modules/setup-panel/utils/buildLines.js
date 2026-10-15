@@ -87,13 +87,13 @@ export function buildLines(S, counts) {
     if ((+def.paid || 8) >= 10) return;
     remainingNeed += counts[def.id] || 0;
   });
-  function fillShift(def, need, seatsLeft) {
+  function fillShift(def, need) {
     var placed = 0;
     var isLong = (+def.paid || 8) >= 10;
     var ptLeft = (pools.PTM || 0) + (pools.PTF || 0);
     var ptQuota = 0;
-    if (!isLong && seatsLeft > 0) {
-      ptQuota = Math.round(need * ptLeft / seatsLeft);
+    if (!isLong && remainingNeed > 0) {
+      ptQuota = Math.round(need * ptLeft / remainingNeed);
       if (ptQuota < 0) ptQuota = 0;
       if (ptQuota > need) ptQuota = need;
       if (ptQuota > ptLeft) ptQuota = ptLeft;
@@ -105,6 +105,7 @@ export function buildLines(S, counts) {
       if (!person) break;
       if (person.empClass === "PT") ptPlaced++;
       placedGlobal[person.sex]++;
+      if (!isLong) remainingNeed--;
       lines.push(makeLineFromPerson(S, def, person, id));
       id++; placed++;
     }
@@ -114,8 +115,7 @@ export function buildLines(S, counts) {
   }
   order.forEach(function (def) {
     var need = counts[def.id] || 0;
-    fillShift(def, need, remainingNeed);
-    if ((+def.paid || 8) < 10) remainingNeed -= need;
+    fillShift(def, need);
   });
   return lines;
 }
