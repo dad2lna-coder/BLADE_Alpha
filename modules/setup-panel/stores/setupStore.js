@@ -1,4 +1,5 @@
 /** Setup owns default hours, FTE, shifts, function-coverage seed. */
+import { ensureUniqueShiftIds, nextShiftSeq } from "../utils/shiftMath.js";
 
 export function defaultShifts() {
   return [
@@ -83,5 +84,6 @@ export function attachSetupState(S) {
   if (!Array.isArray(S.state.shiftCrewGroups)) S.state.shiftCrewGroups = [];
   if (!Array.isArray(S.state.scheduleLocks)) S.state.scheduleLocks = [];
   S.defaultShifts = defaultShifts;
-  if (!S.shiftSeq) S.shiftSeq = (S.state.shifts && S.state.shifts.length) || 6;
+  ensureUniqueShiftIds(S);
+  S.shiftSeq = nextShiftSeq(S.state.shifts);
 }

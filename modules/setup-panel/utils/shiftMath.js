@@ -185,6 +185,181 @@ export function rdoCountForShift(S, shift, empClass) {
   return Math.max(1, 7 - work);
 }
 
+/** Next numeric suffix for an S<n> id. Skips any id already in use. */
+export function nextShiftSeq(shifts) {
+  var used = Object.create(null);
+  var maxN = 0;
+  (shifts || []).forEach(function (s) {
+    if (!s || s.id == null || s.id === "") return;
+    var id = String(s.id);
+    used[id] = true;
+    var m = /^S(\d+)$/.exec(id);
+    if (!m) return;
+    var n = parseInt(m[1], 10);
+    if (n > maxN) maxN = n;
+  });
+  var next = maxN + 1;
+  while (used["S" + next]) next += 1;
+  return next;
+}
+
+export function nextShiftId(shifts) {
+  return "S" + nextShiftSeq(shifts);
+}
+
+export function cloneDayTimes(dayTimes) {
+  if (!dayTimes || typeof dayTimes !== "object") return null;
+  var out = {};
+  Object.keys(dayTimes).forEach(function (k) {
+    var v = dayTimes[k];
+    if (!v || typeof v !== "object") {
+      out[k] = v;
+      return;
+    }
+    var copy = {};
+    if (v.start != null) copy.start = v.start;
+    if (v.end != null) copy.end = v.end;
+    if (Array.isArray(v.segments)) {
+      copy.segments = v.segments.map(function (seg) {
+        return seg ? { start: seg.start, end: seg.end } : seg;
+      });
+    }
+    out[k] = copy;
+  });
+  return out;
+}
+
+function cloneSegments(segments) {
+  if (!Array.isArray(segments)) return segments;
+  return segments.map(function (seg) {
+    return seg ? { start: seg.start, end: seg.end } : seg;
+  });
+}
+
+function shiftsShareNested(shifts) {
+  var seen = [];
+  function hit(v) {
+    if (v == null || typeof v !== "object") return false;
+    if (seen.indexOf(v) !== -1) return true;
+    seen.push(v);
+    return false;
+  }
+  var shared = false;
+  (shifts || []).forEach(function (s) {
+    if (!s) return;
+    if (hit(s.segments)) shared = true;
+    if (Array.isArray(s.segments)) {
+      s.segments.forEach(function (seg) { if (hit(seg)) shared = true; });
+    }
+    if (hit(s.dayTimes)) shared = true;
+    if (s.dayTimes && typeof s.dayTimes === "object") {
+      Object.keys(s.dayTimes).forEach(function (k) {
+        var dt = s.dayTimes[k];
+        if (hit(dt)) shared = true;
+        if (dt && Array.isArray(dt.segments)) {
+          if (hit(dt.segments)) shared = true;
+          dt.segments.forEach(function (seg) { if (hit(seg)) shared = true; });
+        }
+      });
+    }
+    if (hit(s.rdoHard)) shared = true;
+    if (hit(s.rdoPins)) shared = true;
+  });
+  return shared;
+}
+
+var DUPLICATE_SHIFT_ID_NOTE = "Duplicate shift ids were split onto new ids. Regenerate lines so each shift has its own lines.";
+
+/**
+ * Keep the first shift for each id. Later repeats get a fresh S<n>.
+ * segments, dayTimes, rdoHard, and rdoPins are copied so shifts do not share objects.
+ * Lines stay on the first shift. Crew-group membership follows the new ids.
+ * One issue note asks the user to regenerate when anything was renumbered.
+ */
+export function ensureUniqueShiftIds(S) {
+  if (!S || !S.state || !Array.isArray(S.state.shifts)) return false;
+  var shifts = S.state.shifts;
+  var groups = Array.isArray(S.state.shiftCrewGroups) ? S.state.shiftCrewGroups : [];
+
+  var membership = shifts.map(function (s) {
+    var ids = [];
+    if (!s) return ids;
+    if (s.crewGroupId) ids.push(String(s.crewGroupId));
+    var sid = s.id == null ? "" : String(s.id);
+    groups.forEach(function (g) {
+      if (!g || g.id == null || !Array.isArray(g.shiftIds) || !sid) return;
+      var gid = String(g.id);
+      if (g.shiftIds.map(String).indexOf(sid) !== -1 && ids.indexOf(gid) < 0) ids.push(gid);
+    });
+    return ids;
+  });
+
+  var taken = Object.create(null);
+  shifts.forEach(function (s) {
+    if (!s || s.id == null || s.id === "") return;
+    taken[String(s.id)] = true;
+  });
+
+  function freshId() {
+    var maxN = 0;
+    Object.keys(taken).forEach(function (id) {
+      var m = /^S(\d+)$/.exec(id);
+      if (!m) return;
+      var n = parseInt(m[1], 10);
+      if (n > maxN) maxN = n;
+    });
+    var n = maxN + 1;
+    var id = "S" + n;
+    while (taken[id]) {
+      n += 1;
+      id = "S" + n;
+    }
+    taken[id] = true;
+    return id;
+  }
+
+  var seen = Object.create(null);
+  var renamed = false;
+  shifts.forEach(function (s) {
+    if (!s) return;
+    var id = s.id == null ? "" : String(s.id);
+    if (seen[id]) {
+      s.id = freshId();
+      renamed = true;
+      return;
+    }
+    seen[id] = true;
+  });
+
+  if (renamed || shiftsShareNested(shifts)) {
+    shifts.forEach(function (s) {
+      if (!s) return;
+      if (Array.isArray(s.segments)) s.segments = cloneSegments(s.segments);
+      if (s.dayTimes && typeof s.dayTimes === "object") s.dayTimes = cloneDayTimes(s.dayTimes);
+      if (Array.isArray(s.rdoHard)) s.rdoHard = s.rdoHard.slice();
+      if (Array.isArray(s.rdoPins)) s.rdoPins = s.rdoPins.slice();
+    });
+  }
+
+  if (renamed) {
+    groups.forEach(function (g) {
+      if (!g || g.id == null) return;
+      var gid = String(g.id);
+      var nextIds = [];
+      shifts.forEach(function (s, i) {
+        if (!s || membership[i].indexOf(gid) < 0) return;
+        if (nextIds.indexOf(s.id) < 0) nextIds.push(s.id);
+      });
+      g.shiftIds = nextIds;
+    });
+    if (!Array.isArray(S.state.issues)) S.state.issues = [];
+    if (S.state.issues.indexOf(DUPLICATE_SHIFT_ID_NOTE) < 0) {
+      S.state.issues.push(DUPLICATE_SHIFT_ID_NOTE);
+    }
+  }
+  return renamed;
+}
+
 export function normalizeShift(S, raw, index) {
   var fallbackId = "S" + (index + 1);
   var id = raw && raw.id ? String(raw.id) : fallbackId;
@@ -312,4 +487,7 @@ export function attachShiftMath(S) {
   S.rdoCountForShift = function (shift, empClass) { return rdoCountForShift(S, shift, empClass); };
   S.normalizeShift = function (raw, index) { return normalizeShift(S, raw, index); };
   S.getBandKey = function (shiftId) { return getBandKey(S, shiftId); };
+  S.nextShiftSeq = function () { return nextShiftSeq(S.state && S.state.shifts); };
+  S.nextShiftId = function () { return nextShiftId(S.state && S.state.shifts); };
+  S.ensureUniqueShiftIds = function () { return ensureUniqueShiftIds(S); };
 }

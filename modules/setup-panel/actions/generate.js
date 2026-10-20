@@ -1,6 +1,7 @@
 /** Setup owns generate: snapshot inputs, then run allocation + line schedule. */
 import { parseStartDate, addDays, weekdaySun0 } from "../../shared/utils/dates.js";
 import { assignBlockRdos, lockedRdoNotes, normalizeRdoBlock } from "../utils/rdoBlock.js";
+import { ensureUniqueShiftIds } from "../utils/shiftMath.js";
 
 export function buildScheduleForLine(S, line, days) {
   var arr = [];
@@ -35,6 +36,7 @@ export function generate(S) {
   S.state.issues = [];
   if (S.collectSetupInputs) S.collectSetupInputs();
   if (S.readShiftsFromDom) S.readShiftsFromDom();
+  ensureUniqueShiftIds(S);
 
   // Handle active seed for generation
   var seedInput = String(S.state.generateSeed || "random").trim().toLowerCase();

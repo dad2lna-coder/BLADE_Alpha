@@ -3,7 +3,7 @@
  */
 import { buildScheduleForLine } from "../actions/generate.js";
 import { assignCertPoolsToLines } from "./certAssign.js";
-import { assignRdoDays } from "./shiftMath.js";
+import { assignRdoDays, ensureUniqueShiftIds } from "./shiftMath.js";
 import { placedRdosOk } from "./rdoBlock.js";
 
 export function belongsToClass(line, classKey) {
@@ -66,6 +66,7 @@ export function generateClass(S, classKey, perShiftTargets) {
   S.state.issues = S.state.issues || [];
   if (S.collectSetupInputs) S.collectSetupInputs();
   if (S.readShiftsFromDom) S.readShiftsFromDom();
+  ensureUniqueShiftIds(S);
 
   var openMin = S.timeToMin ? S.timeToMin(S.state.open) : 210;
   var closeMin = S.timeToMin ? S.timeToMin(S.state.close) : 1380;

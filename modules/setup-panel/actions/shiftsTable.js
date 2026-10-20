@@ -1,5 +1,5 @@
 /** Setup-tab shifts table + day-times modal. */
-import { assignRdoDays } from "../utils/shiftMath.js";
+import { assignRdoDays, ensureUniqueShiftIds, cloneDayTimes, nextShiftId, nextShiftSeq } from "../utils/shiftMath.js";
 import { placedRdosOk } from "../utils/rdoBlock.js";
 import { rdoConstraintHtml, readRdoConstraint, syncRdoConstraintRow } from "./rdoConstraintUi.js";
 export function attachShiftsTable(S) {
@@ -48,7 +48,7 @@ export function attachShiftsTable(S) {
       var ltsoForce = Math.max(0, Math.floor(+(tr.querySelector("[data-f=ltsoForce]") && tr.querySelector("[data-f=ltsoForce]").value) || 0));
       var stsoForce = Math.max(0, Math.floor(+(tr.querySelector("[data-f=stsoForce]") && tr.querySelector("[data-f=stsoForce]").value) || 0));
       var rdo = readRdoConstraint(tr);
-      var dayTimes = existing && existing.dayTimes ? existing.dayTimes : null;
+      var dayTimes = existing && existing.dayTimes ? cloneDayTimes(existing.dayTimes) : null;
       var phaseEl = tr.querySelector("[data-f=phase]");
       var phase = (phaseEl && phaseEl.value) || (existing && existing.phase) || "auto";
       var cgEl = tr.querySelector("[data-f=crewGroupId]");
@@ -129,6 +129,8 @@ export function attachShiftsTable(S) {
   };
 
   S.renderShiftsTable = function () {
+    ensureUniqueShiftIds(S);
+    if (typeof document === "undefined") return;
     var tbody = document.getElementById("shifts-tbody");
     if (!tbody) return;
     var groups = S.state.shiftCrewGroups || [];
@@ -208,14 +210,14 @@ export function attachShiftsTable(S) {
   S.addShift = function () {
     if (!S.state) return;
     S.readShiftsFromDom();
-    S.shiftSeq = S.shiftSeq || ((S.state.shifts || []).length + 1);
-    var id = "S" + S.shiftSeq++;
     S.state.shifts = S.state.shifts || [];
+    var id = nextShiftId(S.state.shifts);
     S.state.shifts.push({
       id: id, name: "Shift", start: "08:00", end: "16:30", paid: 8,
       force: 0, ltsoForce: 0, stsoForce: 0, rdoHard: [],
       rdoBlock: 2, rdoPins: [], rdoPinRequired: false
     });
+    S.shiftSeq = nextShiftSeq(S.state.shifts);
     S.renderShiftsTable();
   };
 
