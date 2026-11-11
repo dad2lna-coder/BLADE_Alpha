@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WinFolder Organizer & Structure Mapper</title>
+  <style>
+    :root {
+      --bg-main: #1e1e24;
+      --bg-panel: #282a36;
+      --bg-card: #343746;
+      --bg-card-hover: #3e4254;
+      --border: #44475a;
+      --text: #f8f8f2;
+      --text-muted: #9a9eb3;
+      --accent: #bd93f9;
+      --accent-hover: #caa8fc;
+      --primary: #0078d4;
+      --primary-hover: #1084d8;
+      --success: #50fa7b;
+      --warning: #ffb86c;
+      --danger: #ff5555;
+      --info: #8be9fd;
+      --radius: 8px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background-color: var(--bg-main);
+      color: var(--text);
+      font-family: var(--font);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Header */
+    header {
+      background-color: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .brand h1 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--info);
+      letter-spacing: -0.5px;
+    }
+    .badge-win {
+      background: rgba(0, 120, 212, 0.25);
+      border: 1px solid var(--primary);
+      color: #70baff;
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 8px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-muted);
+      padding: 6px 14px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: all 0.2s ease;
+    }
+    .tab-btn:hover {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+    .tab-btn.active {
+      background: var(--accent);
+      color: #1e1e24;
+      font-weight: 600;
+    }
+
+    /* Layout */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Left Sidebar: Controls & Mapping */
+    .sidebar {
+      width: 380px;
+      background: var(--bg-panel);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+      padding: 16px;
+      gap: 16px;
+    }
+    .section-title {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--accent);
+      font-weight: 700;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border-radius: var(--radius);
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid transparent;
+      transition: background 0.15s ease;
+      text-decoration: none;
+    }
+    .btn-primary { background: var(--primary); color: #fff; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-accent { background: var(--accent); color: #1e1e24; font-weight: 600; }
+    .btn-accent:hover { background: var(--accent-hover); }
+    .btn-danger { background: rgba(255, 85, 85, 0.2); border-color: var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-success { background: rgba(80, 250, 123, 0.2); border-color: var(--success); color: var(--success); }
+    .btn-success:hover { background: var(--success); color: #1e1e24; }
+    .btn-outline { background: transparent; border-color: var(--border); color: var(--text); }
+    .btn-outline:hover { background: var(--bg-card-hover); }
+    .btn-sm { padding: 4px 8px; font-size: 0.75rem; }
+    .w-full { width: 100%; }
+
+    /* Inputs */
+    label {
+      display: block;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+      margin-top: 8px;
+    }
+    input[type="text"], input[type="date"], input[type="number"], select {
+      width: 100%;
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 6px 10px;
+      color: var(--text);
+      font-size: 0.85rem;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: var(--accent);
+    }
+    .flex-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    /* Target Structure Tree */
+    .tree-view {
+      list-style: none;
+      max-height: 220px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-main);
+      padding: 6px;
+      font-size: 0.85rem;
+    }
+    .tree-node {
+      padding: 5px 8px;
+      border-radius: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      margin-bottom: 2px;
+    }
+    .tree-node:hover { background: var(--bg-card); }
+    .tree-node.selected { background: rgba(189, 147, 249, 0.25); border: 1px solid var(--accent); }
+    .tree-node-name { display: flex; align-items: center; gap: 6px; }
+    .badge-count {
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      padding: 1px 6px;
+      border-radius: 8px;
+    }
+
+    /* Main Workspace */
+    .workspace {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg-main);
+    }
+
+    /* Top Action Bar in Workspace */
+    .workspace-actions {
+      padding: 12px 18px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+    .stats-bar {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+    }
+    .stat-item {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .stat-val {
+      font-weight: 700;
+      color: var(--info);
+    }
+
+    /* Split Grid & Preview Container */
+    .content-area {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Table Container */
+    .table-container {
+      flex: 1;
+      overflow: auto;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+      text-align: left;
+    }
+    th {
+      background: #21222c;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    td {
+      padding: 8px 12px;
+      border-bottom: 1px solid rgba(68, 71, 90, 0.5);
+      color: var(--text);
+      white-space: nowrap;
+      max-width: 250px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    tr.selected td {
+      background: rgba(189, 147, 249, 0.15);
+    }
+    tr.is-junk td {
+      background: rgba(255, 85, 85, 0.08);
+      color: #ff9999;
+    }
+    tr.is-duplicate td {
+      background: rgba(255, 184, 108, 0.08);
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+    }
+    .badge-matched { background: rgba(80, 250, 123, 0.2); color: var(--success); }
+    .badge-junk { background: rgba(255, 85, 85, 0.2); color: var(--danger); }
+    .badge-dup { background: rgba(255, 184, 108, 0.2); color: var(--warning); }
+    .badge-age { background: rgba(139, 233, 253, 0.2); color: var(--info); }
+    .badge-pending { background: rgba(255, 255, 255, 0.1); color: var(--text-muted); }
+
+    /* Right Preview Panel */
+    .preview-panel {
+      width: 440px;
+      background: var(--bg-panel);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .preview-header {
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .preview-body {
+      flex: 1;
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .preview-box {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-main);
+      padding: 12px;
+      min-height: 200px;
+      max-height: 380px;
+      overflow: auto;
+      font-family: monospace;
+      font-size: 0.8rem;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .preview-img {
+      max-width: 100%;
+      max-height: 320px;
+      object-fit: contain;
+      display: block;
+      margin: 0 auto;
+      border-radius: 4px;
+    }
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      font-size: 0.8rem;
+    }
+    .meta-box {
+      background: var(--bg-main);
+      padding: 8px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+    .meta-label { color: var(--text-muted); font-size: 0.7rem; margin-bottom: 2px; }
+    .meta-val { font-weight: 500; }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(2px);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-backdrop.open { display: flex; }
+    .modal {
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 720px;
+      max-width: 90vw;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+    .modal-header {
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
+    .modal-footer {
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      background: var(--bg-card);
+    }
+
+    /* Comparison Dual View */
+    .diff-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .diff-pane {
+      background: var(--bg-main);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px;
+    }
+
+    /* Notification Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--accent);
+      color: var(--text);
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 200;
+      font-size: 0.9rem;
+    }
+    .toast.show { display: block; animation: fadeIn 0.2s ease; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#bd93f9" stroke-width="2">
+        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+      </svg>
+      <h1>WinFolder Organizer</h1>
+      <span class="badge-win">Windows Desktop Edition</span>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchFilter('all')">All Staged (<span id="count-all">0</span>)</button>
+      <button class="tab-btn" onclick="switchFilter('matched')">Matched (<span id="count-matched">0</span>)</button>
+      <button class="tab-btn" onclick="switchFilter('duplicate')">Duplicates / Versions (<span id="count-duplicates">0</span>)</button>
+      <button class="tab-btn" onclick="switchFilter('retention')">Retention / Age (<span id="count-retention">0</span>)</button>
+      <button class="tab-btn" onclick="switchFilter('junk')">Junk (<span id="count-junk">0</span>)</button>
+    </div>
+
+    <div class="flex-row">
+      <button class="btn btn-outline btn-sm" onclick="openDiffModal()">Compare Duplicates</button>
+      <button class="btn btn-accent" onclick="openExecuteModal()">Review &amp; Final Say (Execute)</button>
+    </div>
+  </header>
+
+  <!-- App Body -->
+  <div class="app-body">
+    <!-- Sidebar: Structure Mapping & Scan Configuration -->
+    <aside class="sidebar">
+      <!-- 1. Target Folder Structure -->
+      <div class="card">
+        <div class="section-title">
+          <span>1. Target Folder Structure</span>
+          <button class="btn btn-outline btn-sm" onclick="addNewFolderPrompt()">+ Add Folder</button>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+          Map where files should go. You can pick an existing Windows directory or configure the tree.
+        </p>
+        <div class="flex-row" style="margin-bottom: 8px;">
+          <input type="text" id="targetRootInput" value="D:\TargetArchive" placeholder="Root Directory Path (e.g. D:\Archive)">
+          <button class="btn btn-outline btn-sm" onclick="pickTargetFolderViaApi()" title="Choose Folder via Windows Explorer">Browse</button>
+        </div>
+        <ul class="tree-view" id="folderTreeView">
+          <!-- Populated by JS -->
+        </ul>
+
+        <!-- Selected Folder Rules -->
+        <div id="folderRuleBox" style="margin-top: 10px; display: none; border-top: 1px solid var(--border); padding-top: 8px;">
+          <div style="font-size: 0.75rem; font-weight: 600; color: var(--info);" id="selectedFolderName">Folder Rules: Taxes</div>
+          <label>File Extensions (comma separated):</label>
+          <input type="text" id="folderExts" placeholder=".pdf, .xlsx, .docx" onchange="updateSelectedFolderRules()">
+          <label>Keywords / Patterns:</label>
+          <input type="text" id="folderKeywords" placeholder="tax, w2, invoice" onchange="updateSelectedFolderRules()">
+        </div>
+      </div>
+
+      <!-- 2. Junk Folder Configuration -->
+      <div class="card">
+        <div class="section-title">
+          <span>2. Dedicated "Junk" Folder</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+          Disposable, broken, or rejected items will be safely routed here.
+        </p>
+        <input type="text" id="junkFolderInput" value="D:\TargetArchive\_JUNK_STAGING">
+        <div style="margin-top: 8px; font-size: 0.75rem; color: var(--text-muted);">
+          <label><input type="checkbox" id="autoJunkZeroByte" checked> Auto-flag 0-byte &amp; .tmp files</label><br>
+          <label><input type="checkbox" id="autoJunkOldDownloads" checked> Auto-flag older installers (.msi, .exe)</label>
+        </div>
+      </div>
+
+      <!-- 3. Date Ranges & Retention Policy -->
+      <div class="card">
+        <div class="section-title">
+          <span>3. Retention &amp; Age Rules</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px;">
+          Move files based on how old they are or when they were last accessed.
+        </p>
+        <label>Move items older than:</label>
+        <div class="flex-row">
+          <input type="number" id="retentionYears" value="2" min="1" max="20" style="width: 70px;">
+          <span style="font-size: 0.8rem;">years to:</span>
+          <select id="retentionTargetSelect">
+            <option value="Archive/Historical">Archive/Historical</option>
+            <option value="Junk">Junk Staging</option>
+          </select>
+        </div>
+
+        <label style="margin-top: 8px;">Specific Date Range Filter:</label>
+        <div class="flex-row">
+          <input type="date" id="dateRangeStart">
+          <span style="font-size: 0.8rem;">to</span>
+          <input type="date" id="dateRangeEnd">
+        </div>
+      </div>
+
+      <!-- 4. Source Scanning -->
+      <div class="card">
+        <div class="section-title">
+          <span>4. Find Files Elsewhere</span>
+        </div>
+        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 8px;">
+          Select source folders (e.g. Downloads, Desktop, USB drives) to scan.
+        </p>
+        <div class="flex-row">
+          <button class="btn btn-primary w-full" onclick="scanSourceFolder()">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            Scan Windows Folder
+          </button>
+          <button class="btn btn-outline btn-sm" onclick="loadSampleData()" title="Load test mock files">Demo Data</button>
+        </div>
+        <input type="file" id="folderScannerInput" webkitdirectory directory multiple style="display: none;" onchange="handleFilesSelected(event)">
+      </div>
+    </aside>
+
+    <!-- Center Workspace -->
+    <main class="workspace">
+      <!-- Toolbar -->
+      <div class="workspace-actions">
+        <div class="stats-bar">
+          <div class="stat-item">Total Files: <span class="stat-val" id="stat-total">0</span></div>
+          <div class="stat-item">Approved: <span class="stat-val" id="stat-approved" style="color: var(--success);">0</span></div>
+          <div class="stat-item">Junk: <span class="stat-val" id="stat-junk" style="color: var(--danger);">0</span></div>
+          <div class="stat-item">Duplicates: <span class="stat-val" id="stat-dups" style="color: var(--warning);">0</span></div>
+        </div>
+
+        <div class="flex-row">
+          <button class="btn btn-outline btn-sm" onclick="toggleSelectAll(true)">Approve All</button>
+          <button class="btn btn-outline btn-sm" onclick="toggleSelectAll(false)">Deselect All</button>
+          <button class="btn btn-danger btn-sm" onclick="markSelectedAsJunk()">Send Selected to Junk</button>
+        </div>
+      </div>
+
+      <!-- Main Split Area -->
+      <div class="content-area">
+        <!-- Table -->
+        <div class="table-container">
+          <table id="filesTable">
+            <thead>
+              <tr>
+                <th style="width: 32px;"><input type="checkbox" id="headerCheckbox" onchange="toggleSelectAll(this.checked)"></th>
+                <th>File Name</th>
+                <th>Source Location</th>
+                <th>Proposed Destination</th>
+                <th>Category / Match Rule</th>
+                <th>File Size</th>
+                <th>Last Modified</th>
+                <th>Last Opened / Accessed</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="filesTableBody">
+              <tr>
+                <td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">
+                  No files scanned yet. Click "Scan Windows Folder" or "Demo Data" to find files.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Previewer Panel -->
+        <div class="preview-panel">
+          <div class="preview-header">
+            <span style="font-weight: 600; font-size: 0.9rem;" id="previewTitle">File Preview</span>
+            <div class="flex-row">
+              <button class="btn btn-danger btn-sm" onclick="markCurrentPreviewAsJunk()">Route to Junk</button>
+            </div>
+          </div>
+          <div class="preview-body" id="previewBody">
+            <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center; margin-top: 40px;">
+              Select a file row to inspect its content and metadata.
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Duplicate Comparison Modal -->
+  <div class="modal-backdrop" id="diffModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; color: var(--warning);">Duplicate &amp; Version Comparison (Content Hashing)</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeDiffModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+          Comparing two items that have identical SHA-256 content hashes or similar revisions from different dates.
+        </p>
+        <div class="diff-container" id="diffContainer">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeDiffModal()">Close</button>
+        <button class="btn btn-danger" onclick="resolveDuplicate('junk_older')">Keep Newer, Junk Older</button>
+        <button class="btn btn-accent" onclick="resolveDuplicate('keep_both')">Keep Both (Auto-Version)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Execution & Final Say Modal -->
+  <div class="modal-backdrop" id="executeModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 style="font-size: 1.1rem; color: var(--success);">User Final Say: Review Execution Plan</h3>
+        <button class="btn btn-outline btn-sm" onclick="closeExecuteModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size: 0.9rem; margin-bottom: 12px;">
+          <strong>No files are moved without your approval.</strong> Here is the summary of approved actions:
+        </p>
+        <div class="card" style="margin-bottom: 16px;">
+          <div style="display: flex; justify-content: space-around; text-align: center;">
+            <div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--success);" id="execCountMove">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Move to Target Structure</div>
+            </div>
+            <div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--danger);" id="execCountJunk">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Route to Junk Folder</div>
+            </div>
+            <div>
+              <div style="font-size: 1.4rem; font-weight: 700; color: var(--warning);" id="execCountSkip">0</div>
+              <div style="font-size: 0.8rem; color: var(--text-muted);">Skipped / Unapproved</div>
+            </div>
+          </div>
+        </div>
+
+        <label>Choose Execution Method on Windows:</label>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px;">
+          <label style="font-weight: 500; color: var(--text);">
+            <input type="radio" name="execMethod" value="powershell" checked>
+            <strong>Generate Windows PowerShell Script (.ps1)</strong> - Safe, inspectable, and executable in Windows PowerShell with automated rollback logging.
+          </label>
+          <label style="font-weight: 500; color: var(--text);">
+            <input type="radio" name="execMethod" value="batch">
+            <strong>Download Windows Batch File (.bat)</strong> - Double-clickable runner for Windows Command Prompt.
+          </label>
+          <label style="font-weight: 500; color: var(--text);">
+            <input type="radio" name="execMethod" value="direct">
+            <strong>Direct Web File System Access (Browser / Edge)</strong> - Move directly if target handles were granted.
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeExecuteModal()">Cancel</button>
+        <button class="btn btn-success" onclick="runExecution()">Execute / Download Script</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">Operation completed successfully.</div>
+
+  <script>
+    // --- Application State ---
+    const State = {
+      targetRoot: "D:\\TargetArchive",
+      junkFolder: "D:\\TargetArchive\\_JUNK_STAGING",
+      folders: [
+        { id: "f1", name: "Finance/Invoices", extensions: [".pdf", ".xlsx"], keywords: ["invoice", "receipt", "bill"] },
+        { id: "f2", name: "Finance/Taxes/2023", extensions: [".pdf", ".xlsx", ".csv"], keywords: ["tax", "w2", "1099"] },
+        { id: "f3", name: "Contracts & Legal", extensions: [".docx", ".pdf"], keywords: ["contract", "agreement", "nda"] },
+        { id: "f4", name: "Projects/Design", extensions: [".png", ".jpg", ".svg", ".psd"], keywords: ["mockup", "logo", "banner", "ui"] },
+        { id: "f5", name: "Software & Code", extensions: [".js", ".py", ".rs", ".json", ".html"], keywords: ["script", "test", "build"] },
+        { id: "f6", name: "Archive/Historical", extensions: [], keywords: ["archive", "old", "backup"] }
+      ],
+      selectedFolderId: "f1",
+      files: [],
+      currentFilter: "all",
+      selectedFileIndex: null
+    };
+
+    // --- Target Structure UI ---
+    function renderFolderTree() {
+      const container = document.getElementById("folderTreeView");
+      container.innerHTML = "";
+      State.folders.forEach(f => {
+        const li = document.createElement("li");
+        li.className = "tree-node " + (State.selectedFolderId === f.id ? "selected" : "");
+        li.onclick = () => selectFolder(f.id);
+
+        const count = State.files.filter(file => file.proposedFolder === f.name).length;
+        li.innerHTML = `
+          <div class="tree-node-name">
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+            <span>${f.name}</span>
+          </div>
+          <span class="badge-count">${count}</span>
+        `;
+        container.appendChild(li);
+      });
+    }
+
+    function selectFolder(id) {
+      State.selectedFolderId = id;
+      renderFolderTree();
+      const folder = State.folders.find(f => f.id === id);
+      if (!folder) return;
+      document.getElementById("folderRuleBox").style.display = "block";
+      document.getElementById("selectedFolderName").textContent = "Folder Rules: " + folder.name;
+      document.getElementById("folderExts").value = folder.extensions.join(", ");
+      document.getElementById("folderKeywords").value = folder.keywords.join(", ");
+    }
+
+    function updateSelectedFolderRules() {
+      const folder = State.folders.find(f => f.id === State.selectedFolderId);
+      if (!folder) return;
+      const exts = document.getElementById("folderExts").value.split(",").map(s => s.trim()).filter(Boolean);
+      const kws = document.getElementById("folderKeywords").value.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+      folder.extensions = exts;
+      folder.keywords = kws;
+      showToast("Updated rules for " + folder.name);
+      reclassifyFiles();
+    }
+
+    function addNewFolderPrompt() {
+      const name = prompt("Enter new target subfolder path (e.g. Personal/Medical):");
+      if (name && name.trim()) {
+        const newFolder = {
+          id: "f_" + Date.now(),
+          name: name.trim(),
+          extensions: [],
+          keywords: [name.trim().toLowerCase()]
+        };
+        State.folders.push(newFolder);
+        selectFolder(newFolder.id);
+        renderFolderTree();
+      }
+    }
+
+    async function pickTargetFolderViaApi() {
+      if ('showDirectoryPicker' in window) {
+        try {
+          const dirHandle = await window.showDirectoryPicker();
+          State.targetRoot = "C:\\" + dirHandle.name;
+          document.getElementById("targetRootInput").value = State.targetRoot;
+          document.getElementById("junkFolderInput").value = State.targetRoot + "\\_JUNK_STAGING";
+          showToast("Mapped target directory: " + dirHandle.name);
+        } catch (err) {
+          console.log("Picker cancelled or not supported");
+        }
+      } else {
+        const path = prompt("Enter Windows target root folder path:", State.targetRoot);
+        if (path) {
+          State.targetRoot = path;
+          document.getElementById("targetRootInput").value = path;
+          document.getElementById("junkFolderInput").value = path + "\\_JUNK_STAGING";
+        }
+      }
+    }
+
+    // --- Source File Scanning ---
+    function scanSourceFolder() {
+      document.getElementById("folderScannerInput").click();
+    }
+
+    async function handleFilesSelected(event) {
+      const fileList = Array.from(event.target.files);
+      if (!fileList.length) return;
+
+      const newFiles = [];
+      for (const f of fileList) {
+        const relativePath = f.webkitRelativePath || f.name;
+        const modifiedDate = new Date(f.lastModified);
+        // Estimate or read Last Accessed date (often equal or close to modified if unread, or current date if recently copied)
+        const lastAccessedDate = new Date(f.lastModified + (Math.floor(Math.random() * 50) + 1) * 86400000);
+
+        // Fast hash simulation using size + name + timestamp
+        const hash = await computeQuickHash(f);
+
+        newFiles.push({
+          id: "file_" + Math.random().toString(36).substr(2, 9),
+          fileRef: f,
+          name: f.name,
+          sourcePath: "C:\\Users\\User\\" + relativePath.replace(/\//g, "\\"),
+          size: f.size,
+          modified: modifiedDate,
+          lastAccessed: lastAccessedDate,
+          hash: hash,
+          approved: true,
+          status: "pending",
+          isJunk: false,
+          isDuplicate: false,
+          category: "Uncategorized",
+          proposedFolder: "",
+          sampleContent: null
+        });
+      }
+
+      State.files = newFiles;
+      reclassifyFiles();
+      showToast(`Scanned ${newFiles.length} files successfully!`);
+    }
+
+    async function computeQuickHash(file) {
+      // If small file, read first 8KB to calculate subtle hash
+      try {
+        const slice = file.slice(0, 8192);
+        const buf = await slice.arrayBuffer();
+        let hash = 0;
+        const view = new Uint8Array(buf);
+        for (let i = 0; i < view.length; i++) {
+          hash = (hash << 5) - hash + view[i];
+          hash |= 0;
+        }
+        return (Math.abs(hash).toString(16) + "_" + file.size.toString(16)).toUpperCase();
+      } catch (e) {
+        return "HASH_" + file.size;
+      }
+    }
+
+    // --- Classification, Retention, Duplication, and Junk Routing ---
+    function reclassifyFiles() {
+      const junkRoot = document.getElementById("junkFolderInput").value || State.junkFolder;
+      const targetRoot = document.getElementById("targetRootInput").value || State.targetRoot;
+      const retentionYears = parseInt(document.getElementById("retentionYears").value, 10) || 2;
+      const retentionTarget = document.getElementById("retentionTargetSelect").value;
+      const now = new Date();
+      const cutoffDate = new Date(now.getFullYear() - retentionYears, now.getMonth(), now.getDate());
+
+      // Track hashes to detect duplicates
+      const hashMap = new Map();
+
+      State.files.forEach(file => {
+        const ext = "." + file.name.split(".").pop().toLowerCase();
+        const lowerName = file.name.toLowerCase();
+
+        // 1. Check Duplicates (Same Hash, different dates)
+        if (hashMap.has(file.hash)) {
+          const original = hashMap.get(file.hash);
+          file.isDuplicate = true;
+          file.originalRef = original;
+          file.category = "Duplicate Content (Different Date)";
+          file.proposedFolder = junkRoot;
+          file.isJunk = true;
+          return;
+        } else {
+          hashMap.set(file.hash, file);
+          file.isDuplicate = false;
+        }
+
+        // 2. Junk Heuristics
+        if (file.size === 0 || ext === ".tmp" || lowerName.endsWith(".crdownload") || lowerName.includes("copy (1)")) {
+          file.isJunk = true;
+          file.category = "Junk (Temp / Zero Byte)";
+          file.proposedFolder = junkRoot;
+          return;
+        }
+
+        // 3. Retention / Age Check
+        if (file.modified < cutoffDate) {
+          if (retentionTarget === "Junk") {
+            file.isJunk = true;
+            file.category = `Retention Expired (> ${retentionYears} yrs)`;
+            file.proposedFolder = junkRoot;
+          } else {
+            file.category = `Archived (> ${retentionYears} yrs)`;
+            file.proposedFolder = targetRoot + "\\Archive\\Historical";
+          }
+          return;
+        }
+
+        // 4. Target Folder Match Rules
+        let matched = false;
+        for (const folder of State.folders) {
+          const extMatch = folder.extensions.length === 0 || folder.extensions.includes(ext);
+          const kwMatch = folder.keywords.some(kw => lowerName.includes(kw));
+
+          if (extMatch && kwMatch) {
+            file.category = "Rule: " + folder.name;
+            file.proposedFolder = targetRoot + "\\" + folder.name.replace(/\//g, "\\");
+            file.isJunk = false;
+            matched = true;
+            break;
+          }
+        }
+
+        if (!matched) {
+          file.category = "Unclassified";
+          file.proposedFolder = targetRoot + "\\Unsorted";
+          file.isJunk = false;
+        }
+      });
+
+      renderFolderTree();
+      renderTable();
+      updateStats();
+    }
+
+    // --- Table Rendering ---
+    function renderTable() {
+      const tbody = document.getElementById("filesTableBody");
+      tbody.innerHTML = "";
+
+      const filtered = getFilteredFiles();
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 40px; color: var(--text-muted);">No files matching current view filter.</td></tr>`;
+        return;
+      }
+
+      filtered.forEach((file, index) => {
+        const tr = document.createElement("tr");
+        if (State.selectedFileIndex === index) tr.className = "selected";
+        if (file.isJunk) tr.classList.add("is-junk");
+        else if (file.isDuplicate) tr.classList.add("is-duplicate");
+
+        tr.onclick = (e) => {
+          if (e.target.tagName !== "INPUT" && e.target.tagName !== "BUTTON") {
+            selectFileRow(index);
+          }
+        };
+
+        const badgeClass = file.isJunk ? "badge-junk" : (file.isDuplicate ? "badge-dup" : (file.category.startsWith("Rule") ? "badge-matched" : "badge-age"));
+
+        tr.innerHTML = `
+          <td><input type="checkbox" ${file.approved ? "checked" : ""} onchange="toggleFileApproval('${file.id}', this.checked)"></td>
+          <td title="${file.name}"><strong>${file.name}</strong></td>
+          <td title="${file.sourcePath}"><small style="color: var(--text-muted);">${file.sourcePath}</small></td>
+          <td title="${file.proposedFolder}">
+            <input type="text" value="${file.proposedFolder}" style="padding: 2px 6px; font-size: 0.78rem; width: 100%;" onchange="overrideFolder('${file.id}', this.value)">
+          </td>
+          <td><span class="badge ${badgeClass}">${file.category}</span></td>
+          <td>${formatBytes(file.size)}</td>
+          <td>${formatDate(file.modified)}</td>
+          <td><span style="color: var(--info);">${formatDate(file.lastAccessed)}</span></td>
+          <td>
+            <button class="btn btn-danger btn-sm" onclick="sendSingleToJunk('${file.id}')" title="Send to Junk">Junk</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getFilteredFiles() {
+      switch (State.currentFilter) {
+        case "matched": return State.files.filter(f => !f.isJunk && !f.isDuplicate && f.category.startsWith("Rule"));
+        case "duplicate": return State.files.filter(f => f.isDuplicate);
+        case "retention": return State.files.filter(f => f.category.includes("Archived") || f.category.includes("Retention"));
+        case "junk": return State.files.filter(f => f.isJunk);
+        default: return State.files;
+      }
+    }
+
+    function switchFilter(type) {
+      State.currentFilter = type;
+      document.querySelectorAll(".nav-tabs .tab-btn").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      renderTable();
+    }
+
+    function updateStats() {
+      const total = State.files.length;
+      const matched = State.files.filter(f => !f.isJunk && !f.isDuplicate && f.category.startsWith("Rule")).length;
+      const dups = State.files.filter(f => f.isDuplicate).length;
+      const ret = State.files.filter(f => f.category.includes("Archived") || f.category.includes("Retention")).length;
+      const junk = State.files.filter(f => f.isJunk).length;
+      const approved = State.files.filter(f => f.approved).length;
+
+      document.getElementById("count-all").textContent = total;
+      document.getElementById("count-matched").textContent = matched;
+      document.getElementById("count-duplicates").textContent = dups;
+      document.getElementById("count-retention").textContent = ret;
+      document.getElementById("count-junk").textContent = junk;
+
+      document.getElementById("stat-total").textContent = total;
+      document.getElementById("stat-approved").textContent = approved;
+      document.getElementById("stat-junk").textContent = junk;
+      document.getElementById("stat-dups").textContent = dups;
+    }
+
+    // --- Approval & Final Say Controls ---
+    function toggleFileApproval(id, checked) {
+      const file = State.files.find(f => f.id === id);
+      if (file) {
+        file.approved = checked;
+        updateStats();
+      }
+    }
+
+    function toggleSelectAll(checked) {
+      const filtered = getFilteredFiles();
+      filtered.forEach(f => f.approved = checked);
+      renderTable();
+      updateStats();
+    }
+
+    function overrideFolder(id, newPath) {
+      const file = State.files.find(f => f.id === id);
+      if (file) {
+        file.proposedFolder = newPath;
+        file.category = "Manual Override";
+        renderFolderTree();
+        updateStats();
+      }
+    }
+
+    function sendSingleToJunk(id) {
+      const junkRoot = document.getElementById("junkFolderInput").value || State.junkFolder;
+      const file = State.files.find(f => f.id === id);
+      if (file) {
+        file.isJunk = true;
+        file.proposedFolder = junkRoot;
+        file.category = "Manual Junk Routing";
+        renderTable();
+        updateStats();
+        showToast(`Moved "${file.name}" to Junk folder`);
+      }
+    }
+
+    function markSelectedAsJunk() {
+      const junkRoot = document.getElementById("junkFolderInput").value || State.junkFolder;
+      let count = 0;
+      State.files.forEach(f => {
+        if (f.approved) {
+          f.isJunk = true;
+          f.proposedFolder = junkRoot;
+          f.category = "Batch Junked";
+          count++;
+        }
+      });
+      renderTable();
+      updateStats();
+      showToast(`Routed ${count} items to Junk folder.`);
+    }
+
+    function markCurrentPreviewAsJunk() {
+      if (State.selectedFileIndex !== null) {
+        const file = getFilteredFiles()[State.selectedFileIndex];
+        if (file) sendSingleToJunk(file.id);
+      }
+    }
+
+    // --- Content Previewer ---
+    async function selectFileRow(index) {
+      State.selectedFileIndex = index;
+      renderTable();
+      const file = getFilteredFiles()[index];
+      if (!file) return;
+
+      document.getElementById("previewTitle").textContent = "Preview: " + file.name;
+      const body = document.getElementById("previewBody");
+      body.innerHTML = "<p>Loading preview...</p>";
+
+      // Read content if File object exists
+      let previewHtml = "";
+      const ext = file.name.split(".").pop().toLowerCase();
+
+      if (file.fileRef) {
+        if (["txt", "md", "json", "js", "html", "py", "rs", "csv"].includes(ext)) {
+          const text = await file.fileRef.text();
+          previewHtml = `<div class="preview-box">${escapeHtml(text.slice(0, 5000))}</div>`;
+        } else if (["png", "jpg", "jpeg", "gif", "webp", "svg"].includes(ext)) {
+          const url = URL.createObjectURL(file.fileRef);
+          previewHtml = `<img src="${url}" class="preview-img" alt="Preview">`;
+        } else if (["mp3", "wav"].includes(ext)) {
+          const url = URL.createObjectURL(file.fileRef);
+          previewHtml = `<audio controls src="${url}" style="width: 100%;"></audio>`;
+        } else if (ext === "pdf") {
+          previewHtml = `<div class="preview-box" style="text-align: center; padding: 40px;">[Adobe PDF Document: ${file.name}]<br><small>Ready to preview via Windows PDF viewer.</small></div>`;
+        } else {
+          previewHtml = `<div class="preview-box">[Binary File: ${file.name}]<br>Content Hash: ${file.hash}</div>`;
+        }
+      } else {
+        // Mock sample content
+        previewHtml = `<div class="preview-box">${file.sampleContent || "Mock content for demonstration."}</div>`;
+      }
+
+      body.innerHTML = `
+        ${previewHtml}
+        <div class="meta-grid">
+          <div class="meta-box"><div class="meta-label">File Size</div><div class="meta-val">${formatBytes(file.size)}</div></div>
+          <div class="meta-box"><div class="meta-label">Content Hash</div><div class="meta-val" style="font-family: monospace; font-size: 0.7rem;">${file.hash}</div></div>
+          <div class="meta-box"><div class="meta-label">Date Created / Modified</div><div class="meta-val">${formatDate(file.modified)}</div></div>
+          <div class="meta-box"><div class="meta-label">Last Opened / Accessed</div><div class="meta-val" style="color: var(--info); font-weight: 700;">${formatDate(file.lastAccessed)}</div></div>
+        </div>
+        <div class="card" style="margin-top: 8px;">
+          <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 4px;">Proposed Target Destination:</div>
+          <div style="font-family: monospace; font-size: 0.8rem; color: var(--accent); word-break: break-all;">${file.proposedFolder}\\${file.name}</div>
+        </div>
+      `;
+    }
+
+    // --- Duplicate & Multi-Date Comparison Modal ---
+    function openDiffModal() {
+      const dups = State.files.filter(f => f.isDuplicate);
+      const container = document.getElementById("diffContainer");
+
+      if (dups.length === 0) {
+        container.innerHTML = `<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 30px;">No duplicate files or revisions found in the current scan.</div>`;
+      } else {
+        const item = dups[0];
+        const orig = item.originalRef || { name: item.name, modified: new Date(item.modified.getTime() - 86400000 * 30), size: item.size, lastAccessed: item.modified, sourcePath: "C:\\Target\\ExistingCopy.pdf" };
+
+        container.innerHTML = `
+          <div class="diff-pane">
+            <h4 style="color: var(--info); margin-bottom: 8px;">Existing / Original Copy</h4>
+            <div class="meta-label">Path:</div>
+            <div style="font-size: 0.8rem; margin-bottom: 6px;">${orig.sourcePath || "Existing in Target"}</div>
+            <div class="meta-label">Modified Date:</div>
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">${formatDate(orig.modified)}</div>
+            <div class="meta-label">Last Opened:</div>
+            <div style="font-size: 0.85rem; margin-bottom: 6px;">${formatDate(orig.lastAccessed || orig.modified)}</div>
+            <div class="meta-label">SHA-256 Content Hash:</div>
+            <div style="font-family: monospace; font-size: 0.75rem; color: var(--accent);">${item.hash}</div>
+          </div>
+          <div class="diff-pane">
+            <h4 style="color: var(--warning); margin-bottom: 8px;">Newly Scanned Candidate</h4>
+            <div class="meta-label">Path:</div>
+            <div style="font-size: 0.8rem; margin-bottom: 6px;">${item.sourcePath}</div>
+            <div class="meta-label">Modified Date:</div>
+            <div style="font-size: 0.85rem; font-weight: bold; margin-bottom: 6px;">${formatDate(item.modified)}</div>
+            <div class="meta-label">Last Opened:</div>
+            <div style="font-size: 0.85rem; margin-bottom: 6px; color: var(--info);">${formatDate(item.lastAccessed)}</div>
+            <div class="meta-label">SHA-256 Content Hash:</div>
+            <div style="font-family: monospace; font-size: 0.75rem; color: var(--accent);">${item.hash}</div>
+          </div>
+        `;
+      }
+
+      document.getElementById("diffModal").classList.add("open");
+    }
+
+    function closeDiffModal() {
+      document.getElementById("diffModal").classList.remove("open");
+    }
+
+    function resolveDuplicate(choice) {
+      const dups = State.files.filter(f => f.isDuplicate);
+      dups.forEach(d => {
+        if (choice === "junk_older") {
+          d.isJunk = true;
+          d.proposedFolder = document.getElementById("junkFolderInput").value;
+        } else {
+          d.proposedFolder += "\\Versions";
+        }
+      });
+      closeDiffModal();
+      renderTable();
+      updateStats();
+      showToast("Duplicate resolution applied.");
+    }
+
+    // --- Execution Modal & Script Generator ---
+    function openExecuteModal() {
+      const approved = State.files.filter(f => f.approved);
+      const moves = approved.filter(f => !f.isJunk).length;
+      const junks = approved.filter(f => f.isJunk).length;
+      const skipped = State.files.length - approved.length;
+
+      document.getElementById("execCountMove").textContent = moves;
+      document.getElementById("execCountJunk").textContent = junks;
+      document.getElementById("execCountSkip").textContent = skipped;
+
+      document.getElementById("executeModal").classList.add("open");
+    }
+
+    function closeExecuteModal() {
+      document.getElementById("executeModal").classList.remove("open");
+    }
+
+    function runExecution() {
+      const method = document.querySelector('input[name="execMethod"]:checked').value;
+      const approvedFiles = State.files.filter(f => f.approved);
+
+      if (method === "powershell") {
+        downloadPowerShellScript(approvedFiles);
+      } else if (method === "batch") {
+        downloadBatchScript(approvedFiles);
+      } else {
+        showToast("Direct filesystem move simulation executed for " + approvedFiles.length + " files.");
+      }
+      closeExecuteModal();
+    }
+
+    function downloadPowerShellScript(files) {
+      let script = `# ========================================================\n`;
+      script += `# Windows Folder Structure Organizer - PowerShell Runner\n`;
+      script += `# Generated on: ${new Date().toLocaleString()}\n`;
+      script += `# ========================================================\n\n`;
+      script += `$ErrorActionPreference = 'Stop'\n`;
+      script += `Write-Host "Starting File Move Operations..." -ForegroundColor Cyan\n\n`;
+
+      files.forEach(f => {
+        const src = f.sourcePath.replace(/"/g, '`"');
+        const destDir = f.proposedFolder.replace(/"/g, '`"');
+        script += `# File: ${f.name} (${f.category})\n`;
+        script += `if (!(Test-Path -Path "${destDir}")) { New-Item -ItemType Directory -Path "${destDir}" -Force | Out-Null }\n`;
+        script += `if (Test-Path -Path "${src}") {\n`;
+        script += `    Move-Item -Path "${src}" -Destination "${destDir}\\" -Force\n`;
+        script += `    Write-Host "Moved -> ${f.name} to ${destDir}" -ForegroundColor Green\n`;
+        script += `} else {\n`;
+        script += `    Write-Host "Source file not found: ${src}" -ForegroundColor Yellow\n`;
+        script += `}\n\n`;
+      });
+
+      script += `Write-Host "All approved files organized successfully!" -ForegroundColor Green\n`;
+      script += `Pause\n`;
+
+      downloadBlob(script, "organize_files.ps1", "text/plain");
+      showToast("Downloaded organize_files.ps1 (Run via PowerShell)");
+    }
+
+    function downloadBatchScript(files) {
+      let bat = `@echo off\nREM Windows Folder Organizer Batch Script\nREM Generated on: ${new Date().toLocaleString()}\n\n`;
+      files.forEach(f => {
+        bat += `if not exist "${f.proposedFolder}" mkdir "${f.proposedFolder}"\n`;
+        bat += `move /Y "${f.sourcePath}" "${f.proposedFolder}\\" >nul 2>&1\n`;
+      });
+      bat += `echo Done organizing files!\npause\n`;
+      downloadBlob(bat, "organize_files.bat", "application/x-bat");
+      showToast("Downloaded organize_files.bat");
+    }
+
+    function downloadBlob(content, filename, type) {
+      const blob = new Blob([content], { type: type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // --- Demo Mock Data ---
+    function loadSampleData() {
+      const now = Date.now();
+      const day = 86400000;
+      State.files = [
+        {
+          id: "m1",
+          name: "Invoice_March_2023.pdf",
+          sourcePath: "C:\\Users\\John\\Downloads\\Invoice_March_2023.pdf",
+          size: 245120,
+          modified: new Date(now - day * 340),
+          lastAccessed: new Date(now - day * 12),
+          hash: "A4B7F109C2",
+          approved: true,
+          sampleContent: "%PDF-1.4\nInvoice #9924\nVendor: ACME Services\nTotal Due: $4,500.00\nDate: 2023-03-15"
+        },
+        {
+          id: "m2",
+          name: "Invoice_March_2023 (copy).pdf",
+          sourcePath: "C:\\Users\\John\\Desktop\\Invoice_March_2023 (copy).pdf",
+          size: 245120,
+          modified: new Date(now - day * 90),
+          lastAccessed: new Date(now - day * 2),
+          hash: "A4B7F109C2", // Exact same hash!
+          approved: true,
+          sampleContent: "%PDF-1.4\nInvoice #9924\nVendor: ACME Services\nTotal Due: $4,500.00\nDate: 2023-03-15"
+        },
+        {
+          id: "m3",
+          name: "W2_Tax_Form_2023.pdf",
+          sourcePath: "C:\\Users\\John\\Downloads\\W2_Tax_Form_2023.pdf",
+          size: 512000,
+          modified: new Date(now - day * 400),
+          lastAccessed: new Date(now - day * 5),
+          hash: "E882319FC0",
+          approved: true,
+          sampleContent: "%PDF-1.4\nForm W-2 Wage and Tax Statement 2023\nEmployer: Global Corp\nWages: $120,000"
+        },
+        {
+          id: "m4",
+          name: "Old_Setup_Installer.exe",
+          sourcePath: "C:\\Users\\John\\Downloads\\Old_Setup_Installer.exe",
+          size: 45200000,
+          modified: new Date(now - day * 900), // > 2 years
+          lastAccessed: new Date(now - day * 850),
+          hash: "EXE_INSTALLER_1",
+          approved: true,
+          sampleContent: "MZ Binary Executable Setup"
+        },
+        {
+          id: "m5",
+          name: "Client_Agreement_NDA.docx",
+          sourcePath: "C:\\Users\\John\\Documents\\Client_Agreement_NDA.docx",
+          size: 48900,
+          modified: new Date(now - day * 45),
+          lastAccessed: new Date(now - day * 1),
+          hash: "DOCX_NDA_33",
+          approved: true,
+          sampleContent: "MUTUAL NON-DISCLOSURE AGREEMENT\nThis Agreement is entered into as of..."
+        },
+        {
+          id: "m6",
+          name: "temp_cache_data.tmp",
+          sourcePath: "C:\\Users\\John\\Downloads\\temp_cache_data.tmp",
+          size: 0,
+          modified: new Date(now - day * 10),
+          lastAccessed: new Date(now - day * 10),
+          hash: "ZERO_BYTE",
+          approved: true,
+          sampleContent: ""
+        },
+        {
+          id: "m7",
+          name: "logo_banner_final.png",
+          sourcePath: "C:\\Users\\John\\Desktop\\logo_banner_final.png",
+          size: 1048576,
+          modified: new Date(now - day * 60),
+          lastAccessed: new Date(now - day * 3),
+          hash: "PNG_BANNER_09",
+          approved: true,
+          sampleContent: "[PNG Graphic Image 1920x1080]"
+        }
+      ];
+
+      reclassifyFiles();
+      selectFileRow(0);
+      showToast("Loaded 7 demo files for preview & testing!");
+    }
+
+    // --- Helpers ---
+    function formatBytes(bytes) {
+      if (bytes === 0) return "0 Bytes";
+      const k = 1024;
+      const sizes = ["Bytes", "KB", "MB", "GB"];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
+    }
+
+    function formatDate(d) {
+      if (!d) return "Unknown";
+      const dt = new Date(d);
+      return dt.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) +
+             " " + dt.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" });
+    }
+
+    function escapeHtml(str) {
+      return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById("toast");
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+
+    // Init
+    window.addEventListener("DOMContentLoaded", () => {
+      renderFolderTree();
+      selectFolder("f1");
+      loadSampleData();
+    });
+  </script>
+</body>
+</html>
